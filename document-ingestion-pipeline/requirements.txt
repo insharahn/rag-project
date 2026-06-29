@@ -3,3 +3,7 @@ python-docx
 trafilatura
 pytesseract
 pillow
+langdetect
+sentence-transformers
+numpy
+fpdf2
