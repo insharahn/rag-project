@@ -16,3 +16,6 @@ paddleocr
 #chunking
 tiktoken
 sentence-transformers
+
+#benchmarking
+matplotlib

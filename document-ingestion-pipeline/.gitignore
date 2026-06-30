@@ -226,3 +226,5 @@ notes.txt
 pdfs/
 htmls/
 docxs/
+corpus_validation_report_tesseract.csv
+*.png
