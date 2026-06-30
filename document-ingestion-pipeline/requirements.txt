@@ -7,3 +7,12 @@ langdetect
 scikit-learn
 numpy
 fpdf2
+
+#ocr models
+easyocr
+paddlepaddle
+paddleocr
+
+#chunking
+tiktoken
+sentence-transformers
