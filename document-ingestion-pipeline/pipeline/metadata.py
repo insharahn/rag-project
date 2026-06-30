@@ -1,12 +1,13 @@
 """Extract document metadata: file-level facts (size, type), content-derived
-facts (character/word counts, detected language), and native document
-properties (title, author, creation date) where the format provides them.
+facts (character/word counts, detected languages), and document properties
+(title, author, creation date) where the format provides them.
 
-Native properties are often empty — many PDFs and DOCX files were never
-given a title/author in their document properties, even when the content
-clearly has one printed on the page. That's expected, not a bug: this
-reports what the file's metadata fields actually contain, not what a
-human would guess from reading the content.
+Title resolution: many files never had a real title set in their document
+properties — some are empty, and Word in particular auto-fills a generic
+placeholder ("Word Document") rather than leaving it blank. Both cases are
+treated as "no real title" and fall back to the filename instead, so the
+metadata record always has something useful to show rather than a
+technically-correct but unhelpful null or placeholder.
 """
 
 from pathlib import Path
@@ -17,7 +18,20 @@ import trafilatura
 
 from pipeline.ingest import ingest_document, detect_file_type
 from pipeline.clean import clean_text
-from pipeline.detect_language import detect_language
+from pipeline.detect_language import detect_languages
+
+# Known placeholder values that count as "no real title" rather than a
+# genuine one -- compared case-insensitively.
+GENERIC_TITLE_PLACEHOLDERS = {"word document", "untitled", ""}
+
+
+def _resolve_title(native_title: str | None, filename: str) -> str:
+    """Return the native title if it's a real one, otherwise derive a
+    readable title from the filename."""
+    if native_title and native_title.strip().lower() not in GENERIC_TITLE_PLACEHOLDERS:
+        return native_title.strip()
+    stem = Path(filename).stem
+    return stem.replace("_", " ").replace("-", " ").strip()
 
 
 def _native_properties(path: str, file_type: str) -> dict:
@@ -29,9 +43,6 @@ def _native_properties(path: str, file_type: str) -> dict:
         return {
             "title": meta.get("title") or None,
             "author": meta.get("author") or None,
-            # PDF dates come in their own native format (e.g. "D:20250125000000+00'00'"),
-            # left unparsed here — fine for a metadata report, revisit only if you
-            # need to sort/filter by date later.
             "created": meta.get("creationDate") or None,
         }
 
@@ -61,8 +72,10 @@ def extract_metadata(path: str) -> dict:
     file_type = detect_file_type(path)
     ingest_result = ingest_document(path)
     cleaned = clean_text(ingest_result["full_text"])
-
     file_path = Path(path)
+
+    native = _native_properties(path, file_type)
+    languages = detect_languages(cleaned)
 
     return {
         "path": str(file_path),
@@ -71,8 +84,11 @@ def extract_metadata(path: str) -> dict:
         "file_size_bytes": file_path.stat().st_size,
         "char_count": len(cleaned),
         "word_count": len(cleaned.split()),
-        "language": detect_language(cleaned),
-        **_native_properties(path, file_type),
+        "languages": languages,
+        "primary_language": languages[0]["language"] if languages else None,
+        "title": _resolve_title(native["title"], file_path.name),
+        "author": native["author"],
+        "created": native["created"],
         "extraction_info": ingest_result["extraction_info"],
     }
 

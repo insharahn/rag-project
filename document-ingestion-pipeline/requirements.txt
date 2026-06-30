@@ -4,6 +4,6 @@ trafilatura
 pytesseract
 pillow
 langdetect
-sentence-transformers
+scikit-learn
 numpy
 fpdf2

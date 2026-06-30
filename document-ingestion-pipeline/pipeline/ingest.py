@@ -46,6 +46,9 @@ def ingest_document(path: str) -> dict:
             "extraction_info": {
                 "page_count": result["page_count"],
                 "ocr_pages": result["ocr_pages"],
+                "ocr_confidence": result["ocr_confidence"],
+                "low_confidence_pages": result["low_confidence_pages"],
+                "failed_pages": result["failed_pages"],
             },
         }
 
