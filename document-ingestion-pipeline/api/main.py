@@ -35,6 +35,11 @@ app = FastAPI(
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".html", ".htm"}
 
 
+#ui
+from fastapi.staticfiles import StaticFiles
+app.mount("/ui", StaticFiles(directory="ui", html=True), name="ui")
+
+
 @app.get("/")
 def root():
     return {

@@ -24,3 +24,6 @@ matplotlib
 fastapi
 uvicorn
 python-multipart
+
+#ui
+aiofiles

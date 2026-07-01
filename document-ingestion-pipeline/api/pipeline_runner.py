@@ -99,28 +99,55 @@ def run_pipeline(file_path: str, original_filename: str | None = None, strategy_
     strategy = strategy_override or select_strategy(primary_language)
     chunker_fn = CHUNKERS[strategy]
 
-    # --- Dedup ---
-    existing_paths = _load_existing_paths()
-    dedup_result = {"exact_duplicate_groups": [], "near_duplicate_pairs": []}
-    if existing_paths:
-        try:
-            dedup_result = find_duplicates([file_path] + existing_paths)
-        except Exception as e:
-            dedup_result["error"] = str(e)
+    # --- Dedup: compare text directly against stored documents ---
+    # We use text rather than file paths because the temp file path
+    # used during upload doesn't match what's stored in the JSON records
+    # (and those stored paths no longer exist on disk anyway). Comparing
+    # text directly is more reliable and avoids a second extraction pass.
+    from pipeline.dedup import exact_hash
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity as sk_cosine
+    import numpy as np
 
-    is_duplicate = bool(
-        dedup_result["exact_duplicate_groups"] or
-        dedup_result["near_duplicate_pairs"]
-    )
+    is_duplicate = False
     duplicate_of = None
-    if dedup_result["near_duplicate_pairs"]:
-        _, other_path, similarity = dedup_result["near_duplicate_pairs"][0]
-        duplicate_of = {"path": other_path, "similarity": similarity}
-    elif dedup_result["exact_duplicate_groups"]:
-        group = dedup_result["exact_duplicate_groups"][0]
-        other = [p for p in group if p != file_path]
-        if other:
-            duplicate_of = {"path": other[0], "similarity": 1.0}
+
+    existing_texts = {}  # filename -> cleaned text
+    PROCESSED_DIR.mkdir(exist_ok=True)
+    for json_file in PROCESSED_DIR.glob("*.json"):
+        try:
+            stored = json.loads(json_file.read_text(encoding="utf-8"))
+            stored_text = stored.get("full_text") or ""
+            if stored_text:
+                existing_texts[stored.get("filename", json_file.stem)] = stored_text
+        except Exception:
+            continue
+
+    if cleaned and existing_texts:
+        incoming_hash = exact_hash(cleaned)
+
+        # Exact match check
+        for fname, stored_text in existing_texts.items():
+            if exact_hash(stored_text) == incoming_hash:
+                is_duplicate = True
+                duplicate_of = {"filename": fname, "similarity": 1.0}
+                break
+
+        # Near-duplicate check via TF-IDF if no exact match
+        if not is_duplicate and len(existing_texts) >= 1:
+            try:
+                names = list(existing_texts.keys())
+                texts = [cleaned] + [existing_texts[n] for n in names]
+                vec = TfidfVectorizer(stop_words="english", max_features=20000)
+                matrix = vec.fit_transform(texts)
+                sims = sk_cosine(matrix[0:1], matrix[1:])[0]
+                best_idx = int(np.argmax(sims))
+                best_sim = float(sims[best_idx])
+                if best_sim >= 0.85:
+                    is_duplicate = True
+                    duplicate_of = {"filename": names[best_idx], "similarity": round(best_sim, 4)}
+            except Exception:
+                pass
 
     # --- Chunking (single selected strategy only) ---
     chunks_result = {}
