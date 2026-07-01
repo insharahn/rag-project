@@ -35,7 +35,7 @@ from pipeline.ingest import ingest_document
 from pipeline.clean import clean_text
 from pipeline.chunk_fixed import chunk_fixed_size
 from pipeline.chunk_recursive import chunk_recursive
-from pipeline.chunk_semantic import chunk_semantic, _get_model, _split_sentences
+from pipeline.chunk_semantic import chunk_semantic, _get_model, _split_sentences, _get_encoding
 from scripts.validate_corpus import find_corpus_files
 
 CHUNKERS = {
@@ -44,9 +44,8 @@ CHUNKERS = {
     "semantic": chunk_semantic,
 }
 
-SENTENCE_END_CHARS = (".", "!", "?", '."', '!"', '?"', ".'", "!'", "?'")
+SENTENCE_END_CHARS = (".", "!", "?", '."', '!"', '?"', ".'", "!'", "?'", "۔", "؟", "！", "。") #account for different language sentence terminators
 COHERENCE_SAMPLE_SIZE = 10  # keep the heavier metric bounded in runtime
-
 RESULTS_DIR = Path("benchmark/results")
 
 
@@ -61,16 +60,28 @@ def boundary_quality(chunks: list[dict]) -> float:
     return sum(ends_at_sentence_boundary(c["text"]) for c in chunks) / len(chunks)
 
 
+
+def _strip_leading_tokens(text: str, n: int) -> str:
+    if n <= 0 or not text:
+        return text
+    encoding = _get_encoding()
+    tokens = encoding.encode(text)
+    if len(tokens) <= n:
+        return ""
+    return encoding.decode(tokens[n:])
+
+
 def semantic_coherence(chunks: list[dict]) -> dict:
-    """Average intra-chunk and cross-boundary sentence similarity for
-    one document's chunk list, from one chunker.
-    """
     model = _get_model()
     intra_sims = []
     boundary_sims = []
     prev_last_embedding = None
 
     for chunk in chunks:
+        # Full text (seed + body) is fine for intra-chunk pairs -- the
+        # seed is genuinely contiguous with this chunk's own body in
+        # the original document, so that adjacency is real, not an
+        # artifact.
         sentences = _split_sentences(chunk["text"])
         if not sentences:
             continue
@@ -82,10 +93,18 @@ def semantic_coherence(chunks: list[dict]) -> dict:
             norms[norms == 0] = 1e-10
             intra_sims.extend((np.sum(a * b, axis=1) / norms).tolist())
 
-        if prev_last_embedding is not None:
-            first = embeddings[0]
-            denom = np.linalg.norm(prev_last_embedding) * np.linalg.norm(first)
-            boundary_sims.append(float(np.dot(prev_last_embedding, first) / (denom + 1e-10)))
+        # For the boundary comparison specifically, strip the overlap
+        # seed first -- it's a duplicate of the *previous* chunk's
+        # tail, so leaving it in would compare prev_last_embedding to
+        # a near-copy of itself instead of to genuinely new content.
+        overlap_tokens = chunk.get("overlap_prefix_tokens", 0)
+        core_text = _strip_leading_tokens(chunk["text"], overlap_tokens)
+        core_sentences = _split_sentences(core_text)
+
+        if prev_last_embedding is not None and core_sentences:
+            first_embedding = model.encode([core_sentences[0]], show_progress_bar=False)[0]
+            denom = np.linalg.norm(prev_last_embedding) * np.linalg.norm(first_embedding)
+            boundary_sims.append(float(np.dot(prev_last_embedding, first_embedding) / (denom + 1e-10)))
 
         prev_last_embedding = embeddings[-1]
 

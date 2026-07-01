@@ -42,8 +42,8 @@ from sentence_transformers import SentenceTransformer
 
 from pipeline.chunk_fixed import _get_encoding
 
-SENTENCE_SPLIT_PATTERN = re.compile(r"(?<=[.!?])\s+")
-
+SENTENCE_SPLIT_PATTERN = re.compile(r"(?<=[.!?۔؟！。])\s+") #account for urdu/arabic sentences as well
+SENTENCE_TERMINATORS = ".!?۔؟！。"  # keep in sync with SENTENCE_SPLIT_PATTERN above
 _model = None
 
 
@@ -114,6 +114,13 @@ def chunk_semantic(
 
     raw_sentences = _split_sentences(text)
     if len(raw_sentences) <= 1:
+        # Single sentence means no split points were found -- common for
+        # non-Latin-script text if the sentence splitter doesn't cover
+        # that script's terminators. Fall back to fixed-size splitting
+        # rather than returning the whole document as one chunk.
+        if _token_count(text) > chunk_size:
+            from pipeline.chunk_fixed import chunk_fixed_size
+            return chunk_fixed_size(text, chunk_size=chunk_size, overlap=overlap)
         token_count = _token_count(text)
         return [{"chunk_index": 0, "text": text, "token_count": token_count, "start_token": 0, "end_token": token_count}]
 
@@ -135,15 +142,33 @@ def chunk_semantic(
     is_breakpoint = similarities < threshold
 
     chunks = []
+    used_seed_tokens = []
     buffer = []
     buffer_tokens = 0
     buffer_token_overlap_seed = ""
     overlap_seed_tokens = 0  # token count of the seed, reserved against chunk_size
+    
+    def _ensure_sentence_terminated(text: str) -> str:
+        """Force text to end on a character SENTENCE_SPLIT_PATTERN recognizes,
+        so a downstream re-split can't fuse it with whatever follows it.
+        The token-level tail slice used for overlap has no such guarantee on
+        its own -- it's cut by token count, not by sentence structure.
+        """
+        stripped = text.rstrip()
+        if not stripped or stripped[-1] in SENTENCE_TERMINATORS:
+            return text
+        return stripped + "."
 
     def flush():
         nonlocal buffer, buffer_tokens, buffer_token_overlap_seed, overlap_seed_tokens
         body = " ".join(buffer)
-        chunk_text = f"{buffer_token_overlap_seed} {body}" if buffer_token_overlap_seed else body
+        if buffer_token_overlap_seed:
+            seed = _ensure_sentence_terminated(buffer_token_overlap_seed)
+            chunk_text = f"{seed} {body}"
+            used_seed_tokens.append(_token_count(seed))   # <-- add this
+        else:
+            chunk_text = body
+            used_seed_tokens.append(0)                    # <-- add this
         chunks.append(chunk_text)
         buffer_token_overlap_seed = _get_token_tail(chunk_text, overlap)
         overlap_seed_tokens = _token_count(buffer_token_overlap_seed)
@@ -179,6 +204,7 @@ def chunk_semantic(
             "token_count": token_count,
             "start_token": 0,
             "end_token": token_count,
+            "overlap_prefix_tokens": used_seed_tokens[i],   # <-- add this
         })
 
     return result
@@ -198,6 +224,13 @@ if __name__ == "__main__":
 
     cleaned = clean_text(ingest_document(sys.argv[1])["full_text"]) or ""
     chunks = chunk_semantic(cleaned)
+    
+    for i in range(1, len(chunks)):
+        text = chunks[i]["text"]
+        # crude check: does the text right after the overlap seed area
+        # start with what looks like a fresh sentence?
+        preview = text[:80]
+        print(f"chunk {i} start: {preview!r}")
 
     print(f"Number of chunks: {len(chunks)}")
     if chunks:
@@ -211,4 +244,4 @@ if __name__ == "__main__":
 
             end_tokens = _get_encoding().encode(chunks[0]["text"])[-50:]
             start_tokens = _get_encoding().encode(chunks[1]["text"])[:50]
-            print(f"\nOverlap check (token-level): {'match' if end_tokens == start_tokens else 'no overlap at boundary (may be expected -- see BPE re-tokenization note in chat)'}")
+            print(f"\nOverlap check (token-level): {'match' if end_tokens == start_tokens else 'no overlap at boundary'}")
