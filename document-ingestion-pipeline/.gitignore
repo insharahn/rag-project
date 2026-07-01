@@ -223,6 +223,7 @@ notes.txt
 *.pdf #cause ill be testing pdfs
 *.html
 *.docx
+dataset/
 pdfs/
 htmls/
 docxs/
@@ -232,3 +233,4 @@ summary_beforeurduarabicfix.csv
 benchmark/results/
 per_document_results_BEFORESEMANTICCHUNKINGFIOX.csv
 per_document_results_beforeurduarabicfix.csv
+processed_documents/

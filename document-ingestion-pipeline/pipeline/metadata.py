@@ -67,8 +67,14 @@ def _native_properties(path: str, file_type: str) -> dict:
     }
 
 
-def extract_metadata(path: str) -> dict:
-    """Build a full metadata record for a single document."""
+def extract_metadata(path: str, display_filename: str | None = None) -> dict:
+    """Build a full metadata record for a single document.
+    
+    display_filename: if provided, used for title fallback resolution
+    instead of the actual path's filename. Useful when the file on disk
+    has a temporary name (e.g. during API upload) but the original
+    filename is known separately.
+    """ 
     file_type = detect_file_type(path)
     ingest_result = ingest_document(path)
     cleaned = clean_text(ingest_result["full_text"])
@@ -76,17 +82,18 @@ def extract_metadata(path: str) -> dict:
 
     native = _native_properties(path, file_type)
     languages = detect_languages(cleaned)
+    fallback_filename = display_filename or file_path.name
 
     return {
         "path": str(file_path),
-        "filename": file_path.name,
+        "filename": fallback_filename,
         "file_type": file_type,
         "file_size_bytes": file_path.stat().st_size,
         "char_count": len(cleaned),
         "word_count": len(cleaned.split()),
         "languages": languages,
         "primary_language": languages[0]["language"] if languages else None,
-        "title": _resolve_title(native["title"], file_path.name),
+        "title": _resolve_title(native["title"], fallback_filename),
         "author": native["author"],
         "created": native["created"],
         "extraction_info": ingest_result["extraction_info"],

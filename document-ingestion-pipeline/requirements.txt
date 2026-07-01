@@ -19,3 +19,8 @@ sentence-transformers
 
 #benchmarking
 matplotlib
+
+#api
+fastapi
+uvicorn
+python-multipart
