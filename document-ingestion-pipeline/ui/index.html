@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document Ingestion Pipeline</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f3ef;
+    color: #2e2b27;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Top bar ── */
+.topbar {
+    background: #fffef9;
+    border-bottom: 1.5px solid #e8e3db;
+    padding: 0 20px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+.topbar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2e2b27;
+    letter-spacing: -0.2px;
+}
+.topbar-title span { color: #7aaa8f; }
+
+.upload-btn {
+    background: #7aaa8f;
+    color: #fff;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.upload-btn:hover    { background: #6a9a7f; }
+.upload-btn:disabled { background: #c8ddd2; color: #8ab8a0; cursor: not-allowed; }
+
+#file-input { display: none; }
+
+.status {
+    margin-left: auto;
+    font-size: 12px;
+    color: #a8a098;
+}
+.status.ok      { color: #6a9a7a; }
+.status.err     { color: #c07060; }
+.status.loading { color: #b8965a; }
+
+/* ── Layout ── */
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ── */
+.sidebar {
+    width: 215px;
+    background: #eeeae3;
+    border-right: 1.5px solid #e0dbd2;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+.sidebar-hd {
+    padding: 11px 14px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #a09888;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    border-bottom: 1px solid #ddd8cf;
+    flex-shrink: 0;
+}
+.doc-list { flex: 1; overflow-y: auto; }
+.doc-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd8cf;
+    transition: background 0.1s;
+    border-left: 3px solid transparent;
+    user-select: none;
+}
+.doc-item:hover  { background: #e5e0d8; }
+.doc-item.active { background: #ddf0e6; border-left-color: #7aaa8f; }
+.doc-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #3a3630;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.doc-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+.tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.tag.pdf  { background: #fce8e8; color: #b85050; }
+.tag.docx { background: #e8effe; color: #4a70b8; }
+.tag.html { background: #e6f5ec; color: #3a8858; }
+.tag.lang { background: #fef5e8; color: #a07030; }
+.tag.dup  { background: #fff0e8; color: #b86830; }
+
+/* ── Content ── */
+.content { flex: 1; display: flex; overflow: hidden; }
+
+.empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #c8c0b4;
+}
+.empty h2 { font-size: 15px; font-weight: 500; color: #b8b0a4; }
+.empty p  { font-size: 13px; }
+
+/* ── Split ── */
+.split { flex: 1; display: flex; overflow: hidden; }
+
+.preview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1.5px solid #e0dbd2;
+    overflow: hidden;
+    min-width: 0;
+}
+.pane-hd {
+    padding: 9px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #a09888;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 1px solid #e0dbd2;
+    flex-shrink: 0;
+    background: #f8f5f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.preview-note {
+    font-size: 10.5px;
+    color: #b8b0a4;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+.preview-iframe { flex: 1; border: none; background: #fff; display: none; }
+.preview-text {
+    flex: 1;
+    padding: 22px 26px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #6a6258;
+    white-space: pre-wrap;
+    font-family: Georgia, 'Times New Roman', serif;
+    min-height: 0;
+}
+
+/* ── Right panel ── */
+.right-pane {
+    width: 450px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fffef9;
+}
+.tabs {
+    display: flex;
+    border-bottom: 1.5px solid #e0dbd2;
+    background: #f8f5f0;
+    flex-shrink: 0;
+}
+.tab {
+    padding: 10px 18px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #a09888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.1s, border-color 0.1s;
+}
+.tab:hover { color: #5a5248; }
+.tab.on    { color: #7aaa8f; border-bottom-color: #7aaa8f; font-weight: 600; }
+
+.tab-body { display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
+.tab-body.on { display: flex; }
+
+/* ── Text tab ── */
+.text-tab { padding: 12px; display: flex; flex-direction: column; height: 100%; }
+.text-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 9px;
+    flex-shrink: 0;
+}
+.text-stats { font-size: 11.5px; color: #a09888; }
+.copy-btn {
+    background: #f0ede8;
+    color: #7a7268;
+    border: 1px solid #ddd8cf;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.copy-btn:hover { background: #e8e3db; color: #3a3630; }
+.copy-btn.done  { background: #e6f5ec; color: #3a8858; border-color: #b0ddc0; }
+
+.text-body {
+    flex: 1;
+    min-height: 0;
+    background: #f8f5f0;
+    border: 1.5px solid #e0dbd2;
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.85;
+    color: #5a5248;
+    white-space: pre-wrap;
+    font-family: Georgia, serif;
+    user-select: text;
+    word-break: break-word;
+}
+
+/* ── Meta tab ── */
+.meta-tab {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    min-height: 0;
+}
+.meta-sec { margin-bottom: 22px; }
+.meta-sec-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #a09888;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    margin-bottom: 11px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid #e8e3db;
+}
+.meta-grid { display: grid; grid-template-columns: 96px 1fr; gap: 8px 12px; }
+.mk { font-size: 12px; color: #a09888; }
+.mv { font-size: 12px; color: #3a3630; word-break: break-all; }
+.mv.warn { color: #b86830; }
+.mv.good { color: #3a8858; font-weight: 500; }
+
+.lang-rows { display: flex; flex-direction: column; gap: 10px; }
+.lang-row  { display: flex; align-items: center; gap: 10px; }
+.lang-code  { font-size: 11.5px; font-weight: 700; color: #7a7268; width: 32px; }
+.lang-track { flex: 1; height: 6px; background: #e8e3db; border-radius: 3px; overflow: hidden; }
+.lang-fill  { height: 100%; background: #7aaa8f; border-radius: 3px; }
+.lang-pct   { font-size: 11px; color: #a09888; width: 34px; text-align: right; }
+
+.ocr-pages { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.ocr-page  {
+    font-size: 10.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f0ede8;
+    color: #8a8278;
+    border: 1px solid #e0dbd2;
+}
+.ocr-page.low { background: #fff0e8; color: #b86830; border-color: #f0c8a0; }
+
+/* ── Chunks tab ── */
+.chunks-tab {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    min-height: 0;
+}
+.strategy-card {
+    background: #e8f5ee;
+    border: 1.5px solid #b8ddc8;
+    border-radius: 10px;
+    padding: 13px 15px;
+    margin-bottom: 14px;
+}
+.strategy-name   { font-size: 13px; font-weight: 700; color: #3a8858; margin-bottom: 4px; text-transform: capitalize; }
+.strategy-why    { font-size: 12px; color: #5a8870; line-height: 1.5; }
+.strategy-reason { font-size: 11px; color: #8ab8a0; margin-top: 5px; font-style: italic; }
+
+.chunk-stats { display: flex; gap: 8px; margin-bottom: 14px; }
+.cs {
+    background: #f5f3ef;
+    border: 1.5px solid #e0dbd2;
+    border-radius: 8px;
+    padding: 10px;
+    flex: 1;
+    text-align: center;
+}
+.cs-val { font-size: 18px; font-weight: 700; color: #2e2b27; letter-spacing: -0.5px; }
+.cs-lbl { font-size: 10px; color: #a09888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+.chunk-cards { display: flex; flex-direction: column; gap: 7px; }
+.chunk-card {
+    background: #f8f5f0;
+    border: 1.5px solid #e0dbd2;
+    border-radius: 8px;
+    padding: 10px 13px;
+    cursor: pointer;
+    transition: border-color 0.1s, background 0.1s;
+}
+.chunk-card:hover  { border-color: #c8c0b4; background: #f2efe8; }
+.chunk-card.open   { border-color: #7aaa8f; background: #f0faf4; }
+.cc-hd { display: flex; align-items: center; justify-content: space-between; }
+.cc-num { font-size: 11.5px; font-weight: 700; color: #7aaa8f; }
+.cc-tok {
+    font-size: 10.5px;
+    color: #a09888;
+    background: #e8e3db;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+.cc-preview {
+    font-size: 12px;
+    color: #a09888;
+    margin-top: 6px;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cc-full {
+    font-size: 12px;
+    color: #5a5248;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e8e3db;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    display: none;
+    word-break: break-word;
+}
+.chunk-card.open .cc-preview { display: none; }
+.chunk-card.open .cc-full    { display: block; }
+
+.more-chunks {
+    text-align: center;
+    font-size: 12px;
+    color: #b8b0a4;
+    padding: 12px;
+    border: 1.5px dashed #e0dbd2;
+    border-radius: 8px;
+    margin-top: 6px;
+}
+
+/* ── Skeleton loading ── */
+.skeleton {
+    background: linear-gradient(90deg, #eee9e0 25%, #e4dfd6 50%, #eee9e0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 5px;
+    height: 13px;
+    margin-bottom: 9px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Drop overlay ── */
+.drop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(122,170,143,0.08);
+    border: 2px dashed #7aaa8f;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: #5a9a7a;
+}
+.drop-overlay.show { display: flex; }
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4cfc8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c4bfb8; }
+</style>
+</head>
+<body>
+
+<div class="drop-overlay" id="drop-overlay">Drop files here to upload</div>
+
+<div class="topbar">
+    <div class="topbar-title">Document <span>Ingestion</span> Pipeline</div>
+    <button class="upload-btn" id="upload-btn" onclick="triggerUpload()">Upload</button>
+    <input type="file" id="file-input" multiple accept=".pdf,.docx,.html,.htm">
+    <span class="status" id="status">Ready</span>
+</div>
+
+<div class="main">
+    <div class="sidebar">
+        <div class="sidebar-hd">Documents</div>
+        <div class="doc-list" id="doc-list">
+            <div style="padding:12px 14px;font-size:12px;color:#b8b0a4">Loading...</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="empty" id="empty">
+            <h2>No document selected</h2>
+            <p>Upload a file or pick one from the sidebar</p>
+        </div>
+
+        <div class="split" id="split" style="display:none">
+            <div class="preview-pane">
+                <div class="pane-hd">
+                    <span id="preview-label">Preview</span>
+                    <span class="preview-note" id="preview-note"></span>
+                </div>
+                <iframe class="preview-iframe" id="preview-iframe"></iframe>
+                <div class="preview-text" id="preview-text"></div>
+            </div>
+
+            <div class="right-pane">
+                <div class="tabs">
+                    <div class="tab on"  data-tab="text">Extracted Text</div>
+                    <div class="tab"     data-tab="meta">Metadata</div>
+                    <div class="tab"     data-tab="chunks">Chunks</div>
+                </div>
+                <div class="tab-body on" id="body-text">
+                    <div class="text-tab">
+                        <div class="text-toolbar">
+                            <span class="text-stats" id="text-stats"></span>
+                            <button class="copy-btn" id="copy-btn" onclick="copyAll()">Copy text</button>
+                        </div>
+                        <div class="text-body" id="text-body"></div>
+                    </div>
+                </div>
+                <div class="tab-body" id="body-meta">
+                    <div class="meta-tab" id="meta-panel"></div>
+                </div>
+                <div class="tab-body" id="body-chunks">
+                    <div class="chunks-tab" id="chunks-panel"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+const docs    = {};     // keyed by filename
+const blobUrls = {};    // keyed by filename — session-only blob URLs
+let active = null;
+
+const STRATEGY_DESC = {
+    fixed:     'Splits at exact token counts. Fast, but frequently cuts mid-sentence.',
+    recursive: 'Respects paragraph and sentence structure, only splitting further when needed. Good balance of quality and speed.',
+    semantic:  'Places boundaries where meaning actually shifts, using sentence embeddings. Highest boundary quality — best for retrieval.'
+};
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+    // Wire up tabs via delegation (avoids issues with onclick in HTML)
+    document.querySelector('.tabs').addEventListener('click', e => {
+        const t = e.target.closest('.tab');
+        if (t) switchTab(t.dataset.tab);
+    });
+
+    try {
+        const r = await fetch(`${API}/documents`);
+        const data = await r.json();
+        data.documents.forEach(d => { docs[d.filename] = d; });
+    } catch {
+        setStatus('Cannot reach API — is the server running?', 'err');
+    }
+    renderSidebar();
+    setStatus('Ready');
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────
+function renderSidebar() {
+    const list = document.getElementById('doc-list');
+    const entries = Object.values(docs);
+
+    if (!entries.length) {
+        list.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#b8b0a4">No documents yet — upload one to get started</div>';
+        return;
+    }
+
+    list.innerHTML = entries.map(d => `
+        <div class="doc-item ${active === d.filename ? 'active' : ''}"
+             data-filename="${esc(d.filename)}">
+            <div class="doc-name">${esc(d.filename)}</div>
+            <div class="doc-tags">
+                <span class="tag ${d.file_type||''}">${(d.file_type||'?').toUpperCase()}</span>
+                <span class="tag lang">${(d.primary_language||'?').toUpperCase()}</span>
+                ${d.is_duplicate ? '<span class="tag dup">Duplicate</span>' : ''}
+            </div>
+        </div>`).join('');
+
+    // Attach click listeners via data-attribute — avoids the double-quote
+    // conflict that breaks onclick when filenames contain special characters.
+    list.querySelectorAll('.doc-item').forEach(el => {
+        el.addEventListener('click', () => selectDoc(el.dataset.filename));
+    });
+}
+
+// ── Select ────────────────────────────────────────────────────────────────
+async function selectDoc(filename) {
+    active = filename;
+    renderSidebar();
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('split').style.display = 'flex';
+    renderLoading();
+
+    let doc = docs[filename];
+
+    if (!doc?.full_text) {
+        setStatus('Loading...', 'loading');
+        const stem = filename.replace(/\.[^.]+$/, '');
+        try {
+            const r = await fetch(`${API}/documents/${encodeURIComponent(stem)}`);
+            if (r.ok) { doc = await r.json(); docs[filename] = doc; }
+            else { setStatus('Failed to load document', 'err'); return; }
+        } catch { setStatus('Failed to load document', 'err'); return; }
+    }
+
+    renderDoc(doc);
+    setStatus('Ready');
+}
+
+function renderLoading() {
+    const ph = Array(5).fill('<div class="skeleton"></div>').join('');
+    document.getElementById('text-body').innerHTML    = ph;
+    document.getElementById('meta-panel').innerHTML   = ph;
+    document.getElementById('chunks-panel').innerHTML = ph;
+    document.getElementById('preview-text').textContent = '';
+    document.getElementById('preview-iframe').style.display = 'none';
+    document.getElementById('preview-text').style.display   = 'block';
+    document.getElementById('text-stats').textContent = '';
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function renderDoc(doc) {
+    const iframe = document.getElementById('preview-iframe');
+    const prevTxt = document.getElementById('preview-text');
+    const url = blobUrls[doc.filename];
+
+    if (url && ['pdf','html','htm'].includes(doc.file_type)) {
+        iframe.src = url;
+        iframe.style.display = 'block';
+        prevTxt.style.display = 'none';
+        document.getElementById('preview-label').textContent = 'Live Preview';
+        document.getElementById('preview-note').textContent  = 'Preview expires on page reload';
+    } else {
+        iframe.style.display = 'none';
+        prevTxt.style.display = 'block';
+        prevTxt.textContent = doc.full_text || '(no text extracted)';
+        document.getElementById('preview-label').textContent = 'Extracted Text';
+        document.getElementById('preview-note').textContent  =
+            doc.file_type === 'docx' ? 'DOCX files cannot render in the browser' : 'Upload again for live preview';
+    }
+
+    document.getElementById('text-body').textContent = doc.full_text || '';
+    document.getElementById('text-stats').textContent =
+        `${fmt(doc.word_count)} words · ${fmt(doc.char_count)} chars`;
+
+    renderMeta(doc);
+    renderChunks(doc);
+}
+
+function renderMeta(doc) {
+    const ei   = doc.extraction_info || {};
+    const langs = doc.languages || [];
+    const ocrPages = ei.ocr_pages || [];
+    const lowConf  = ei.low_confidence_pages || [];
+
+    const langHTML = langs.length
+        ? langs.map(l => `
+            <div class="lang-row">
+                <div class="lang-code">${l.language.toUpperCase()}</div>
+                <div class="lang-track"><div class="lang-fill" style="width:${(l.probability*100).toFixed(0)}%"></div></div>
+                <div class="lang-pct">${(l.probability*100).toFixed(0)}%</div>
+            </div>`).join('')
+        : '<div class="mk">Not detected</div>';
+
+    const ocrHTML = '';
+
+    const dupHTML = doc.is_duplicate
+        ? `<span class="mv warn">Similar to ${esc((doc.duplicate_of?.path||'').split(/[\\/]/).pop())} (${((doc.duplicate_of?.similarity||0)*100).toFixed(0)}% match)</span>`
+        : `<span class="mv good">Unique</span>`;
+
+    document.getElementById('meta-panel').innerHTML = `
+        <div class="meta-sec">
+            <div class="meta-sec-title">File Info</div>
+            <div class="meta-grid">
+                <div class="mk">Filename</div><div class="mv">${esc(doc.filename||'—')}</div>
+                <div class="mk">Title</div><div class="mv">${esc(doc.title||'—')}</div>
+                <div class="mk">Author</div><div class="mv">${esc(doc.author||'—')}</div>
+                <div class="mk">Created</div><div class="mv">${esc(doc.created||'—')}</div>
+                <div class="mk">Format</div><div class="mv">${(doc.file_type||'—').toUpperCase()}</div>
+                <div class="mk">Size</div><div class="mv">${fmtBytes(doc.file_size_bytes)}</div>
+                <div class="mk">Words</div><div class="mv">${fmt(doc.word_count)}</div>
+                <div class="mk">Chars</div><div class="mv">${fmt(doc.char_count)}</div>
+            </div>
+        </div>
+
+        <div class="meta-sec">
+            <div class="meta-sec-title">Language</div>
+            <div class="lang-rows">${langHTML}</div>
+        </div>
+
+        <div class="meta-sec">
+            <div class="meta-sec-title">Extraction</div>
+            <div class="meta-grid">
+                ${ei.page_count ? `<div class="mk">Pages</div><div class="mv">${ei.page_count}</div>` : ''}
+                <div class="mk">OCR</div>
+                <div class="mv">${ocrPages.length > 0 ? `${ocrPages.length} page(s) processed` : 'Not needed'}</div>
+                <div class="mk">Duplicate</div>${dupHTML}
+            </div>
+            ${ocrHTML}
+        </div>`;
+}
+
+function renderChunks(doc) {
+    const panel = document.getElementById('chunks-panel');
+    const cd = doc.chunks;
+    if (!cd || cd.error || !cd.strategy) {
+        panel.innerHTML = '<div style="padding:20px;color:#b8b0a4;font-size:13px">No chunking data available.</div>';
+        return;
+    }
+    const chunks = cd.chunks || [];
+    const maxTok = chunks.length ? Math.max(...chunks.map(c => c.token_count)) : 0;
+    const reason = doc.primary_language
+        ? `Auto-selected · detected language: ${doc.primary_language.toUpperCase()}`
+        : 'Default strategy';
+
+    panel.innerHTML = `
+        <div class="strategy-card">
+            <div class="strategy-name">${cd.strategy.charAt(0).toUpperCase() + cd.strategy.slice(1)} Chunking</div>
+            <div class="strategy-why">${STRATEGY_DESC[cd.strategy]||''}</div>
+            <div class="strategy-reason">${esc(reason)}</div>
+        </div>
+        <div class="chunk-stats">
+            <div class="cs"><div class="cs-val">${fmt(chunks.length)}</div><div class="cs-lbl">Chunks</div></div>
+            <div class="cs"><div class="cs-val">${cd.avg_token_count||0}</div><div class="cs-lbl">Avg tokens</div></div>
+            <div class="cs"><div class="cs-val">${maxTok}</div><div class="cs-lbl">Max tokens</div></div>
+        </div>
+        <div class="chunk-cards">
+            ${chunks.slice(0, 100).map((c, i) => `
+                <div class="chunk-card">
+                    <div class="cc-hd">
+                        <span class="cc-num">Chunk ${i + 1}</span>
+                        <span class="cc-tok">${c.token_count} tokens</span>
+                    </div>
+                    <div class="cc-preview">${esc((c.text||'').slice(0, 130))}…</div>
+                    <div class="cc-full">${esc(c.text||'')}</div>
+                </div>`).join('')}
+            ${chunks.length > 100
+                ? `<div class="more-chunks">Showing first 100 of ${fmt(chunks.length)} chunks</div>`
+                : ''}
+        </div>`;
+
+    // Click-to-expand on chunk cards
+    panel.querySelectorAll('.chunk-card').forEach(card => {
+        card.addEventListener('click', () => card.classList.toggle('open'));
+    });
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────
+function triggerUpload() { document.getElementById('file-input').click(); }
+
+document.getElementById('file-input').addEventListener('change', async e => {
+    const files = [...e.target.files];
+    if (files.length) await upload(files);
+    e.target.value = '';
+});
+
+async function upload(files) {
+    const btn = document.getElementById('upload-btn');
+    btn.disabled = true;
+    btn.textContent = `Processing ${files.length} file${files.length > 1 ? 's' : ''}…`;
+    setStatus(`Processing ${files.length} file(s)`, 'loading');
+
+    files.forEach(f => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (['pdf','html','htm'].includes(ext)) blobUrls[f.name] = URL.createObjectURL(f);
+    });
+
+    const fd = new FormData();
+    files.forEach(f => fd.append('files', f));
+
+    try {
+        const r    = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+        const data = await r.json();
+        let ok = 0, fail = 0;
+
+        data.results.forEach(res => {
+            if (res.status === 'success') {
+                docs[res.filename] = { ...res.summary, filename: res.filename };
+                ok++;
+            } else {
+                fail++;
+                console.error('Failed:', res.filename, res.detail);
+            }
+        });
+
+        renderSidebar();
+        if (fail > 0 && ok === 0) setStatus(`All ${fail} file(s) failed`, 'err');
+        else if (fail > 0)        setStatus(`${ok} processed, ${fail} failed`, 'err');
+        else { setStatus(`${ok} file${ok > 1 ? 's' : ''} processed`, 'ok'); setTimeout(() => setStatus('Ready'), 3000); }
+
+        const first = data.results.find(r => r.status === 'success');
+        if (first) selectDoc(first.filename);
+    } catch {
+        setStatus('Upload failed — is the server running?', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Upload';
+    }
+}
+
+// ── Drag and drop ─────────────────────────────────────────────────────────
+const overlay = document.getElementById('drop-overlay');
+let dragCount = 0;
+document.addEventListener('dragenter', e => { e.preventDefault(); dragCount++; overlay.classList.add('show'); });
+document.addEventListener('dragleave', () => { dragCount--; if (dragCount <= 0) { dragCount = 0; overlay.classList.remove('show'); } });
+document.addEventListener('dragover',  e => e.preventDefault());
+document.addEventListener('drop', async e => {
+    e.preventDefault(); dragCount = 0; overlay.classList.remove('show');
+    const files = [...e.dataTransfer.files];
+    if (files.length) await upload(files);
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name));
+    document.querySelectorAll('.tab-body').forEach(b => b.classList.remove('on'));
+    document.getElementById(`body-${name}`).classList.add('on');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function copyAll() {
+    navigator.clipboard.writeText(document.getElementById('text-body').textContent).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!'; btn.classList.add('done');
+        setTimeout(() => { btn.textContent = 'Copy text'; btn.classList.remove('done'); }, 2000);
+    });
+}
+function setStatus(msg, type = '') {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status' + (type ? ` ${type}` : '');
+}
+function fmt(n)      { return (n||0).toLocaleString(); }
+function fmtBytes(b) {
+    if (!b) return '—';
+    if (b < 1024)    return `${b} B`;
+    if (b < 1048576) return `${(b/1024).toFixed(1)} KB`;
+    return `${(b/1048576).toFixed(1)} MB`;
+}
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>
