@@ -1,43 +1,43 @@
 """Extract text from PDF documents, falling back to OCR for scanned pages.
 
-OCR uses Tesseract via pytesseract. OCR_LANGUAGES lists every language
-pack actually installed.
-Currently: eng + kr + ur
-Tesseract's accuracy on Urdu specifically is not great;
-published OCR benchmarks show Tesseract handles far worse than Latin or
-Naskh-style Arabic text -- this is a known limitation of the tool.
+Two OCR engines, chosen once per document:
+  - Tesseract for English and Korean documents
+  - EasyOCR for Urdu documents, since Tesseract's accuracy on Urdu's
+    Nastaliq script is a documented weak point of the engine itself.
 """
 
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import fitz  # PyMuPDF
+import numpy as np
 import pytesseract
 from PIL import Image, ImageOps
 
+sys.stdout.reconfigure(encoding="utf-8")
+
 OCR_LANGUAGES = "eng+kor+urd"
-
 MIN_TEXT_LENGTH_FOR_NATIVE_TEXT = 20
-
-# Pages needing OCR are run through Tesseract concurrently via threads.
-# This is safe specifically because, by this point, all PyMuPDF
-# rendering is already done -- only plain PIL images and Tesseract
-# subprocess calls remain, neither of which touch fitz. PyMuPDF itself
-# explicitly does not support being used from multiple threads, so all
-# fitz/PDF work below happens sequentially in the main thread first.
 MAX_OCR_WORKERS = 4
+SCRIPT_SAMPLE_DPI = 150  # cheap, just for routing -- not the real OCR pass
+
+_easyocr_reader = None
+
+
+def _get_easyocr_reader():
+    global _easyocr_reader
+    if _easyocr_reader is None:
+        import easyocr
+        print("Loading EasyOCR Urdu model (first use only)...")
+        _easyocr_reader = easyocr.Reader(["ur"], gpu=False)
+    return _easyocr_reader
 
 
 def _preprocess_for_ocr(img: Image.Image) -> Image.Image:
-    """Grayscale plus autocontrast -- cheap, helps borderline scans."""
     return ImageOps.autocontrast(img.convert("L"))
 
 
 def _reconstruct_text_from_ocr_data(data: dict) -> str:
-    """Rebuild text with real line breaks from Tesseract's word-level
-    output, grouped by its own block/paragraph/line numbering -- rather
-    than space-joining every word on the page into one run-on string.
-    """
     lines: dict[tuple, list[str]] = {}
     order = []
     for i, word in enumerate(data["text"]):
@@ -51,90 +51,162 @@ def _reconstruct_text_from_ocr_data(data: dict) -> str:
     return "\n".join(" ".join(lines[key]) for key in order)
 
 
-def _ocr_image(page_number: int, img: Image.Image) -> dict:
-    """Run OCR on one already-rendered page image, once. Pure Tesseract
-    work -- no PyMuPDF/fitz objects involved, safe to call from a
-    worker thread.
+def _dominant_script(text: str) -> str:
+    counts = {"urd": 0, "kor": 0, "eng": 0}
+    for ch in text:
+        cp = ord(ch)
+        if 0x0600 <= cp <= 0x06FF or 0x0750 <= cp <= 0x077F:
+            counts["urd"] += 1
+        elif 0xAC00 <= cp <= 0xD7A3 or 0x1100 <= cp <= 0x11FF:
+            counts["kor"] += 1
+        elif cp < 128 and ch.isalpha():
+            counts["eng"] += 1
+    return max(counts, key=counts.get) if any(counts.values()) else "eng"
+
+def _detect_document_script(ocr_pages: list, sample_size: int = 3) -> str:
+    """Sample up to `sample_size` OCR-needing pages, not just the first,
+    and pool script counts across all of them before deciding. A single
+    page -- especially the first one, which is often a cover/title page
+    with unrepresentative content -- can misroute an entire document;
+    one bad sample page already did exactly that.
     """
+    combined_counts = {"urd": 0, "kor": 0, "eng": 0}
+    for _, page in ocr_pages[:sample_size]:
+        img = _preprocess_for_ocr(_render_page(page, SCRIPT_SAMPLE_DPI))
+        data = pytesseract.image_to_data(img, lang=OCR_LANGUAGES, output_type=pytesseract.Output.DICT)
+        sample_text = " ".join(w for w in data["text"] if w.strip())
+        for ch in sample_text:
+            cp = ord(ch)
+            if 0x0600 <= cp <= 0x06FF or 0x0750 <= cp <= 0x077F:
+                combined_counts["urd"] += 1
+            elif 0xAC00 <= cp <= 0xD7A3 or 0x1100 <= cp <= 0x11FF:
+                combined_counts["kor"] += 1
+            elif cp < 128 and ch.isalpha():
+                combined_counts["eng"] += 1
+    return max(combined_counts, key=combined_counts.get) if any(combined_counts.values()) else "eng"
+
+def _render_page(page: "fitz.Page", dpi: int) -> Image.Image:
+    pix = page.get_pixmap(dpi=dpi, colorspace=fitz.csRGB)
+    return Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+
+
+def _ocr_with_tesseract(img: Image.Image) -> dict:
     img = _preprocess_for_ocr(img)
     data = pytesseract.image_to_data(img, lang=OCR_LANGUAGES, output_type=pytesseract.Output.DICT)
     text = _reconstruct_text_from_ocr_data(data)
-
     confidences = [int(c) for c in data["conf"] if c not in ("-1", -1)]
     mean_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+    return {"text": text, "confidence": round(mean_confidence, 1)}
 
-    return {"page": page_number, "text": text, "confidence": round(mean_confidence, 1)}
+
+def _ocr_with_easyocr(img: Image.Image) -> dict:
+    reader = _get_easyocr_reader()
+    img_array = np.array(img.convert("RGB"))
+
+    # paragraph=True groups text boxes into reading-order paragraphs --
+    # critical for Urdu Nastaliq. Trade-off: paragraph mode returns
+    # (bbox, text) tuples only, no per-box confidence scores. We run a
+    # second pass without paragraph=True on the same image to get
+    # confidence scores for the overall quality signal, without using
+    # those results for the actual text content.
+    results = reader.readtext(img_array, detail=1, paragraph=True)
+    if not results:
+        return {"text": "", "confidence": 0.0}
+
+    lines = [text for (_, text) in results]
+
+    # Confidence pass -- detail=1 without paragraph gives (bbox, text, conf)
+    conf_results = reader.readtext(img_array, detail=1, paragraph=False)
+    confidences = [conf for (_, _, conf) in conf_results] if conf_results else []
+
+    return {
+        "text": "\n".join(lines),
+        "confidence": round(sum(confidences) / len(confidences) * 100, 1) if confidences else 0.0,
+    }
 
 
 def extract_pdf_text(path: str, ocr_dpi: int = 300, low_confidence_threshold: float = 60.0) -> dict:
     """Extract text from a PDF, page by page.
 
-    Tries the normal text layer first for each page. If a page has
-    almost no extractable text, it's rendered to an image and queued
-    for OCR.
-
     Returns a dict with:
-      - pages: list of per-page text strings
-      - full_text: all pages joined together
-      - ocr_pages: page numbers (0-indexed) that needed OCR
-      - ocr_confidence: {page_number: confidence_score} for OCR'd pages
-      - low_confidence_pages: OCR'd pages below low_confidence_threshold,
-        worth a human spot-check rather than trusting blindly
-      - page_count: total number of pages
-      - failed_pages: [{"page": n, "error": str}] for pages that raised
-        an error during extraction/OCR
+      - pages, full_text, page_count, failed_pages -- as before
+      - ocr_pages: page numbers that needed OCR
+      - ocr_confidence: {page_number: confidence_score}
+      - ocr_engine_used: "tesseract" | "easyocr" | "none" -- one engine
+        for the whole document
+      - low_confidence_pages: OCR'd pages below low_confidence_threshold
     """
     doc = fitz.open(path)
-
+    
     pages = [None] * len(doc)
     failed_pages = []
-    ocr_targets = []  # (page_number, PIL.Image) -- only for pages needing OCR
+    ocr_targets = []  # (page_number, fitz.Page)
 
-    # Sequential pass: all fitz/PDF work happens here, in the main
-    # thread, because PyMuPDF does not support concurrent access.
     for page_number, page in enumerate(doc):
         try:
             text = (page.get_text() or "").strip()
             if len(text) < MIN_TEXT_LENGTH_FOR_NATIVE_TEXT:
-                pix = page.get_pixmap(dpi=ocr_dpi, colorspace=fitz.csRGB)
-                img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-                ocr_targets.append((page_number, img))
+                ocr_targets.append((page_number, page))
             else:
                 pages[page_number] = text
         except Exception as e:
             pages[page_number] = ""
             failed_pages.append({"page": page_number, "error": str(e)})
 
-    doc.close()  # done with fitz entirely from this point on
-
-    ocr_pages = []
-    ocr_confidence = {}
-    low_confidence_pages = []
+    ocr_pages, ocr_confidence, low_confidence_pages = [], {}, []
+    engine_used = "none"
 
     if ocr_targets:
-        with ThreadPoolExecutor(max_workers=MAX_OCR_WORKERS) as executor:
-            futures = {
-                executor.submit(_ocr_image, page_number, img): page_number
-                for page_number, img in ocr_targets
-            }
-            for future in futures:
-                page_number = futures[future]
+        # One cheap call decides the engine for the whole document.
+        script = _detect_document_script(ocr_targets)
+        engine_used = "easyocr" if script == "urd" else "tesseract"
+
+        # Render every OCR-needing page at full quality now, while doc
+        # is still open and we're still in the main thread (PyMuPDF
+        # rules: no concurrent access).
+        rendered = [(pn, _render_page(p, ocr_dpi)) for pn, p in ocr_targets]
+        doc.close()
+
+        if engine_used == "tesseract":
+            with ThreadPoolExecutor(max_workers=MAX_OCR_WORKERS) as executor:
+                futures = {executor.submit(_ocr_with_tesseract, img): pn for pn, img in rendered}
+                for future in futures:
+                    pn = futures[future]
+                    try:
+                        result = future.result()
+                        pages[pn] = result["text"]
+                        ocr_pages.append(pn)
+                        ocr_confidence[pn] = result["confidence"]
+                        if result["confidence"] < low_confidence_threshold:
+                            low_confidence_pages.append(pn)
+                    except Exception as e:
+                        pages[pn] = ""
+                        failed_pages.append({"page": pn, "error": str(e)})
+        else:
+            # EasyOCR not run in a thread pool -- avoids re-introducing
+            # an unverified concurrency assumption right after the
+            # PyMuPDF threading lesson; sequential here is deliberate.
+            for i, (pn, img) in enumerate(rendered, start=1):
+                print(f"  EasyOCR: page {pn} ({i}/{len(rendered)})...", flush=True)
                 try:
-                    result = future.result()
-                    pages[page_number] = result["text"]
-                    ocr_pages.append(page_number)
-                    ocr_confidence[page_number] = result["confidence"]
+                    result = _ocr_with_easyocr(img)
+                    pages[pn] = result["text"]
+                    ocr_pages.append(pn)
+                    ocr_confidence[pn] = result["confidence"]
                     if result["confidence"] < low_confidence_threshold:
-                        low_confidence_pages.append(page_number)
+                        low_confidence_pages.append(pn)
                 except Exception as e:
-                    pages[page_number] = ""
-                    failed_pages.append({"page": page_number, "error": str(e)})
+                    pages[pn] = ""
+                    failed_pages.append({"page": pn, "error": str(e)})
+    else:
+        doc.close()
 
     return {
         "pages": pages,
         "full_text": "\n\n".join(p for p in pages if p),
         "ocr_pages": sorted(ocr_pages),
         "ocr_confidence": ocr_confidence,
+        "ocr_engine_used": engine_used,
         "low_confidence_pages": sorted(low_confidence_pages),
         "page_count": len(pages),
         "failed_pages": failed_pages,
@@ -142,6 +214,7 @@ def extract_pdf_text(path: str, ocr_dpi: int = 300, low_confidence_threshold: fl
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
     if len(sys.argv) != 2:
         print("Usage: python pipeline/extract_pdf.py <path-to-pdf>")
         sys.exit(1)
@@ -149,12 +222,13 @@ if __name__ == "__main__":
     result = extract_pdf_text(sys.argv[1])
 
     print(f"Pages: {result['page_count']}")
+    print(f"OCR engine used: {result['ocr_engine_used']}")
     print(f"OCR'd pages: {result['ocr_pages']}")
     if result["ocr_confidence"]:
         print(f"OCR confidence by page: {result['ocr_confidence']}")
     if result["low_confidence_pages"]:
-        print(f"Low-confidence OCR pages (worth a spot-check): {result['low_confidence_pages']}")
+        print(f"Low-confidence OCR pages: {result['low_confidence_pages']}")
     if result["failed_pages"]:
         print(f"Failed pages: {result['failed_pages']}")
-    print("\n--- First 500 characters of extracted text ---\n")
-    print(result["full_text"][:500])
+    print("\n--- First 1000 characters of extracted text ---\n")
+    print(result["full_text"][:1000])
