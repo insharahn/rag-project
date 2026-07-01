@@ -609,7 +609,7 @@ function renderMeta(doc) {
     const ocrHTML = '';
 
     const dupHTML = doc.is_duplicate
-        ? `<span class="mv warn">Similar to ${esc((doc.duplicate_of?.path||'').split(/[\\/]/).pop())} (${((doc.duplicate_of?.similarity||0)*100).toFixed(0)}% match)</span>`
+        ? `<span class="mv warn">Similar to <strong>${esc(doc.duplicate_of?.filename || doc.duplicate_of?.path?.split(/[\\/]/).pop() || '—')}</strong> (${((doc.duplicate_of?.similarity||0)*100).toFixed(0)}% match)</span>`
         : `<span class="mv good">Unique</span>`;
 
     document.getElementById('meta-panel').innerHTML = `
