@@ -152,7 +152,7 @@ def extract_pdf_text(path: str, ocr_dpi: int = 300, low_confidence_threshold: fl
       - low_confidence_pages: OCR'd pages below low_confidence_threshold
     """
     doc = fitz.open(path)
-
+    
     pages = [None] * len(doc)
     failed_pages = []
     ocr_targets = []  # (page_number, fitz.Page)
