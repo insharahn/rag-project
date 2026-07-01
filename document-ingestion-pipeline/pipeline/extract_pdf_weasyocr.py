@@ -117,14 +117,26 @@ def _ocr_with_tesseract(img: Image.Image) -> dict:
 def _ocr_with_easyocr(img: Image.Image) -> dict:
     reader = _get_easyocr_reader()
     img_array = np.array(img.convert("RGB"))
-    results = reader.readtext(img_array, detail=1)
+
+    # paragraph=True groups text boxes into reading-order paragraphs --
+    # critical for Urdu Nastaliq. Trade-off: paragraph mode returns
+    # (bbox, text) tuples only, no per-box confidence scores. We run a
+    # second pass without paragraph=True on the same image to get
+    # confidence scores for the overall quality signal, without using
+    # those results for the actual text content.
+    results = reader.readtext(img_array, detail=1, paragraph=True)
     if not results:
         return {"text": "", "confidence": 0.0}
-    lines = [text for (_, text, _) in results]
-    confidences = [conf for (_, _, conf) in results]
+
+    lines = [text for (_, text) in results]
+
+    # Confidence pass -- detail=1 without paragraph gives (bbox, text, conf)
+    conf_results = reader.readtext(img_array, detail=1, paragraph=False)
+    confidences = [conf for (_, _, conf) in conf_results] if conf_results else []
+
     return {
         "text": "\n".join(lines),
-        "confidence": round(sum(confidences) / len(confidences) * 100, 1),
+        "confidence": round(sum(confidences) / len(confidences) * 100, 1) if confidences else 0.0,
     }
 
 
