@@ -8,17 +8,11 @@ Metrics, per chunker:
     should vary more, since they prioritize respecting structure/meaning
     over hitting an exact size.
   - Boundary quality: fraction of chunks whose text ends at a real
-    sentence boundary (., !, ?), as a proxy for "respects structure."
-    Fixed-size is expected to score worst here -- it has no idea where
-    sentences end.
+    sentence boundary (., !, ?)
   - Semantic coherence: average cosine similarity between consecutive
     sentences *within* a chunk, versus average similarity *across* a
     chunk boundary (last sentence of one chunk vs. first of the next).
-    A chunker doing a good job should show a clear gap -- sentences
-    inside a chunk are more related to each other than to whatever
-    comes right after the cut. Computed on a subset of documents (not
-    the full corpus), since it requires re-embedding every sentence on
-    top of what semantic chunking already does, which adds real time.
+    A chunker doing a good job should show a clear gap
 """
 
 import csv
@@ -186,7 +180,6 @@ def run_benchmark():
         json.dump(summary, f, indent=2)
 
     _print_summary(summary)
-    _make_chart(summary)
 
     print(f"\nFull results: {RESULTS_DIR / 'per_document_results.csv'}")
     print(f"Summary: {RESULTS_DIR / 'summary.json'}")
@@ -210,36 +203,6 @@ def _print_summary(summary: dict):
     for label, key in rows:
         vals = [summary[name].get(key) for name in ("fixed", "recursive", "semantic")]
         print(f"{label:<30}" + "".join(f"{str(v):<14}" for v in vals))
-
-
-def _make_chart(summary: dict):
-    names = list(CHUNKERS.keys())
-    fig, axes = plt.subplots(2, 2, figsize=(11, 8))
-
-    axes[0, 0].bar(names, [summary[n]["avg_time_per_doc_seconds"] for n in names])
-    axes[0, 0].set_title("Avg time per document (s)")
-
-    axes[0, 1].bar(names, [summary[n]["avg_chunk_tokens"] for n in names])
-    axes[0, 1].set_title("Avg chunk size (tokens)")
-
-    axes[1, 0].bar(names, [summary[n]["avg_boundary_quality"] for n in names])
-    axes[1, 0].set_title("Boundary quality (fraction ending at sentence end)")
-    axes[1, 0].set_ylim(0, 1)
-
-    intra = [summary[n]["avg_intra_chunk_similarity"] or 0 for n in names]
-    cross = [summary[n]["avg_boundary_similarity"] or 0 for n in names]
-    x = np.arange(len(names))
-    width = 0.35
-    axes[1, 1].bar(x - width/2, intra, width, label="intra-chunk")
-    axes[1, 1].bar(x + width/2, cross, width, label="cross-boundary")
-    axes[1, 1].set_xticks(x)
-    axes[1, 1].set_xticklabels(names)
-    axes[1, 1].set_title("Semantic coherence")
-    axes[1, 1].legend()
-
-    plt.tight_layout()
-    plt.savefig(RESULTS_DIR / "comparison_chart.png", dpi=150)
-    plt.close()
 
 
 if __name__ == "__main__":

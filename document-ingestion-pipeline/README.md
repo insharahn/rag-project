@@ -1,1 +1,1 @@
-# document-integration-pipeline
+# document-ingestion-pipeline

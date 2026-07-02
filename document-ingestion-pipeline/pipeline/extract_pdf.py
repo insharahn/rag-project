@@ -67,8 +67,7 @@ def _detect_document_script(ocr_pages: list, sample_size: int = 3) -> str:
     """Sample up to `sample_size` OCR-needing pages, not just the first,
     and pool script counts across all of them before deciding. A single
     page -- especially the first one, which is often a cover/title page
-    with unrepresentative content -- can misroute an entire document;
-    one bad sample page already did exactly that.
+    with unrepresentative content -- can misroute an entire document.
     """
     combined_counts = {"urd": 0, "kor": 0, "eng": 0}
     for _, page in ocr_pages[:sample_size]:
@@ -157,7 +156,7 @@ def extract_pdf_text(path: str, ocr_dpi: int = 300, low_confidence_threshold: fl
     engine_used = "none"
 
     if ocr_targets:
-        # One cheap call decides the engine for the whole document.
+        # decide the engine for the whole document.
         script = _detect_document_script(ocr_targets)
         engine_used = "easyocr" if script == "urd" else "tesseract"
 
@@ -183,9 +182,7 @@ def extract_pdf_text(path: str, ocr_dpi: int = 300, low_confidence_threshold: fl
                         pages[pn] = ""
                         failed_pages.append({"page": pn, "error": str(e)})
         else:
-            # EasyOCR not run in a thread pool -- avoids re-introducing
-            # an unverified concurrency assumption right after the
-            # PyMuPDF threading lesson; sequential here is deliberate.
+            # EasyOCR not run in a thread pool to avoid concurrency issues
             for i, (pn, img) in enumerate(rendered, start=1):
                 print(f"  EasyOCR: page {pn} ({i}/{len(rendered)})...", flush=True)
                 try:

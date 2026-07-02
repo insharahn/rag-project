@@ -31,9 +31,7 @@ def ingest_document(path: str) -> dict:
     The top-level fields (path, file_type, full_text) are the same
     no matter what kind of document this was. Everything that's
     specific to that document type (page count, OCR pages, table
-    count, etc.) lives under extraction_info instead of being forced
-    into a one-size-fits-all schema — a PDF has pages, a DOCX doesn't,
-    and pretending otherwise just makes the dict confusing later.
+    count, etc.) lives under extraction_info instead.
     """
     file_type = detect_file_type(path)
 
