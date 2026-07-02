@@ -152,47 +152,68 @@ async def upload_document(files: List[UploadFile] = File(...)):
 
 @app.get("/documents")
 def list_documents():
-    """List all processed documents with their metadata.
-
-    Returns lightweight records -- filename, language, word count,
-    duplicate status -- without the full chunk data.
+    """List all processed documents from the master metadata file.
+    Auto-removes any entry whose per-document JSON no longer exists on disk.
     """
     PROCESSED_DIR.mkdir(exist_ok=True)
-    records = []
-    for json_file in sorted(PROCESSED_DIR.glob("*.json")):
-        try:
-            data = json.loads(json_file.read_text(encoding="utf-8"))
-            records.append({
-                "filename": data.get("filename"),
-                "file_type": data.get("file_type"),
-                "title": data.get("title"),
-                "primary_language": data.get("primary_language"),
-                "languages": data.get("languages"),
-                "word_count": data.get("word_count"),
-                "is_duplicate": data.get("is_duplicate"),
-                "duplicate_of": data.get("duplicate_of"),
-            })
-        except Exception:
-            continue
-    return {"total": len(records), "documents": records}
+    metadata_path = PROCESSED_DIR / "metadata.json"
+
+    if not metadata_path.exists():
+        return {"total": 0, "documents": []}
+
+    try:
+        master = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"total": 0, "documents": []}
+
+    # Sync: prune entries where the per-doc JSON was deleted from disk
+    stale = [
+        fname for fname in master
+        if not (PROCESSED_DIR / f"{Path(fname).stem}.json").exists()
+    ]
+    if stale:
+        for fname in stale:
+            del master[fname]
+        metadata_path.write_text(
+            json.dumps(master, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+
+    return {"total": len(master), "documents": list(master.values())}
 
 
 @app.get("/documents/{filename}")
 def get_document(filename: str):
-    """Retrieve the full pipeline results for a processed document.
-
-    {filename} should be the original filename without extension,
-    e.g. /documents/my_report for my_report.pdf.
-    Includes full chunk text for all three strategies.
+    """Retrieve full results for a processed document.
+    Combines metadata (from metadata.json), chunks (from <filename>.json),
+    and full text (from <filename>.txt).
     """
-    json_path = PROCESSED_DIR / f"{filename}.json"
-    if not json_path.exists():
+    doc_json = PROCESSED_DIR / f"{filename}.json"
+    doc_txt  = PROCESSED_DIR / f"{filename}.txt"
+
+    if not doc_json.exists():
         raise HTTPException(
             status_code=404,
-            detail=f"No processed document found for '{filename}'. "
-                   f"Upload it first via POST /upload.",
+            detail=f"No processed document found for '{filename}'. Upload it first via POST /upload.",
         )
+
     try:
-        return json.loads(json_path.read_text(encoding="utf-8"))
+        chunks_data = json.loads(doc_json.read_text(encoding="utf-8"))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read results: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to read chunks: {e}")
+
+    full_text = doc_txt.read_text(encoding="utf-8") if doc_txt.exists() else ""
+
+    # Find metadata by stem match in the master file
+    meta = {}
+    metadata_path = PROCESSED_DIR / "metadata.json"
+    if metadata_path.exists():
+        try:
+            master = json.loads(metadata_path.read_text(encoding="utf-8"))
+            for fname, m in master.items():
+                if Path(fname).stem == filename:
+                    meta = m
+                    break
+        except Exception:
+            pass
+
+    return {**meta, "full_text": full_text, **chunks_data}

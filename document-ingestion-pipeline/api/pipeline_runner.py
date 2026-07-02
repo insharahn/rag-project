@@ -99,11 +99,8 @@ def run_pipeline(file_path: str, original_filename: str | None = None, strategy_
     strategy = strategy_override or select_strategy(primary_language)
     chunker_fn = CHUNKERS[strategy]
 
-    # --- Dedup: compare text directly against stored documents ---
-    # We use text rather than file paths because the temp file path
-    # used during upload doesn't match what's stored in the JSON records
-    # (and those stored paths no longer exist on disk anyway). Comparing
-    # text directly is more reliable and avoids a second extraction pass.
+    # --- Dedup: read existing text from TXT files, using metadata.json
+    # as the source of truth for what documents actually exist ---
     from pipeline.dedup import exact_hash
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity as sk_cosine
@@ -112,28 +109,31 @@ def run_pipeline(file_path: str, original_filename: str | None = None, strategy_
     is_duplicate = False
     duplicate_of = None
 
-    existing_texts = {}  # filename -> cleaned text
+    existing_texts = {}
+    metadata_path = PROCESSED_DIR / "metadata.json"
     PROCESSED_DIR.mkdir(exist_ok=True)
-    for json_file in PROCESSED_DIR.glob("*.json"):
+
+    if metadata_path.exists():
         try:
-            stored = json.loads(json_file.read_text(encoding="utf-8"))
-            stored_text = stored.get("full_text") or ""
-            if stored_text:
-                existing_texts[stored.get("filename", json_file.stem)] = stored_text
+            master = json.loads(metadata_path.read_text(encoding="utf-8"))
+            for display_fname, _meta in master.items():
+                stem = Path(display_fname).stem
+                txt_path = PROCESSED_DIR / f"{stem}.txt"
+                if txt_path.exists():
+                    text = txt_path.read_text(encoding="utf-8")
+                    if text:
+                        existing_texts[display_fname] = text
         except Exception:
-            continue
+            pass
 
     if cleaned and existing_texts:
         incoming_hash = exact_hash(cleaned)
-
-        # Exact match check
         for fname, stored_text in existing_texts.items():
             if exact_hash(stored_text) == incoming_hash:
                 is_duplicate = True
                 duplicate_of = {"filename": fname, "similarity": 1.0}
                 break
 
-        # Near-duplicate check via TF-IDF if no exact match
         if not is_duplicate and len(existing_texts) >= 1:
             try:
                 names = list(existing_texts.keys())
@@ -166,10 +166,27 @@ def run_pipeline(file_path: str, original_filename: str | None = None, strategy_
             chunks_result = {"strategy": strategy, "error": str(e)}
     else:
         chunks_result = {"strategy": strategy, "num_chunks": 0, "chunks": []}
+    
+    # --- Persist ---
+    PROCESSED_DIR.mkdir(exist_ok=True)
 
-    # --- Assemble result ---
-    result = {
-        "path": str(file_path_obj),
+    # Per-document JSON: chunks only (no metadata — that lives in metadata.json)
+    (PROCESSED_DIR / f"{display_stem}.json").write_text(
+        json.dumps({
+            "chunking_strategy_used": strategy,
+            "chunks": chunks_result,
+        }, indent=2, ensure_ascii=False),
+        encoding="utf-8"
+    )
+
+    # Per-document TXT: cleaned readable text
+    (PROCESSED_DIR / f"{display_stem}.txt").write_text(
+        cleaned or "", encoding="utf-8"
+    )
+
+    # Master metadata file: one entry per document, updated on every upload.
+    # This is the single source of truth for what's been processed.
+    meta_entry = {
         "filename": display_name,
         "file_type": ingest_result["file_type"],
         "title": metadata.get("title"),
@@ -184,17 +201,20 @@ def run_pipeline(file_path: str, original_filename: str | None = None, strategy_
         "extraction_info": ingest_result["extraction_info"],
         "is_duplicate": is_duplicate,
         "duplicate_of": duplicate_of,
-        "full_text": cleaned,
-        "chunks": chunks_result,
     }
 
-    # --- Persist ---
-    PROCESSED_DIR.mkdir(exist_ok=True)
-    (PROCESSED_DIR / f"{display_stem}.json").write_text(
-        json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    (PROCESSED_DIR / f"{display_stem}.txt").write_text(
-        cleaned or "", encoding="utf-8"
+    try:
+        master = json.loads(metadata_path.read_text(encoding="utf-8")) if metadata_path.exists() else {}
+    except Exception:
+        master = {}
+
+    master[display_name] = meta_entry
+    metadata_path.write_text(
+        json.dumps(master, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
+    # --- Assemble result ---
+    # result returned to the API (full_text included for dedup on next upload;
+    # not written to any file)
+    result = {**meta_entry, "full_text": cleaned, "chunks": chunks_result}
     return result
