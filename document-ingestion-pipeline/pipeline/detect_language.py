@@ -16,6 +16,9 @@ MIN_TEXT_LENGTH = 50
 # than a real second language actually present in the document.
 DEFAULT_THRESHOLD = 0.10
 
+#the languages this system will support; eventually, queries outside these will be rejected
+SUPPORTED_LANGUAGES = {"en", "ur", "ar", "fr", "ko"}
+
 
 def detect_languages(text: str, threshold: float = DEFAULT_THRESHOLD) -> list[dict]:
     """Return [{"language": code, "probability": float}, ...], sorted by
@@ -34,7 +37,6 @@ def detect_languages(text: str, threshold: float = DEFAULT_THRESHOLD) -> list[di
         if r.prob >= threshold
     ]
 
-
 def detect_language(text: str) -> str | None:
     """Single-language convenience wrapper: just the most likely code,
     or None. Kept for callers (like metadata.py) that want one answer
@@ -43,6 +45,16 @@ def detect_language(text: str) -> str | None:
     languages = detect_languages(text, threshold=0.0)
     return languages[0]["language"] if languages else None
 
+
+def is_supported(languages: list[dict]) -> bool:
+    """Return True if the document's primary language is in the supported
+    set. Used as a metadata flag, not as a hard rejection gate — the
+    pipeline ingests all documents regardless; enforcement is handled
+    downstream.
+    """
+    if not languages:
+        return False
+    return languages[0]["language"] in SUPPORTED_LANGUAGES
 
 if __name__ == "__main__":
     import sys

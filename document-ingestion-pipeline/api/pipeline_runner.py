@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pipeline.ingest import ingest_document
 from pipeline.clean import clean_text
-from pipeline.detect_language import detect_languages
+from pipeline.detect_language import detect_languages, is_supported
 from pipeline.metadata import extract_metadata
 from pipeline.dedup import find_duplicates
 
@@ -197,6 +197,7 @@ def run_pipeline(file_path: str, original_filename: str | None = None, strategy_
         "word_count": len(cleaned.split()),
         "languages": languages,
         "primary_language": primary_language,
+        "is_supported_language": is_supported(languages),
         "chunking_strategy_used": strategy,
         "extraction_info": ingest_result["extraction_info"],
         "is_duplicate": is_duplicate,
