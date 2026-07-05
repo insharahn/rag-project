@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent      # scripts/ -> project root
+ROOT = Path(__file__).resolve().parent.parent    # src/ -> root
 PROCESSED = ROOT / "data" / "processed_documents"
 
 def load_corpus():
