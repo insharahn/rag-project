@@ -1,0 +1,292 @@
+{
+  "model_axis": {
+    "bge-large": {
+      "overall": {
+        "n": 45,
+        "mrr": 0.3644,
+        "recall@1": 0.2889,
+        "precision@1": 0.2889,
+        "recall@3": 0.4222,
+        "precision@3": 0.1407,
+        "recall@5": 0.4667,
+        "precision@5": 0.0933,
+        "recall@10": 0.5111,
+        "precision@10": 0.0511
+      },
+      "en": {
+        "n": 22,
+        "mrr": 0.6015,
+        "recall@1": 0.5,
+        "precision@1": 0.5,
+        "recall@3": 0.6818,
+        "precision@3": 0.2273,
+        "recall@5": 0.7727,
+        "precision@5": 0.1545,
+        "recall@10": 0.8182,
+        "precision@10": 0.0818
+      },
+      "ko": {
+        "n": 12,
+        "mrr": 0.125,
+        "recall@1": 0.0833,
+        "precision@1": 0.0833,
+        "recall@3": 0.1667,
+        "precision@3": 0.0556,
+        "recall@5": 0.1667,
+        "precision@5": 0.0333,
+        "recall@10": 0.1667,
+        "precision@10": 0.0167
+      },
+      "ur": {
+        "n": 11,
+        "mrr": 0.1515,
+        "recall@1": 0.0909,
+        "precision@1": 0.0909,
+        "recall@3": 0.1818,
+        "precision@3": 0.0606,
+        "recall@5": 0.1818,
+        "precision@5": 0.0364,
+        "recall@10": 0.2727,
+        "precision@10": 0.0273
+      }
+    },
+    "bge-m3": {
+      "overall": {
+        "n": 45,
+        "mrr": 0.6608,
+        "recall@1": 0.5556,
+        "precision@1": 0.5556,
+        "recall@3": 0.7333,
+        "precision@3": 0.2444,
+        "recall@5": 0.8222,
+        "precision@5": 0.1644,
+        "recall@10": 0.8667,
+        "precision@10": 0.0867
+      },
+      "en": {
+        "n": 22,
+        "mrr": 0.6141,
+        "recall@1": 0.5455,
+        "precision@1": 0.5455,
+        "recall@3": 0.6364,
+        "precision@3": 0.2121,
+        "recall@5": 0.7727,
+        "precision@5": 0.1545,
+        "recall@10": 0.8182,
+        "precision@10": 0.0818
+      },
+      "ko": {
+        "n": 12,
+        "mrr": 0.623,
+        "recall@1": 0.4167,
+        "precision@1": 0.4167,
+        "recall@3": 0.8333,
+        "precision@3": 0.2778,
+        "recall@5": 0.8333,
+        "precision@5": 0.1667,
+        "recall@10": 0.9167,
+        "precision@10": 0.0917
+      },
+      "ur": {
+        "n": 11,
+        "mrr": 0.7955,
+        "recall@1": 0.7273,
+        "precision@1": 0.7273,
+        "recall@3": 0.8182,
+        "precision@3": 0.2727,
+        "recall@5": 0.9091,
+        "precision@5": 0.1818,
+        "recall@10": 0.9091,
+        "precision@10": 0.0909
+      }
+    },
+    "e5-large": {
+      "overall": {
+        "n": 45,
+        "mrr": 0.4023,
+        "recall@1": 0.3333,
+        "precision@1": 0.3333,
+        "recall@3": 0.4444,
+        "precision@3": 0.1481,
+        "recall@5": 0.5111,
+        "precision@5": 0.1022,
+        "recall@10": 0.5556,
+        "precision@10": 0.0556
+      },
+      "en": {
+        "n": 22,
+        "mrr": 0.689,
+        "recall@1": 0.5909,
+        "precision@1": 0.5909,
+        "recall@3": 0.7727,
+        "precision@3": 0.2576,
+        "recall@5": 0.8182,
+        "precision@5": 0.1636,
+        "recall@10": 0.8636,
+        "precision@10": 0.0864
+      },
+      "ko": {
+        "n": 12,
+        "mrr": 0.1319,
+        "recall@1": 0.0833,
+        "precision@1": 0.0833,
+        "recall@3": 0.1667,
+        "precision@3": 0.0556,
+        "recall@5": 0.25,
+        "precision@5": 0.05,
+        "recall@10": 0.25,
+        "precision@10": 0.025
+      },
+      "ur": {
+        "n": 11,
+        "mrr": 0.1237,
+        "recall@1": 0.0909,
+        "precision@1": 0.0909,
+        "recall@3": 0.0909,
+        "precision@3": 0.0303,
+        "recall@5": 0.1818,
+        "precision@5": 0.0364,
+        "recall@10": 0.2727,
+        "precision@10": 0.0273
+      }
+    },
+    "multilingual-e5-large": {
+      "overall": {
+        "n": 45,
+        "mrr": 0.6549,
+        "recall@1": 0.5333,
+        "precision@1": 0.5333,
+        "recall@3": 0.7333,
+        "precision@3": 0.2444,
+        "recall@5": 0.8222,
+        "precision@5": 0.1644,
+        "recall@10": 0.8667,
+        "precision@10": 0.0867
+      },
+      "en": {
+        "n": 22,
+        "mrr": 0.7225,
+        "recall@1": 0.6364,
+        "precision@1": 0.6364,
+        "recall@3": 0.7727,
+        "precision@3": 0.2576,
+        "recall@5": 0.8636,
+        "precision@5": 0.1727,
+        "recall@10": 0.9091,
+        "precision@10": 0.0909
+      },
+      "ko": {
+        "n": 12,
+        "mrr": 0.6,
+        "recall@1": 0.3333,
+        "precision@1": 0.3333,
+        "recall@3": 0.8333,
+        "precision@3": 0.2778,
+        "recall@5": 0.9167,
+        "precision@5": 0.1833,
+        "recall@10": 0.9167,
+        "precision@10": 0.0917
+      },
+      "ur": {
+        "n": 11,
+        "mrr": 0.5795,
+        "recall@1": 0.5455,
+        "precision@1": 0.5455,
+        "recall@3": 0.5455,
+        "precision@3": 0.1818,
+        "recall@5": 0.6364,
+        "precision@5": 0.1273,
+        "recall@10": 0.7273,
+        "precision@10": 0.0727
+      }
+    },
+    "instructor-xl": {
+      "overall": {
+        "n": 45,
+        "mrr": 0.243,
+        "recall@1": 0.1556,
+        "precision@1": 0.1556,
+        "recall@3": 0.3111,
+        "precision@3": 0.1037,
+        "recall@5": 0.3556,
+        "precision@5": 0.0711,
+        "recall@10": 0.4222,
+        "precision@10": 0.0422
+      },
+      "en": {
+        "n": 22,
+        "mrr": 0.4913,
+        "recall@1": 0.3182,
+        "precision@1": 0.3182,
+        "recall@3": 0.6364,
+        "precision@3": 0.2121,
+        "recall@5": 0.7273,
+        "precision@5": 0.1455,
+        "recall@10": 0.8182,
+        "precision@10": 0.0818
+      },
+      "ko": {
+        "n": 12,
+        "mrr": 0.0,
+        "recall@1": 0.0,
+        "precision@1": 0.0,
+        "recall@3": 0.0,
+        "precision@3": 0.0,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "ur": {
+        "n": 11,
+        "mrr": 0.0114,
+        "recall@1": 0.0,
+        "precision@1": 0.0,
+        "recall@3": 0.0,
+        "precision@3": 0.0,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0909,
+        "precision@10": 0.0091
+      }
+    }
+  },
+  "db_axis": {
+    "faiss": {
+      "p50_ms": 5.514,
+      "p95_ms": 7.291,
+      "p99_ms": 9.003,
+      "build_seconds": 0.0275,
+      "index_memory_mb": 42.8,
+      "recall_vs_faiss": 1.0
+    },
+    "chroma": {
+      "p50_ms": 1.163,
+      "p95_ms": 1.704,
+      "p99_ms": 2.175,
+      "build_seconds": 4.7793,
+      "index_memory_mb": 58.3,
+      "recall_vs_faiss": 0.9889
+    },
+    "milvus": {
+      "p50_ms": 3.607,
+      "p95_ms": 6.003,
+      "p99_ms": 7.93,
+      "build_seconds": 3.3915,
+      "index_memory_mb": null,
+      "recall_vs_faiss": 0.8267
+    }
+  },
+  "_meta": {
+    "model_axis_search": "faiss",
+    "db_axis_model": "bge-m3",
+    "k": 10,
+    "languages": [
+      "en",
+      "ko",
+      "ur"
+    ],
+    "caveat_precision": "1 relevant chunk/query, so precision@k = recall@k / k.",
+    "caveat_korean": "Korean queries are held-out sentences (near-exact substrings); compare models WITHIN Korean, not Korean vs English absolute scores."
+  }
+}
