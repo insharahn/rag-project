@@ -1,0 +1,9 @@
+torch
+numpy
+sentence-transformers 
+faiss-cpu 
+chromadb 
+pymilvus 
+milvus-lite 
+openai 
+python-dotenv
