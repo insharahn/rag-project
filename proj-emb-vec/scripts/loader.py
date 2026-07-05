@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 
-PROCESSED = Path("data/processed_documents")
+ROOT = Path(__file__).resolve().parent.parent      # scripts/ -> project root
+PROCESSED = ROOT / "data" / "processed_documents"
 
 def load_corpus():
     """Read all non-duplicate chunks from project 1's output.
