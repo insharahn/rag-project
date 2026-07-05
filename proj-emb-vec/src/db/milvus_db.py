@@ -15,7 +15,6 @@ class MilvusDB(VectorDB):
         self.dim = vectors.shape[1]
         self.client = MilvusClient(uri="http://localhost:19530") #docker server
 
-
         if self.client.has_collection("bench"):
             self.client.drop_collection("bench")
 

@@ -4,6 +4,8 @@ sentence-transformers
 faiss-cpu 
 chromadb 
 pymilvus 
-milvus-lite 
-openai 
-python-dotenv
+
+
+# Instructor-XL runs only in Colab (notebooks/02_embed_instructor_xl.ipynb)
+# with a pinned stack: sentence-transformers==2.2.2 + InstructorEmbedding.
+# Deliberately not installed locally.
