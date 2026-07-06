@@ -233,4 +233,7 @@ benchmark/results/
 per_document_results_BEFORESEMANTICCHUNKINGFIOX.csv
 per_document_results_beforeurduarabicfix.csv
 processed_documents/
+processed_documents_semantic/
+processed_documents_recursive/
+processed_documents_fixed/
 ocred/
