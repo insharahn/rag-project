@@ -15,6 +15,7 @@ Docker must be up for Milvus:
 import json, time
 from pathlib import Path
 import numpy as np
+import gc
 
 try:
     import psutil
@@ -38,6 +39,19 @@ RES  = ROOT / "results"; RES.mkdir(exist_ok=True)
 
 MODELS = ["bge-large", "bge-m3", "e5-large", "multilingual-e5-large", "instructor-xl"]
 DBS    = {"faiss": FaissDB, "chroma": ChromaDB, "milvus": MilvusDB}
+
+def warmup_milvus():
+    """Cold-start Milvus once so the first real run isn't hit by etcd timeouts / lazy init."""
+    try:
+        import numpy as np
+        db = MilvusDB()
+        dummy = np.random.rand(10, 8).astype(np.float32)
+        db.build(dummy, [f"w{i}" for i in range(10)])
+        db.search(dummy[0], 3)
+        db.teardown()
+        print("[warmup] milvus ready")
+    except Exception as e:
+        print(f"[warmup] milvus warmup skipped: {e}")
 
 K          = 10   # retrieve top-10 -> lets us compute recall@1/3/5/10 + MRR
 WARMUP     = 5    # warmup searches discarded before timing
@@ -71,6 +85,7 @@ def rank_of(answer_id, retrieved_ids):
 
 
 def run():
+    warmup_milvus()
     runs = []
     for model in MODELS:
         print(f"\n########## {model} ##########")
@@ -82,15 +97,23 @@ def run():
             print(f"  -- {db_name} --", flush=True)
             db = DBClass()
 
-            # ---- build (timed + memory) ----
-            m0 = rss_mb()
-            t0 = time.perf_counter()
-            db.build(corpus_vecs, corpus_ids)      # adjust call if your signature differs
-            build_s = time.perf_counter() - t0
-            m1 = rss_mb()
-            # RSS delta is only meaningful for in-process DBs (faiss, chroma).
-            # Milvus runs in Docker -> its memory isn't in this process. Flag it.
-            mem_mb = (m1 - m0) if (m0 is not None and db_name != "milvus") else None
+            # ---- build (median of N, de-noises Docker/OS) ----
+            BUILD_REPS = 2 if db_name == "milvus" else 5
+            build_times = []
+            mem_mb = None
+            for rep in range(BUILD_REPS):
+                import gc; gc.collect()
+                m0 = rss_mb()
+                t0 = time.perf_counter()
+                db.build(corpus_vecs, corpus_ids)
+                build_times.append(time.perf_counter() - t0)
+                m1 = rss_mb()
+                if rep == 0:  # measure memory on first build only (later builds may hit warm caches)
+                    mem_mb = (m1 - m0) if (m0 is not None and db_name != "milvus") else None
+                if rep < BUILD_REPS - 1:
+                    db.teardown()          # tear down between rebuilds
+                    db = DBClass()         # fresh instance for next build
+            build_s = float(np.median(build_times))
 
             # ---- warmup ----
             for i in range(min(WARMUP, len(qvecs))):

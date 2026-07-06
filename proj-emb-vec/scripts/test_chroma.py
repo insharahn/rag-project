@@ -1,3 +1,4 @@
+#scripts/test_chroma.py
 import numpy as np
 from emb_store import load_embeddings
 from loader import load_corpus

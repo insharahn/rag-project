@@ -1,3 +1,4 @@
+#src/db/faiss_db.py
 import faiss
 import numpy as np
 from db.base import VectorDB

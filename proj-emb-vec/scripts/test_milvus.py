@@ -1,3 +1,4 @@
+#scripts/test_milvus.py
 import numpy as np
 from emb_store import load_embeddings
 from loader import load_corpus
@@ -16,7 +17,7 @@ f = faiss_db.search(query, k=5)
 m = milvus_db.search(query, k=5)
 
 print(f"QUERY: {ids[probe]}\n")
-print("FAISS (exact)          | MILVUS (approx)")
+print("FAISS (exact)          | MILVUS (exact)")
 for (fid, fs), (mid, ms) in zip(f, m):
     print(f"{fs:.4f} {fid[:32]:<34}| {ms:.4f} {mid[:32]}")
 
