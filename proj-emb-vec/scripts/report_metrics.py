@@ -55,6 +55,23 @@ def db_recall_vs_faiss(model):
         out[db] = round(float(np.mean(overlaps)), 4)
     return out
 
+def crosscut_recall():
+    """Real per-(model, db) recall@1/5/10 — not copied from the model-axis overall,
+    actually computed per database. Confirms (or disproves) that quality is
+    DB-independent when using exact indexes."""
+    out = {}
+    for model in raw["config"]["models"]:
+        out[model] = {}
+        for db in raw["config"]["dbs"]:
+            q = quality(runs[(model, db)]["per_query"])["overall"]
+            out[model][db] = {
+                "recall@1": q["recall@1"],
+                "recall@5": q["recall@5"],
+                "recall@10": q["recall@10"],
+                "mrr": q["mrr"],
+            }
+    return out
+
 
 metrics = {"model_axis": {}, "db_axis": {}}
 
@@ -87,6 +104,7 @@ for db in raw["config"]["dbs"]:
         "build_seconds": r["build_seconds"],
         "index_memory_mb": r["index_memory_mb"],
         "recall_vs_faiss": recall_vs_faiss[db],
+        "search_latencies_ms": r["search_latencies_ms"],
     }
     metrics["db_axis"][db] = row
     mem = f"{row['index_memory_mb']:.0f}" if row["index_memory_mb"] else "n/a"
@@ -94,6 +112,19 @@ for db in raw["config"]["dbs"]:
           f"{row['build_seconds']:>9.2f}{mem:>9}{row['recall_vs_faiss']:>17.3f}")
 
 print(f"\n  note: {raw['config']['note_milvus']}")
+
+# ---------- CROSS-CUT (model x db) ----------
+print(f"\n\n=== CROSS-CUT: recall@1 by model x db ===")
+crosscut = crosscut_recall()
+metrics["crosscut"] = crosscut
+
+header = f"{'model':<24}" + "".join(f"{db:>10}" for db in raw["config"]["dbs"])
+print(header)
+for model in raw["config"]["models"]:
+    row = f"{model:<24}"
+    for db in raw["config"]["dbs"]:
+        row += f"{crosscut[model][db]['recall@1']:>10.3f}"
+    print(row)
 
 metrics["_meta"] = {
     "model_axis_search": MODEL_AXIS_DB, "db_axis_model": DB_AXIS_MODEL,

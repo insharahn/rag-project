@@ -6,3 +6,8 @@ chromadb
 pymilvus 
 # Instructor-XL runs in Colab (notebooks/02_embed_instructor_xl.ipynb)
 # with a pinned stack: sentence-transformers==2.2.2 + InstructorEmbedding.
+
+#dashboard
+streamlit
+plotly
+pandas
