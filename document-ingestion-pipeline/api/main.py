@@ -70,7 +70,7 @@ async def upload_document(files: List[UploadFile] = File(...)):
     # and use recursive for all documents -- semantic chunking at 18s/doc
     # makes large batches impractical (20 docs = ~6 mins). Recursive is
     # the benchmark-recommended strategy for high-throughput scenarios.
-    BATCH_STRATEGY_OVERRIDE_THRESHOLD = 10
+    BATCH_STRATEGY_OVERRIDE_THRESHOLD = 100
     batch_strategy_override = "recursive" if len(files) >= BATCH_STRATEGY_OVERRIDE_THRESHOLD else None
 
     for file in files:

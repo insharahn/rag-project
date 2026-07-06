@@ -42,9 +42,12 @@ def select_strategy(primary_language: str | None) -> str:
     """Return the recommended chunking strategy for a detected language.
     Falls back to recursive for unknown or None languages.
     """
+    """
     if not primary_language:
         return DEFAULT_STRATEGY
     return LANGUAGE_STRATEGY_MAP.get(primary_language, DEFAULT_STRATEGY)
+    """
+    return "semantic" #for now, return all semantic for the best chunking
 
 
 def _load_existing_paths() -> list[str]:
