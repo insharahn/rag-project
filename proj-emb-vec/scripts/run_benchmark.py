@@ -1,13 +1,6 @@
 """
 scripts/run_benchmark.py
 
-Runs the full grid: every embedding model x every vector DB.
-For each (model, db): build the index, run all 45 eval queries, capture the
-top-K retrieved chunk_ids + per-query search latency + build time + memory.
-
-Writes one raw file: results/benchmark_raw.json
-Everything (model-quality metrics, DB latency/recall) derives from it later.
-
 Docker must be up for Milvus:
     docker compose up -d
     python scripts/run_benchmark.py

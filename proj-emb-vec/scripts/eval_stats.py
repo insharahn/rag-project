@@ -1,4 +1,5 @@
 # scripts/eval_stats.py
+# compute and print some basic stats about the eval queries
 import json
 from collections import Counter
 from pathlib import Path

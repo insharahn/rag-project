@@ -1,4 +1,8 @@
-# scripts/verify_eval.py
+'''
+scripts/verify_eval.py
+    verify that the eval_queries.json file is consistent with the corpus: 
+    every answer_chunk_id must exist in the corpus, and the text of that chunk should actually answer the question.
+'''
 import json
 from pathlib import Path
 from loader import load_corpus

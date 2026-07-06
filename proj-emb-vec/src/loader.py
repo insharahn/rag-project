@@ -1,8 +1,13 @@
 import json
 from pathlib import Path
 
+#if data/ is a directory, then ROOT = data/processed_documents
+#ROOT = Path(__file__).resolve().parent.parent    # src/ -> root
+#PROCESSED = ROOT / "data" / "processed_documents"
+
+#fetching docs from project 1's ingestion pipeline output
 ROOT = Path(__file__).resolve().parent.parent    # src/ -> root
-PROCESSED = ROOT / "data" / "processed_documents"
+PROCESSED = ROOT.parent / "document-ingestion-pipeline" / "processed_documents"
 
 def load_corpus():
     """Read all non-duplicate chunks from project 1's output.

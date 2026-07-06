@@ -1,4 +1,5 @@
 #scripts/test_faiss.py
+#tests the FaissDB implementation, using the same embeddings and queries as the other DBs.
 import numpy as np
 from emb_store import load_embeddings
 from loader import load_corpus

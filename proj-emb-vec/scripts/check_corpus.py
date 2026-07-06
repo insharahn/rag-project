@@ -1,3 +1,8 @@
+"""
+scripts/check_corpus.py
+check the corpus for obvious problems: empty chunks, duplicate chunk_ids, missing source docs, and garbled text (low alpha-ratio).
+"""
+
 from collections import Counter, defaultdict
 from loader import load_corpus
 

@@ -1,3 +1,7 @@
+"""scripts/check_embeddings.py
+Check the embeddings for obvious problems: missing .npy or .meta.json files, shape mismatch, etc.
+"""
+
 import numpy as np, json
 from pathlib import Path
 from loader import load_corpus
