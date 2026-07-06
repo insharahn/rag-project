@@ -227,4 +227,3 @@ volumes/
 milvus_bench.db/
 *.db/
 *.db
-docs/
