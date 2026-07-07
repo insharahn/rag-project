@@ -5,6 +5,9 @@
     "n_queries": 45,
     "latency_reps": 20,
     "models": [
+      "bge-large",
+      "bge-m3",
+      "e5-large",
       "multilingual-e5-large",
       "instructor-xl"
     ],

@@ -27,8 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DBS  = {"faiss": FaissDB, "chroma": ChromaDB, "milvus": MilvusDB}
 
 
-MODELS = ["multilingual-e5-large", "instructor-xl"] 
-#MODELS = ["bge-large", "bge-m3", "e5-large", "multilingual-e5-large", "instructor-xl"] #change if continuing after a crash (check completed)
+MODELS = ["bge-large", "bge-m3", "e5-large", "multilingual-e5-large", "instructor-xl"] 
 K        = 10
 WARMUP   = 5
 LAT_REPS = 20
