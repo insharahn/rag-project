@@ -1,17 +1,23 @@
 import json
 from pathlib import Path
 
-#if data/ is a directory, then ROOT = data/processed_documents
-#ROOT = Path(__file__).resolve().parent.parent    # src/ -> root
-#PROCESSED = ROOT / "data" / "processed_documents"
+ROOT = Path(__file__).resolve().parent.parent
 
-#fetching docs from project 1's ingestion pipeline output
-ROOT = Path(__file__).resolve().parent.parent    # src/ -> root
-PROCESSED = ROOT.parent / "document-ingestion-pipeline" / "processed_documents"
-
-def load_corpus():
+def load_corpus(strategy="semantic"):
     """Read all non-duplicate chunks from project 1's output.
+    strategy: "semantic", "fixed", or "recursive"
     Returns a flat list of chunk dicts."""
+    
+    # Map strategy to folder name
+    folder_map = {
+        "semantic": "processed_documents",
+        "fixed": "processed_documents_fixed",
+        "recursive": "processed_documents_recursive"
+    }
+    
+    folder_name = folder_map.get(strategy, "processed_documents")
+    PROCESSED = ROOT.parent / "document-ingestion-pipeline" / folder_name
+    
     master = json.loads((PROCESSED / "metadata.json").read_text(encoding="utf-8"))
     corpus, skipped_dupes, missing = [], 0, 0
 
@@ -38,5 +44,5 @@ def load_corpus():
                 "token_count": c.get("token_count"),
             })
 
-    print(f"[loader] {len(corpus)} chunks | {skipped_dupes} dupe docs skipped | {missing} missing json")
+    print(f"[loader] {len(corpus)} chunks | {skipped_dupes} dupe docs skipped | {missing} missing json | strategy: {strategy}")
     return corpus

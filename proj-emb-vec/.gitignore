@@ -222,6 +222,8 @@ data/
 notes.txt
 # Embeddings — large binary vectors, regenerate from Colab notebooks
 embeddings/*.npy
+embeddings_fixed/
+embeddings_recursive/
 # Milvus / Docker data volumes (not the compose file)
 volumes/
 milvus_bench.db/

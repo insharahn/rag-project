@@ -8,11 +8,12 @@ from pathlib import Path
 from loader import load_corpus
 
 ROOT = Path(__file__).resolve().parent.parent
-corpus = load_corpus()
+corpus = load_corpus("fixed") #change to "semantic" or "recursive" if you want to verify those instead
 text_by_id = {c["chunk_id"]: c["text"] for c in corpus}
 valid_ids = set(text_by_id)
 
-queries = json.loads((ROOT / "eval" / "eval_queries.json").read_text(encoding="utf-8"))["queries"]
+#change here too to match the loaded corpus
+queries = json.loads((ROOT / "eval_fixed" / "eval_queries.json").read_text(encoding="utf-8"))["queries"]
 
 missing, present = [], []
 for q in queries:
