@@ -35,9 +35,27 @@ app = FastAPI(
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".html", ".htm"}
 
 
-#ui
+#ui (week 1)
 from fastapi.staticfiles import StaticFiles
 app.mount("/ui", StaticFiles(directory="ui", html=True), name="ui")
+
+#week 2
+app.mount("/week2", StaticFiles(directory="ui_week2", html=True), name="week2")
+
+WEEK2_RESULTS = Path("../proj-emb-vec") 
+
+@app.get("/week2-data/{strategy}")
+def get_week2_metrics(strategy: str):
+    """Serve project 2's pre-computed metrics.json for a given chunking strategy."""
+    path_map = {
+        "semantic": WEEK2_RESULTS / "results" / "metrics.json",
+        "fixed": WEEK2_RESULTS / "results_fixed" / "metrics.json",
+        "recursive": WEEK2_RESULTS / "results_recursive" / "metrics.json",
+    }
+    p = path_map.get(strategy)
+    if not p or not p.exists():
+        raise HTTPException(404, f"No metrics found for strategy '{strategy}'")
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 @app.get("/")

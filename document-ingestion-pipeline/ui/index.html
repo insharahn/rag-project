@@ -36,6 +36,27 @@ body {
 }
 .topbar-title span { color: #7aaa8f; }
 
+.nav-links {
+    display: flex;
+    gap: 6px;
+    margin-left: 4px;
+}
+.nav-link {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #7a7268;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.nav-link:hover { background: #f0ede8; color: #2e2b27; }
+.nav-link.active {
+    background: #e8f5ee;
+    color: #3a8858;
+    font-weight: 600;
+}
+
 .upload-btn {
     background: #7aaa8f;
     color: #fff;
@@ -413,6 +434,10 @@ body {
 
 <div class="topbar">
     <div class="topbar-title">Document <span>Ingestion</span> Pipeline</div>
+    <div class="nav-links">
+        <a class="nav-link active" href="/ui">Week 1 · Ingestion</a>
+        <a class="nav-link" href="/week2">Week 2 · Benchmark</a>
+    </div>
     <button class="upload-btn" id="upload-btn" onclick="triggerUpload()">Upload</button>
     <input type="file" id="file-input" multiple accept=".pdf,.docx,.html,.htm">
     <span class="status" id="status">Ready</span>

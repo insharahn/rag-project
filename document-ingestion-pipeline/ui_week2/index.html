@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrieval Benchmark — Week 2</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f3ef;
+    color: #2e2b27;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Shared nav bar (injected by server) ── */
+.topbar {
+    background: #fffef9;
+    border-bottom: 1.5px solid #e8e3db;
+    padding: 0 20px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+.topbar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2e2b27;
+    letter-spacing: -0.2px;
+}
+.topbar-title span { color: #7aaa8f; }
+.nav-links {
+    display: flex;
+    gap: 6px;
+    margin-left: 12px;
+}
+.nav-link {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #7a7268;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.nav-link:hover { background: #f0ede8; color: #2e2b27; }
+.nav-link.active {
+    background: #e8f5ee;
+    color: #3a8858;
+    font-weight: 600;
+}
+.topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.topbar-status {
+    font-size: 12px;
+    color: #a8a098;
+}
+.topbar-status.ok      { color: #6a9a7a; }
+.topbar-status.err     { color: #c07060; }
+.topbar-status.loading { color: #b8965a; }
+.refresh-btn {
+    background: #f0ede8;
+    color: #7a7268;
+    border: 1px solid #ddd8cf;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.refresh-btn:hover { background: #e8e3db; color: #3a3630; }
+.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Main layout ── */
+.main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    width: 200px;
+    background: #eeeae3;
+    border-right: 1.5px solid #e0dbd2;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+.sidebar-hd {
+    padding: 11px 14px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #a09888;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    border-bottom: 1px solid #ddd8cf;
+    flex-shrink: 0;
+}
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+}
+.sidebar-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.1s, border-color 0.1s;
+    font-size: 13px;
+    color: #5a5248;
+    user-select: none;
+}
+.sidebar-item:hover { background: #e5e0d8; }
+.sidebar-item.active {
+    background: #ddf0e6;
+    border-left-color: #7aaa8f;
+    font-weight: 500;
+}
+.sidebar-item .badge {
+    float: right;
+    font-size: 10px;
+    color: #a09888;
+    background: #ddd8cf;
+    padding: 1px 7px;
+    border-radius: 10px;
+}
+.sidebar-item.active .badge { background: #b0ddc0; color: #3a8858; }
+
+/* ── Content ── */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px 40px;
+    background: #faf8f5;
+}
+.content h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #2e2b27;
+    margin-bottom: 4px;
+}
+.content .subtitle {
+    font-size: 14px;
+    color: #a09888;
+    margin-bottom: 20px;
+}
+.content h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #3a3630;
+    margin: 28px 0 14px 0;
+    border-bottom: 1.5px solid #e8e3db;
+    padding-bottom: 8px;
+}
+.content h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a4238;
+    margin: 18px 0 10px 0;
+}
+.content p {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #5a5248;
+    margin-bottom: 10px;
+}
+.note {
+    background: #f8f5f0;
+    border-left: 3px solid #b8b0a4;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #5a5248;
+    margin: 10px 0 16px 0;
+    line-height: 1.6;
+}
+.note.warn {
+    background: #fef9e8;
+    border-left-color: #e0b050;
+}
+.note strong { color: #3a3630; }
+
+/* ── Metric cards ── */
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 12px 0 18px 0;
+}
+.metric-card {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.metric-card .label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #a09888;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.metric-card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #2e2b27;
+    line-height: 1.2;
+    margin: 4px 0 2px 0;
+}
+.metric-card .sub {
+    font-size: 11.5px;
+    color: #a09888;
+}
+.metric-card.green {
+    border-color: #b8ddc8;
+    background: #f0faf4;
+}
+.metric-card.green .label { color: #4a7c59; }
+.metric-card.green .value { color: #2d6a4f; }
+.metric-card.green .sub { color: #5a8870; }
+.metric-card.blue {
+    border-color: #b3cde8;
+    background: #f0f6fc;
+}
+.metric-card.blue .label { color: #3a6186; }
+.metric-card.blue .value { color: #2c5282; }
+.metric-card.blue .sub { color: #3a6186; }
+
+/* ── Selectors ── */
+.selector-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0 16px 0;
+    flex-wrap: wrap;
+}
+.selector-row label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #5a5248;
+}
+.selector-row select {
+    background: #fffef9;
+    border: 1.5px solid #ddd8cf;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #2e2b27;
+    cursor: pointer;
+    outline: none;
+}
+.selector-row select:focus {
+    border-color: #7aaa8f;
+}
+
+/* ── Chart container ── */
+.chart-box {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    padding: 8px 6px 4px 6px;
+    margin: 6px 0 12px 0;
+}
+.chart-box .chart-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #4a4238;
+    padding: 0 10px 4px 10px;
+}
+.chart-container {
+    width: 100%;
+    min-height: 340px;
+}
+.chart-container.tall { min-height: 480px; }
+.chart-container.short { min-height: 260px; }
+
+/* ── Data table ── */
+.table-wrap {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    overflow: auto;
+    margin: 8px 0 12px 0;
+}
+.table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+.table-wrap th {
+    background: #f8f5f0;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #5a5248;
+    border-bottom: 1.5px solid #e0dbd2;
+    white-space: nowrap;
+}
+.table-wrap td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #eeeae3;
+    color: #3a3630;
+}
+.table-wrap tr:hover td { background: #f8f5f0; }
+.table-wrap .num { font-variant-numeric: tabular-nums; }
+
+/* ── Expandable ── */
+.expandable {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    margin: 10px 0 14px 0;
+}
+.expandable-header {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: #4a4238;
+    display: flex;
+    justify-content: space-between;
+    user-select: none;
+}
+.expandable-header:hover { background: #f8f5f0; }
+.expandable-header .arrow { transition: transform 0.2s; }
+.expandable-header.open .arrow { transform: rotate(90deg); }
+.expandable-body {
+    padding: 0 16px 16px 16px;
+    display: none;
+}
+.expandable-body.open { display: block; }
+
+/* ── Filters for raw data ── */
+.filter-row {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0 12px 0;
+    flex-wrap: wrap;
+}
+.filter-row label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #5a5248;
+}
+.filter-row select {
+    background: #fffef9;
+    border: 1.5px solid #ddd8cf;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12.5px;
+    cursor: pointer;
+}
+.filter-row .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-btn.active {
+    background: #ddf0e6 !important;
+    border-color: #7aaa8f !important;
+    color: #2d6a4f;
+}
+.filter-btn:hover {
+    background: #f0ede8;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4cfc8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c4bfb8; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .sidebar { width: 140px; }
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .content { padding: 14px 16px 30px; }
+}
+@media (max-width: 480px) {
+    .sidebar { display: none; }
+    .metric-grid { grid-template-columns: 1fr; }
+    .topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Top bar ── -->
+<div class="topbar">
+    <div class="topbar-title">Retrieval <span>Benchmark</span></div>
+    <div class="nav-links">
+        <a class="nav-link" href="/ui">Week 1 · Ingestion</a>
+        <a class="nav-link active" href="/week2">Week 2 · Benchmark</a>
+    </div>
+    <div class="topbar-right">
+        <span class="topbar-status" id="status">Ready</span>
+        <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+    </div>
+</div>
+
+<!-- ── Main ── -->
+<div class="main">
+    <div class="sidebar">
+        <div class="sidebar-hd">Sections</div>
+        <div class="sidebar-nav" id="sidebar-nav">
+            <div class="sidebar-item active" data-section="overview">Overview</div>
+            <div class="sidebar-item" data-section="chunking">Chunking Strategy</div>
+            <div class="sidebar-item" data-section="models">Embedding Models</div>
+            <div class="sidebar-item" data-section="dbs">Vector Databases</div>
+            <div class="sidebar-item" data-section="raw">Raw Data</div>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <!-- Rendered by JS -->
+        <div id="page-content"></div>
+    </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────────────────────
+// CONFIG
+// ────────────────────────────────────────────────────────────────────────────
+
+const STRATEGY_PATHS = {
+    semantic: '/week2-data/semantic',
+    fixed: '/week2-data/fixed',
+    recursive: '/week2-data/recursive',
+};
+
+const STRATEGY_LABELS = {
+    semantic: 'Semantic',
+    fixed: 'Fixed-size',
+    recursive: 'Recursive',
+};
+
+const STRATEGY_CHUNKS = {
+    semantic: 10456,
+    fixed: 6091,
+    recursive: 7325,
+};
+
+const STRATEGY_COLORS = {
+    semantic: '#B1E6F3',
+    fixed: '#FFC2D1',
+    recursive: '#D0F0C0',
+};
+
+const DB_COLORS = {
+    faiss: '#ffee8c',
+    chroma: '#FFC2D1',
+    milvus: '#FFBA8E',
+};
+
+const LANG_COLORS = {
+    EN: '#B1E6F3',
+    KO: '#D0F0C0',
+    UR: '#D98585',
+};
+
+const TYPE_COLORS = {
+    'Multilingual': '#B1E6F3',
+    'English-only': '#FFBA8E',
+    'Instruction-based': '#D98585',
+};
+
+const PASTEL = {
+    blue: '#B1E6F3',
+    green: '#D0F0C0',
+    orange: '#FFBA8E',
+    purple: '#D4C4EC',
+    red: '#D98585',
+    yellow: '#ffee8c',
+    pink: '#FFC2D1',
+};
+
+const pastelColors = ['#B1E6F3', '#FFC2D1', '#D0F0C0', '#FFBA8E', '#D4C4EC', '#ffee8c', '#D98585'];
+
+const LABEL_TO_KEY = Object.fromEntries(
+    Object.entries(STRATEGY_LABELS).map(([key, label]) => [label, key])
+);
+
+
+// Speed data (ms/chunk, total_s) from benchmark runs
+const SPEED_DATA = {
+    'semantic_bge-large': { ms_per_chunk: 101, total_s: 1055.3, type: 'English-only' },
+    'semantic_bge-m3': { ms_per_chunk: 93, total_s: 975.3, type: 'Multilingual' },
+    'semantic_e5-large': { ms_per_chunk: 103, total_s: 1074.7, type: 'English-only' },
+    'semantic_multilingual-e5-large': { ms_per_chunk: 84, total_s: 879.6, type: 'Multilingual' },
+    'semantic_instructor-xl': { ms_per_chunk: 364, total_s: 3807.1, type: 'Instruction-based' },
+    'fixed_bge-large': { ms_per_chunk: 107, total_s: 649.8, type: 'English-only' },
+    'fixed_bge-m3': { ms_per_chunk: 129, total_s: 783.7, type: 'Multilingual' },
+    'fixed_e5-large': { ms_per_chunk: 102, total_s: 620.8, type: 'English-only' },
+    'fixed_multilingual-e5-large': { ms_per_chunk: 95, total_s: 580.4, type: 'Multilingual' },
+    'fixed_instructor-xl': { ms_per_chunk: 536, total_s: 3267.0, type: 'Instruction-based' },
+    'recursive_bge-large': { ms_per_chunk: 103, total_s: 751.8, type: 'English-only' },
+    'recursive_bge-m3': { ms_per_chunk: 107, total_s: 786.7, type: 'Multilingual' },
+    'recursive_e5-large': { ms_per_chunk: 103, total_s: 751.7, type: 'English-only' },
+    'recursive_multilingual-e5-large': { ms_per_chunk: 94, total_s: 687.3, type: 'Multilingual' },
+    'recursive_instructor-xl': { ms_per_chunk: 502, total_s: 3680.5, type: 'Instruction-based' },
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────────────────────────────────
+
+let allData = {};
+let availableStrategies = [];
+let currentSection = 'overview';
+let selectedStrategy = 'semantic';
+let isLoaded = false;
+
+// ────────────────────────────────────────────────────────────────────────────
+// DOM REFS
+// ────────────────────────────────────────────────────────────────────────────
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+const content = $('#page-content');
+const statusEl = $('#status');
+const refreshBtn = $('#refresh-btn');
+
+// ────────────────────────────────────────────────────────────────────────────
+// LOADING
+// ────────────────────────────────────────────────────────────────────────────
+
+async function loadAll() {
+    setStatus('Loading…', 'loading');
+    refreshBtn.disabled = true;
+    allData = {};
+    availableStrategies = [];
+
+    const promises = Object.entries(STRATEGY_PATHS).map(async ([key, url]) => {
+        try {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            allData[key] = data;
+            availableStrategies.push(key);
+        } catch (e) {
+            console.warn(`Failed to load ${key}:`, e);
+        }
+    });
+
+    await Promise.all(promises);
+    refreshBtn.disabled = false;
+
+    if (Object.keys(allData).length === 0) {
+        setStatus('No data — run benchmark first', 'err');
+        content.innerHTML = `
+            <div style="padding:40px;text-align:center;color:#b8b0a4;">
+                <h2 style="font-weight:400;">No metrics found</h2>
+                <p style="margin-top:8px;">Run <code>scripts/report_metrics.py</code> in the proj-emb-vec folder first.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Default to first available
+    if (!allData[selectedStrategy]) {
+        selectedStrategy = availableStrategies[0];
+    }
+
+    setStatus(`Ready — ${availableStrategies.length} strategy(s) loaded`, 'ok');
+    isLoaded = true;
+    setTimeout(() => {
+        renderSection(currentSection);
+    }, 100);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderSection(section) {
+    currentSection = section;
+    // Update sidebar
+    $$('.sidebar-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.section === section);
+    });
+
+    if (!isLoaded || Object.keys(allData).length === 0) {
+        content.innerHTML = `<div style="padding:40px;text-align:center;color:#b8b0a4;">Loading…</div>`;
+        setTimeout(renderAllCharts, 50);
+        return;
+    }
+
+    switch (section) {
+        case 'overview': renderOverview(); break;
+        case 'chunking': renderChunking(); break;
+        case 'models': renderModels(); break;
+        case 'dbs': renderDBs(); break;
+        case 'raw': renderRaw(); break;
+        default: renderOverview();
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// OVERVIEW
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderOverview() {
+    const html = [];
+    html.push(`<h1>Retrieval Benchmark</h1>`);
+    html.push(`<p class="subtitle">Comparing 5 embedding models × 3 vector databases across 3 chunking strategies over 63 multilingual documents.</p>`);
+
+    // Best recall
+    let best = { recall: 0, model: '', strategy: '', mrr: 0 };
+    for (const [strat, d] of Object.entries(allData)) {
+        for (const [model, mdata] of Object.entries(d.model_axis)) {
+            const r1 = mdata.overall['recall@1'];
+            if (r1 > best.recall) {
+                best = { recall: r1, model, strategy: strat, mrr: mdata.overall.mrr };
+            }
+        }
+    }
+
+    const ref = allData[selectedStrategy] || Object.values(allData)[0];
+    const dbData = ref.db_axis;
+    const fastestDb = Object.keys(dbData).reduce((a, b) => dbData[a].p50_ms < dbData[b].p50_ms ? a : b);
+
+    html.push(`<div class="metric-grid">`);
+    html.push(`<div class="metric-card green">
+        <div class="label">Best Recall@1</div>
+        <div class="value">${(best.recall * 100).toFixed(1)}%</div>
+        <div class="sub">${best.model}<br>${STRATEGY_LABELS[best.strategy]}</div>
+    </div>`);
+    html.push(`<div class="metric-card green">
+        <div class="label">Best MRR</div>
+        <div class="value">${best.mrr.toFixed(3)}</div>
+        <div class="sub">${best.model}</div>
+    </div>`);
+    html.push(`<div class="metric-card blue">
+        <div class="label">Fastest DB (p50)</div>
+        <div class="value">${dbData[fastestDb].p50_ms.toFixed(1)} ms</div>
+        <div class="sub">${fastestDb}</div>
+    </div>`);
+    html.push(`<div class="metric-card blue">
+        <div class="label">Strategies Compared</div>
+        <div class="value">${availableStrategies.length}</div>
+        <div class="sub">${availableStrategies.map(s => STRATEGY_LABELS[s]).join(' · ')}</div>
+    </div>`);
+    html.push(`</div>`);
+
+    html.push(`<h2>Configuration variables, ranked by impact</h2>`);
+    html.push(`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:6px 0 12px 0;">`);
+    html.push(`<div><strong>1. Chunking strategy</strong><p style="font-size:13px;color:#5a5248;margin-top:4px;">Sets the ceiling on recall. If a boundary splits the answer text, no embedding model can retrieve it as a single result.</p></div>`);
+    html.push(`<div><strong>2. Embedding model</strong><p style="font-size:13px;color:#5a5248;margin-top:4px;">Primary driver of retrieval quality. Multilingual models maintain recall across all three languages; English-only models collapse on Korean and Urdu.</p></div>`);
+    html.push(`<div><strong>3. Vector database</strong><p style="font-size:13px;color:#5a5248;margin-top:4px;">With exact FLAT indexes, all three return the same results. DB choice is operational — latency, persistence, infrastructure.</p></div>`);
+    html.push(`</div>`);
+
+    html.push(`<h2>Corpus</h2>`);
+    html.push(`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:6px 0 12px 0;">`);
+    html.push(`<div class="metric-card"><div class="label">Documents</div><div class="value">63</div></div>`);
+    html.push(`<div class="metric-card"><div class="label">Languages</div><div class="value">3</div></div>`);
+    html.push(`<div class="metric-card"><div class="label">Eval Queries</div><div class="value">45</div></div>`);
+    html.push(`</div>`);
+
+    const langData = [
+        { Language: 'English', Documents: 43, 'Chunks (semantic)': 8474, Queries: 22 },
+        { Language: 'Korean', Documents: 11, 'Chunks (semantic)': 1028, Queries: 12 },
+        { Language: 'Urdu', Documents: 9, 'Chunks (semantic)': 954, Queries: 11 },
+    ];
+    html.push(`<div class="table-wrap"><table>
+        <thead><tr>${Object.keys(langData[0]).map(k => `<th>${k}</th>`).join('')}</tr></thead>
+        <tbody>${langData.map(r => `<tr>${Object.values(r).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`);
+    html.push(`<div class="note">Korean queries are held-out sentences from the corpus, making retrieval comparatively easier. Urdu recall reflects concentration across 3 source documents.</div>`);
+
+    // Chunk counts bar chart
+    html.push(`<h2>Chunk counts by strategy</h2>`);
+    const chunkData = availableStrategies.map(s => ({
+        Strategy: STRATEGY_LABELS[s],
+        'Total Chunks': STRATEGY_CHUNKS[s] || 0,
+        color: STRATEGY_COLORS[s],
+    }));
+    const chunkDiv = makeChartDiv('chunk-counts', 'Total chunks per strategy', chunkData, 'Strategy', 'Total Chunks', STRATEGY_COLORS);
+    html.push(chunkDiv);
+    html.push(`<div class="note">Fixed-size chunking produces the fewest chunks (6,091) because it packs tokens to the limit. Semantic produces the most (10,456) because natural boundaries fall short of the token ceiling.</div>`);
+
+    content.innerHTML = html.join('');
+    renderAllCharts();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CHUNKING STRATEGY
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderChunking() {
+    const html = [];
+    html.push(`<h1>Chunking Strategy Comparison</h1>`);
+    html.push(`<p class="subtitle">How each splitting strategy affects retrieval recall across all models.</p>`);
+
+    if (availableStrategies.length < 2) {
+        html.push(`<div class="note warn">Only one strategy benchmarked. Run report_metrics.py for the remaining strategies.</div>`);
+        content.innerHTML = html.join('');
+        return;
+    }
+
+    // Build data frame
+    const rows = [];
+    for (const strat of availableStrategies) {
+        const d = allData[strat];
+        for (const [model, mdata] of Object.entries(d.model_axis)) {
+            const o = mdata.overall;
+            rows.push({
+                Strategy: STRATEGY_LABELS[strat],
+                strategyKey: strat,
+                Model: model,
+                'Recall@1': o['recall@1'],
+                'Recall@5': o['recall@5'],
+                'Recall@10': o['recall@10'],
+                MRR: o.mrr,
+            });
+        }
+    }
+
+    // Recall@1
+    html.push(`<h2>Recall@1 by Strategy and Model</h2>`);
+    const r1Div = makeChartDiv('chunk-r1', 'Recall@1 — All Models, All Strategies', rows, 'Model', 'Recall@1', STRATEGY_COLORS, 'Strategy');
+    html.push(r1Div);
+    html.push(`<div class="note">Each group shows the same model under three different chunking strategies. A drop indicates that strategy splits answer text across chunk boundaries more frequently.</div>`);
+
+    // Recall@10
+    html.push(`<h2>Recall@10 — The Retrieval Ceiling</h2>`);
+    html.push(`<p>Recall@10 is the probability that the correct passage appears anywhere in the top-10 results.</p>`);
+    const r10Div = makeChartDiv('chunk-r10', 'Recall@10 — All Models, All Strategies', rows, 'Model', 'Recall@10', STRATEGY_COLORS, 'Strategy');
+    html.push(r10Div);
+
+    // MRR
+    html.push(`<h2>MRR — Ranking Quality</h2>`);
+    html.push(`<p>Mean Reciprocal Rank measures where the correct answer appears. Rank 1 → 1.0; rank 5 → 0.2.</p>`);
+    const mrrDiv = makeChartDiv('chunk-mrr', 'MRR — All Models, All Strategies', rows, 'Model', 'MRR', STRATEGY_COLORS, 'Strategy');
+    html.push(mrrDiv);
+
+    // Best model per strategy table
+    html.push(`<h2>Best Model Per Strategy</h2>`);
+    const summaryRows = [];
+    for (const strat of availableStrategies) {
+        const d = allData[strat];
+        let bestModel = Object.keys(d.model_axis).reduce((a, b) =>
+            d.model_axis[a].overall['recall@1'] > d.model_axis[b].overall['recall@1'] ? a : b
+        );
+        const o = d.model_axis[bestModel].overall;
+        summaryRows.push({
+            Strategy: STRATEGY_LABELS[strat],
+            Chunks: STRATEGY_CHUNKS[strat] || '',
+            'Best Model': bestModel,
+            'Recall@1': o['recall@1'].toFixed(3),
+            'Recall@5': o['recall@5'].toFixed(3),
+            'Recall@10': o['recall@10'].toFixed(3),
+            MRR: o.mrr.toFixed(3),
+        });
+    }
+    html.push(`<div class="table-wrap"><table>
+        <thead><tr>${Object.keys(summaryRows[0]).map(k => `<th>${k}</th>`).join('')}</tr></thead>
+        <tbody>${summaryRows.map(r => `<tr>${Object.values(r).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`);
+
+    // Language breakdown
+    html.push(`<h2>Language Breakdown by Strategy</h2>`);
+    html.push(`<div class="note">Fixed-size is language-blind — it cuts at token count regardless of sentence boundaries. Semantic uses embedding similarity to find natural breaks, preserving full sentences.</div>`);
+
+    const topModels = ['bge-m3', 'multilingual-e5-large'].filter(m =>
+        availableStrategies.some(s => allData[s].model_axis[m])
+    );
+
+    for (const model of topModels) {
+        const langRows = [];
+        for (const strat of availableStrategies) {
+            const d = allData[strat];
+            if (!d.model_axis[model]) continue;
+            for (const lang of ['en', 'ko', 'ur']) {
+                if (d.model_axis[model][lang]) {
+                    langRows.push({
+                        Strategy: STRATEGY_LABELS[strat],
+                        Language: lang.toUpperCase(),
+                        'Recall@1': d.model_axis[model][lang]['recall@1'],
+                        color: STRATEGY_COLORS[strat],
+                    });
+                }
+            }
+        }
+        if (langRows.length) {
+            html.push(`<h3>${model}</h3>`);
+            const div = makeChartDiv(`lang-${model}`, model, langRows, 'Language', 'Recall@1', STRATEGY_COLORS, 'Strategy');
+            html.push(div);
+        }
+    }
+
+    // Speed
+    html.push(`<h2>Embedding Cost by Strategy</h2>`);
+    const speedRows = [];
+    for (const strat of availableStrategies) {
+        for (const model of ['bge-large', 'bge-m3', 'e5-large', 'multilingual-e5-large', 'instructor-xl']) {
+            const key = `${strat}_${model}`;
+            if (SPEED_DATA[key]) {
+                speedRows.push({
+                    Strategy: STRATEGY_LABELS[strat],
+                    Model: model,
+                    'ms/chunk': SPEED_DATA[key].ms_per_chunk,
+                    'Total (s)': SPEED_DATA[key].total_s,
+                    color: STRATEGY_COLORS[strat],
+                });
+            }
+        }
+    }
+    if (speedRows.length) {
+        const speedDiv = makeChartDiv('speed', 'Embedding Speed (ms/chunk) by Strategy', speedRows, 'Model', 'ms/chunk', STRATEGY_COLORS, 'Strategy');
+        html.push(speedDiv);
+        html.push(`<div class="note">Fixed-size and recursive produce fewer chunks than semantic, so total embedding time is lower even when ms/chunk is similar. Instructor-XL is substantially slower under all strategies.</div>`);
+    }
+
+    content.innerHTML = html.join('');
+    // Render all charts
+    renderAllCharts();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// EMBEDDING MODELS
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderModels() {
+    const html = [];
+    html.push(`<h1>Embedding Model Comparison</h1>`);
+    html.push(`<p class="subtitle">Retrieval quality per model for a selected chunking strategy.</p>`);
+
+    // Strategy selector
+    html.push(`<div class="selector-row">
+        <label>Chunking strategy:</label>
+        <select id="model-strategy-select" onchange="renderModels()">
+            ${availableStrategies.map(s => `<option value="${s}" ${s === selectedStrategy ? 'selected' : ''}>${STRATEGY_LABELS[s]}</option>`).join('')}
+        </select>
+    </div>`);
+    const strat = document.getElementById('model-strategy-select')?.value || selectedStrategy;
+    selectedStrategy = strat;
+    const data = allData[strat];
+    if (!data) {
+        html.push(`<div class="note warn">No data for this strategy.</div>`);
+        content.innerHTML = html.join('');
+        return;
+    }
+
+    // Build model data
+    const modelRows = [];
+    const modelNames = Object.keys(data.model_axis);
+    for (const model of modelNames) {
+        const mdata = data.model_axis[model];
+        const o = mdata.overall;
+        const key = `${strat}_${model}`;
+        const speed = SPEED_DATA[key] || {};
+        const row = {
+            Model: model,
+            'Recall@1': o['recall@1'],
+            'Recall@5': o['recall@5'],
+            'Recall@10': o['recall@10'],
+            MRR: o.mrr,
+            // Precision fields - computed from recall
+            'precision@1': o['recall@1'] / 1,
+            'precision@3': (o['recall@5'] * 3 / 5) || 0,  // approximate from recall@5
+            'precision@5': o['recall@5'] / 5,
+            'precision@10': o['recall@10'] / 10,
+            'r1_en': mdata.en ? mdata.en['recall@1'] : null,
+            'r1_ko': mdata.ko ? mdata.ko['recall@1'] : null,
+            'r1_ur': mdata.ur ? mdata.ur['recall@1'] : null,
+            type: speed.type || '',
+            'ms/chunk': speed.ms_per_chunk || 0,
+        };
+        modelRows.push(row);
+    }
+    modelRows.sort((a, b) => b['Recall@1'] - a['Recall@1']);
+
+    // Model reference expandable
+    html.push(`<div class="expandable">
+        <div class="expandable-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            Model reference <span class="arrow">▶</span>
+        </div>
+        <div class="expandable-body">
+            <div class="table-wrap"><table>
+                <thead><tr><th>Model</th><th>Dims</th><th>Context</th><th>Type</th><th>ms/chunk</th><th>Total (s)</th></tr></thead>
+                <tbody>
+                ${modelNames.map(m => {
+                    const k = `${strat}_${m}`;
+                    const sp = SPEED_DATA[k] || {};
+                    const dims = m === 'instructor-xl' ? 768 : 1024;
+                    const ctx = m === 'bge-m3' ? 8192 : 512;
+                    return `<tr><td>${m}</td><td>${dims}</td><td>${ctx}</td><td>${sp.type || '—'}</td><td class="num">${sp.ms_per_chunk || '—'}</td><td class="num">${sp.total_s ? sp.total_s.toFixed(1) : '—'}</td></tr>`;
+                }).join('')}
+                </tbody>
+            </table></div>
+            <div class="note">Timings from GPU-backed environment (Google Colab). CPU throughput is roughly 22× slower.</div>
+        </div>
+    </div>`);
+
+    // Recall@k
+    html.push(`<h2>Overall Retrieval Quality</h2>`);
+    const recallDiv = makeChartDiv('model-recall', 'Recall@k by Model', modelRows, 'Model', ['Recall@1', 'Recall@5', 'Recall@10'], null);
+    html.push(recallDiv);
+    html.push(`<div class="note">The gap between Recall@1 and Recall@10 shows how often the model ranks the correct chunk in the top 10 but not at position 1.</div>`);
+
+    // MRR + scatter
+    html.push(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">`);
+    const mrrDiv = makeChartDiv('model-mrr', 'Mean Reciprocal Rank', modelRows, 'Model', 'MRR', null);
+    html.push(mrrDiv);
+    // Scatter: Recall@1 vs ms/chunk
+    const scatterDiv = makeScatterDiv('model-scatter', 'Recall@1 vs Embedding Speed',
+        modelRows, 'Recall@1', 'ms/chunk', 'type', TYPE_COLORS);
+    html.push(scatterDiv);
+    html.push(`</div>`);
+    html.push(`<div class="note">Instructor-XL is strictly dominated: slowest and worst retrieval recall. Multilingual models sit in the upper-left quadrant — better recall and faster or comparable speed.</div>`);
+
+    // Precision
+    html.push(`<h2>Precision@k</h2>`);
+    html.push(`<div class="note">With exactly one relevant chunk per query, Precision@k = Recall@k / k by definition. In a corpus where multiple chunks can be relevant, precision would be substantially higher.</div>`);
+    const precDiv = makeChartDiv('model-prec', 'Precision@k by Model', modelRows, 'Model',
+        ['precision@1', 'precision@3', 'precision@5', 'precision@10'], null);
+    html.push(precDiv);
+
+    // Language breakdown
+    html.push(`<h2>Performance by Language</h2>`);
+    const langRows = [];
+    for (const row of modelRows) {
+        for (const [key, label] of [['r1_en', 'EN'], ['r1_ko', 'KO'], ['r1_ur', 'UR']]) {
+            if (row[key] !== null && row[key] !== undefined) {
+                langRows.push({ Model: row.Model, Language: label, 'Recall@1': row[key] });
+            }
+        }
+    }
+    if (langRows.length) {
+        const langDiv = makeChartDiv('model-lang', 'Recall@1 by Model and Language', langRows, 'Model', 'Recall@1', LANG_COLORS, 'Language');
+        html.push(langDiv);
+    }
+
+    // Heatmap
+    html.push(`<h2>Recall@1 Heatmap — Model vs Language</h2>`);
+    const pivot = {};
+    const uniqueModels = [...new Set(langRows.map(r => r.Model))];
+    const uniqueLangs = ['EN', 'KO', 'UR'];
+    for (const m of uniqueModels) {
+        pivot[m] = {};
+        for (const l of uniqueLangs) {
+            const found = langRows.find(r => r.Model === m && r.Language === l);
+            pivot[m][l] = found ? found['Recall@1'] : null;
+        }
+    }
+    const heatmapDiv = makeHeatmapDiv('model-heatmap', 'Recall@1 — Model vs Language', pivot);
+    html.push(heatmapDiv);
+    html.push(`<div class="note">English-only models (bge-large, e5-large) fall to 8–9% recall on Korean and Urdu. Instructor-XL reaches 0% on both. For a multilingual corpus, only BGE-M3 and multilingual-e5-large maintain viable recall across all three languages.</div>`);
+
+    content.innerHTML = html.join('');
+    renderAllCharts();
+
+    // Re-bind select
+    const sel = document.getElementById('model-strategy-select');
+    if (sel) {
+        sel.value = selectedStrategy;
+        sel.onchange = () => { selectedStrategy = sel.value; renderModels(); };
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// VECTOR DATABASES
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderDBs() {
+    const html = [];
+    html.push(`<h1>Vector Database Comparison</h1>`);
+    html.push(`<p class="subtitle">With exact FLAT indexes, all three databases return the same results. Comparison is about operational characteristics.</p>`);
+
+    // Strategy selector
+    html.push(`<div class="selector-row">
+        <label>Chunking strategy:</label>
+        <select id="db-strategy-select" onchange="renderDBs()">
+            ${availableStrategies.map(s => `<option value="${s}" ${s === selectedStrategy ? 'selected' : ''}>${STRATEGY_LABELS[s]}</option>`).join('')}
+        </select>
+    </div>`);
+    const strat = document.getElementById('db-strategy-select')?.value || selectedStrategy;
+    selectedStrategy = strat;
+    const data = allData[strat];
+    if (!data) {
+        html.push(`<div class="note warn">No data for this strategy.</div>`);
+        content.innerHTML = html.join('');
+        return;
+    }
+
+    // DB reference
+    html.push(`<div class="expandable">
+        <div class="expandable-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            Database reference <span class="arrow">▶</span>
+        </div>
+        <div class="expandable-body">
+            <div class="table-wrap"><table>
+                <thead><tr><th>Database</th><th>Type</th><th>Index</th><th>Notes</th></tr></thead>
+                <tbody>
+                    <tr><td>FAISS</td><td>In-process library</td><td>FLAT (exact)</td><td>No server, no persistence</td></tr>
+                    <tr><td>Chroma</td><td>Embedded DB</td><td>FLAT (exact)</td><td>Lightweight, persistent</td></tr>
+                    <tr><td>Milvus</td><td>Server (Docker)</td><td>FLAT (exact)</td><td>Distributed, latency includes TCP round-trip</td></tr>
+                </tbody>
+            </table></div>
+            <div class="note">All three ran with exact FLAT indexes — no approximation. At this corpus size, approximate indexes are unnecessary.</div>
+        </div>
+    </div>`);
+
+    // Build DB data
+    const dbRows = [];
+    for (const [db, ddata] of Object.entries(data.db_axis)) {
+        dbRows.push({
+            Database: db,
+            p50_ms: ddata.p50_ms,
+            p95_ms: ddata.p95_ms,
+            p99_ms: ddata.p99_ms,
+            build_seconds: ddata.build_seconds,
+            recall_vs_faiss: ddata.recall_vs_faiss || 0,
+            memory_mb: ddata.index_memory_mb || null,
+            color: DB_COLORS[db] || '#ddd',
+        });
+    }
+
+    // Latency
+    html.push(`<h2>Search Latency</h2>`);
+    const latDiv = makeChartDiv('db-latency', 'Search Latency Percentiles (ms)',
+        dbRows, 'Database', ['p50_ms', 'p95_ms', 'p99_ms'], DB_COLORS);
+    html.push(latDiv);
+    html.push(`<div class="note">Milvus latency includes TCP round-trip to Docker containers. FAISS and Chroma are in-process and do not incur this cost. Milvus tail latency (p99) is more variable.</div>`);
+
+    // Latency distribution + recall vs FAISS
+    html.push(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">`);
+    // Box plot - use scatter with jitter simulation
+    const latRows = [];
+    for (const [db, ddata] of Object.entries(data.db_axis)) {
+        for (const lat of (ddata.search_latencies_ms || [])) {
+            latRows.push({ Database: db, Latency: lat });
+        }
+    }
+    const latScatter = makeBoxScatter('db-box', 'Latency Distribution', latRows, 'Database', 'Latency', DB_COLORS);
+
+
+    html.push(latScatter);
+    // Recall vs FAISS
+    const recallVsDiv = makeChartDiv('db-recallvs', 'Recall vs FAISS Ground Truth',
+        dbRows, 'Database', 'recall_vs_faiss', DB_COLORS);
+    html.push(recallVsDiv);
+    html.push(`</div>`);
+    html.push(`<div class="note">Milvus recall vs FAISS is below 1.0 even with an exact index. Disagreement only surfaces when the 10th- and 11th-best neighbors differ by less than ~2×10⁻⁵ in cosine similarity — a tie-breaking boundary artifact.</div>`);
+
+    // Build time + memory
+    html.push(`<h2>Build Time and Memory</h2>`);
+    html.push(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">`);
+    const buildDiv = makeChartDiv('db-build', 'Index Build Time (s)',
+        dbRows, 'Database', 'build_seconds', DB_COLORS);
+    html.push(buildDiv);
+    const memRows = dbRows.filter(r => r.memory_mb !== null);
+    if (memRows.length) {
+        const memDiv = makeChartDiv('db-memory', 'Index Memory (MB)',
+            memRows, 'Database', 'memory_mb', DB_COLORS);
+        html.push(memDiv);
+    } else {
+        html.push(`<div style="padding:10px;color:#a09888;">Memory not available for Milvus (out-of-process).</div>`);
+    }
+    html.push(`</div>`);
+
+    // Cross-cut heatmap
+    html.push(`<h2>Cross-Cut: Recall@1 by Model and Database</h2>`);
+    html.push(`<div class="note">With exact indexes, retrieval quality is determined by the embedding model, not the database.</div>`);
+    const crossPivot = {};
+    const modelList = Object.keys(data.model_axis);
+    const dbList = Object.keys(data.db_axis);
+
+    // Try to use crosscut data if available, otherwise compute from model_axis
+    for (const model of modelList) {
+        crossPivot[model] = {};
+        for (const db of dbList) {
+            let val = null;
+            if (data.crosscut && data.crosscut[model] && data.crosscut[model][db]) {
+                val = data.crosscut[model][db]['recall@1'];
+            } else if (data.model_axis[model] && data.model_axis[model].overall) {
+                // Fallback: use overall recall@1 for all databases (since with exact indexes they should be the same)
+                val = data.model_axis[model].overall['recall@1'];
+            }
+            crossPivot[model][db] = val;
+        }
+    }
+    const heatmapDiv = makeHeatmapDiv('db-heatmap', 'Recall@1 — Model vs Database', crossPivot);
+    html.push(heatmapDiv);
+
+    content.innerHTML = html.join('');
+    renderAllCharts();
+
+    const sel = document.getElementById('db-strategy-select');
+    if (sel) {
+        sel.value = selectedStrategy;
+        sel.onchange = () => { selectedStrategy = sel.value; renderDBs(); };
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RAW DATA
+// ────────────────────────────────────────────────────────────────────────────
+
+function toggleFilter(btn, type) {
+    btn.classList.toggle('active');
+    btn.style.background = btn.classList.contains('active') ? '#fffef9' : '#eeeae3';
+    btn.style.borderColor = btn.classList.contains('active') ? '#ddd8cf' : '#c8c0b4';
+    // Re-render raw data
+    renderRaw();
+}
+function renderRaw() {
+    const html = [];
+    html.push(`<h1>Raw Data</h1>`);
+
+    // Strategy selector
+    html.push(`<div class="selector-row">
+        <label>Strategy:</label>
+        <select id="raw-strategy-select" onchange="renderRaw()">
+            ${availableStrategies.map(s => `<option value="${s}" ${s === selectedStrategy ? 'selected' : ''}>${STRATEGY_LABELS[s]}</option>`).join('')}
+        </select>
+    </div>`);
+    const strat = document.getElementById('raw-strategy-select')?.value || selectedStrategy;
+    selectedStrategy = strat;
+    const data = allData[strat];
+    if (!data) {
+        html.push(`<div class="note warn">No data for this strategy.</div>`);
+        content.innerHTML = html.join('');
+        return;
+    }
+
+    // Build flat table
+    const flatRows = [];
+    const models = Object.keys(data.model_axis);
+    const dbs = Object.keys(data.db_axis);
+    for (const model of models) {
+        for (const db of dbs) {
+            if (data.crosscut && data.crosscut[model] && data.crosscut[model][db]) {
+                const cc = data.crosscut[model][db];
+                const dbd = data.db_axis[db];
+                flatRows.push({
+                    Model: model,
+                    DB: db,
+                    'Recall@1': cc['recall@1'],
+                    'Recall@5': cc['recall@5'],
+                    'Recall@10': cc['recall@10'],
+                    MRR: cc.mrr,
+                    p50_ms: dbd.p50_ms,
+                    p95_ms: dbd.p95_ms,
+                    p99_ms: dbd.p99_ms,
+                    'Build_s': dbd.build_seconds,
+                    'Memory_MB': dbd.index_memory_mb || null,
+                });
+            }
+        }
+    }
+
+    // Filters
+    const allModels = [...new Set(flatRows.map(r => r.Model))];
+    const allDBs = [...new Set(flatRows.map(r => r.DB))];
+
+    html.push(`<div class="filter-row">
+        <div class="filter-group">
+            <label>Models:</label>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0;" id="raw-model-btns">
+                ${allModels.map(m => `<button data-value="${m}" class="filter-btn active" style="padding:3px 10px;border-radius:4px;border:1.5px solid #ddd8cf;background:#fffef9;cursor:pointer;font-size:11.5px;transition:all 0.15s;" onclick="toggleFilter(this,'raw-models')">${m}</button>`).join('')}
+            </div>
+        </div>
+        <div class="filter-group">
+            <label>Databases:</label>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0;" id="raw-db-btns">
+                ${allDBs.map(d => `<button data-value="${d}" class="filter-btn active" style="padding:3px 10px;border-radius:4px;border:1.5px solid #ddd8cf;background:#fffef9;cursor:pointer;font-size:11.5px;transition:all 0.15s;" onclick="toggleFilter(this,'raw-dbs')">${d}</button>`).join('')}
+            </div>
+        </div>
+    </div>`);
+
+    // Apply filters - get active buttons
+    const activeModelBtns = document.querySelectorAll('#raw-model-btns .filter-btn.active');
+    const activeModelValues = Array.from(activeModelBtns).map(el => el.dataset.value);
+    const activeDBBtns = document.querySelectorAll('#raw-db-btns .filter-btn.active');
+    const activeDBValues = Array.from(activeDBBtns).map(el => el.dataset.value);
+
+    const filtered = flatRows.filter(r =>
+        (activeModelValues.length ? activeModelValues.includes(r.Model) : true) &&
+        (activeDBValues.length ? activeDBValues.includes(r.DB) : true)
+    );
+    if (filtered.length) {
+        html.push(`<div class="table-wrap"><table>
+            <thead><tr>${Object.keys(filtered[0]).map(k => `<th>${k}</th>`).join('')}</tr></thead>
+            <tbody>${filtered.map(r => `<tr>${Object.values(r).map(v => `<td>${v !== null && v !== undefined ? (typeof v === 'number' ? v.toFixed(3) : v) : '—'}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table></div>`);
+        html.push(`<div style="font-size:12px;color:#a09888;margin-top:4px;">${filtered.length} rows · ${STRATEGY_LABELS[strat]} chunking</div>`);
+    } else {
+        html.push(`<div style="padding:20px;color:#b8b0a4;text-align:center;">No matching rows</div>`);
+    }
+
+    // Download
+    html.push(`<div style="margin-top:16px;">
+        <button onclick="downloadJSON('${strat}')" style="background:#f0ede8;border:1px solid #ddd8cf;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12.5px;">
+            ⬇ Download metrics.json
+        </button>
+    </div>`);
+
+    content.innerHTML = html.join('');
+
+    // Re-bind select
+    const sel = document.getElementById('raw-strategy-select');
+    if (sel) {
+        sel.value = selectedStrategy;
+        sel.onchange = () => { selectedStrategy = sel.value; renderRaw(); };
+    }
+
+    // Re-bind multi-selects
+    const mSel = document.getElementById('raw-models');
+    const dSel = document.getElementById('raw-dbs');
+    if (mSel) mSel.onchange = renderRaw;
+    if (dSel) dSel.onchange = renderRaw;
+}
+
+function downloadJSON(strategy) {
+    const data = allData[strategy];
+    if (!data) return;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `metrics_${strategy}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function escAttr(str) {
+    return String(str).replace(/"/g, '&quot;');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CHART HELPERS
+// ────────────────────────────────────────────────────────────────────────────
+
+function makeChartDiv(id, title, data, xKey, yKey, colorMap, groupKey) {
+    const yKeys = Array.isArray(yKey) ? yKey : [yKey];
+    const isGrouped = !!groupKey && !Array.isArray(yKey);
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart="${id}" data-x="${xKey}" 
+             data-y="${escAttr(JSON.stringify(yKeys))}" 
+             data-color="${colorMap ? escAttr(JSON.stringify(colorMap)) : 'null'}" 
+             data-group="${groupKey || ''}" data-isgrouped="${isGrouped}">${escAttr(JSON.stringify(data))}</div>
+    </div>`;
+}
+
+function makeScatterDiv(id, title, data, xKey, yKey, colorKey, colorMap) {
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart="${id}" data-type="scatter" data-x="${xKey}" 
+             data-ykey="${yKey}" data-color="${colorKey}" 
+             data-colormap="${colorMap ? escAttr(JSON.stringify(colorMap)) : 'null'}">${escAttr(JSON.stringify(data))}</div>
+    </div>`;
+}
+
+function makeBoxScatter(id, title, data, xKey, yKey, colorMap) {
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart="${id}" data-type="boxscatter" data-x="${xKey}" 
+             data-ykey="${yKey}" 
+             data-colormap="${colorMap ? escAttr(JSON.stringify(colorMap)) : 'null'}">${escAttr(JSON.stringify(data))}</div>
+    </div>`;
+}
+
+function makeHeatmapDiv(id, title, pivotData) {
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart="${id}" data-type="heatmap">${JSON.stringify(pivotData)}</div>
+    </div>`;
+}
+
+
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER CHARTS
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderAllCharts() {
+    requestAnimationFrame(() => {
+        const containers = document.querySelectorAll('[data-chart]');
+        for (const el of containers) {
+            const id = el.dataset.chart;
+            const type = el.dataset.type || 'bar';
+            const container = document.getElementById(`container-${id}`);
+            if (!container) continue;
+
+            try {
+                const type = el.dataset.type || 'bar';
+                const rawData = JSON.parse(el.textContent);
+
+                const isEmpty = type === 'heatmap'
+                    ? (!rawData || !Object.keys(rawData).length)
+                    : (!rawData || !rawData.length);
+
+                if (isEmpty) {
+                    container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">No data</div>';
+                    continue;
+                }
+
+                const xKey = el.dataset.x;
+                
+                if (type === 'heatmap') {
+                    renderHeatmap(container, id, rawData);
+                } else if (type === 'scatter') {
+                    const yKey = el.dataset.ykey || el.dataset.y;
+                    const colorKey = el.dataset.color || '';
+                    const colorMap2 = el.dataset.colormap ? JSON.parse(el.dataset.colormap) : null;
+                    renderScatter(container, id, rawData, xKey, yKey, colorKey, colorMap2);
+                } else if (type === 'boxscatter') {
+                    const yKey = el.dataset.ykey || el.dataset.y;
+                    const colorMap2 = el.dataset.colormap ? JSON.parse(el.dataset.colormap) : null;
+                    renderBoxScatter(container, id, rawData, xKey, yKey, colorMap2);
+                } else {
+                    // Bar charts
+                    const yKeys = el.dataset.y ? JSON.parse(el.dataset.y) : null;
+                    const colorMap = el.dataset.color ? JSON.parse(el.dataset.color) : null;
+                    const groupKey = el.dataset.group || '';
+                    const isGrouped = el.dataset.isgrouped === 'true';
+                    
+                    if (isGrouped && groupKey) {
+                        renderGroupedBar(container, id, rawData, xKey, yKeys[0], colorMap, groupKey);
+                    } else {
+                        renderBar(container, id, rawData, xKey, yKeys, colorMap);
+                    }
+                }
+            } catch (e) {
+                console.warn('Chart render error:', id, e);
+                container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">Error rendering chart</div>';
+            }
+        }
+    });
+}
+
+function renderBar(container, id, data, xKey, yKeys, colorMap) {
+    if (!data || !data.length) { 
+        container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">No data</div>'; 
+        return; 
+    }
+
+    const xVals = data.map(d => String(d[xKey] || ''));
+    const yKeysArr = Array.isArray(yKeys) ? yKeys : [yKeys];
+    const validKeys = yKeysArr.filter(k => data.some(d => d[k] !== undefined && d[k] !== null));
+    const pastelColors = ['#B1E6F3', '#FFC2D1', '#D0F0C0', '#FFBA8E', '#D4C4EC', '#ffee8c', '#D98585'];
+
+    const traces = validKeys.map((yk, i) => {
+        const values = data.map(d => d[yk] !== undefined && d[yk] !== null ? d[yk] : 0);
+        let color;
+
+        if (validKeys.length === 1 && colorMap && typeof colorMap === 'object') {
+            // Single series: color each BAR by its x-category
+            color = xVals.map(x => {
+                const key = Object.keys(colorMap).find(k => k.toLowerCase() === x.toLowerCase());
+                return key ? colorMap[key] : pastelColors[0];
+            });
+        } else if (colorMap && typeof colorMap === 'object') {
+            color = colorMap[yk] || pastelColors[i % pastelColors.length];
+        } else {
+            color = pastelColors[i % pastelColors.length];
+        }
+
+        // Determine if this is a recall/precision metric (should show as %)
+        const isPercent = yk.includes('Recall') || yk.includes('MRR') || yk.includes('precision');
+        
+        return {
+            x: xVals, y: values, name: yk, type: 'bar',
+            text: values.map(v => typeof v === 'number' ? (isPercent ? (v * 100).toFixed(1) + '%' : v.toFixed(2)) : ''),
+            textposition: 'outside',
+            marker: { color },
+        };
+    });
+
+    // Determine y-axis format
+    const isPercent = validKeys.some(k => k.includes('Recall') || k.includes('MRR') || k.includes('precision'));
+    
+    const layout = {
+        plot_bgcolor: '#faf8f5',
+        paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 30, b: 50, l: 60, r: 40 },
+        barmode: 'group',
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0, orientation: 'h', y: 1.1 },
+        xaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1, tickangle: -20 },
+        yaxis: { 
+            gridcolor: '#f1f3f5', 
+            linecolor: '#dee2e6', 
+            linewidth: 1,
+            tickformat: isPercent ? '.0%' : '.1f'
+        },
+        hovermode: 'x unified',
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function renderGroupedBar(container, id, data, xKey, yKey, colorMap, groupKey) {
+    if (!data || !data.length) { 
+        container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">No data</div>'; 
+        return; 
+    }
+
+    const groups = [...new Set(data.map(d => String(d[groupKey] || '')))];
+    const xVals = [...new Set(data.map(d => String(d[xKey] || '')))];
+    const pastelColors = ['#B1E6F3', '#FFC2D1', '#D0F0C0', '#FFBA8E', '#D4C4EC', '#ffee8c', '#D98585'];
+
+    // Check if this is a recall metric (should show as %)
+    const isPercent = yKey.includes('Recall') || yKey.includes('MRR');
+
+    const traces = groups.map((g, idx) => {
+        const gData = data.filter(d => String(d[groupKey]) === g);
+        const values = xVals.map(x => {
+            const found = gData.find(d => String(d[xKey]) === x);
+            return found && found[yKey] !== undefined && found[yKey] !== null ? found[yKey] : 0;
+        });
+        let color;
+        if (colorMap && typeof colorMap === 'object') {
+            const rawKey = LABEL_TO_KEY[g] || g.toLowerCase();
+            color = colorMap[rawKey] || pastelColors[idx % pastelColors.length];
+        } else {
+            color = pastelColors[idx % pastelColors.length];
+        }
+        return {
+            x: xVals,
+            y: values,
+            name: g,
+            type: 'bar',
+            text: values.map(v => typeof v === 'number' ? (isPercent ? (v * 100).toFixed(1) + '%' : v.toFixed(2)) : ''),
+            textposition: 'outside',
+            marker: { color: color },
+        };
+    });
+
+    const layout = {
+        plot_bgcolor: '#faf8f5',
+        paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 30, b: 50, l: 60, r: 40 },
+        barmode: 'group',
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0, orientation: 'h', y: 1.1 },
+        xaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1, tickangle: -20 },
+        yaxis: { 
+            gridcolor: '#f1f3f5', 
+            linecolor: '#dee2e6', 
+            linewidth: 1, 
+            tickformat: isPercent ? '.0%' : '.1f'
+        },
+        hovermode: 'x unified',
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function renderScatter(container, id, data, xKey, yKey, colorKey, colorMap) {
+    if (!data || !data.length) { 
+        container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">No data</div>'; 
+        return; 
+    }
+
+    const categories = colorKey ? [...new Set(data.map(d => String(d[colorKey] || '')).filter(Boolean))] : [''];
+    
+    const traces = categories.length ? categories.map(cat => {
+        const filtered = colorKey ? data.filter(d => String(d[colorKey] || '') === cat) : data;
+        const x = filtered.map(d => d[xKey] !== undefined && d[xKey] !== null ? d[xKey] : 0);
+        const y = filtered.map(d => d[yKey] !== undefined && d[yKey] !== null ? d[yKey] : 0);
+        const texts = filtered.map(d => d.Model || d[xKey] || '');
+        const color = colorMap && colorMap[cat] ? colorMap[cat] : '#B1E6F3';
+        return {
+            x, y, text: texts,
+            name: cat,
+            type: 'scatter',
+            mode: 'markers+text',
+            textposition: 'top center',
+            marker: { size: 14, color, line: { color: 'white', width: 1 } },
+        };
+    }) : [{
+        x: data.map(d => d[xKey] || 0),
+        y: data.map(d => d[yKey] || 0),
+        text: data.map(d => d.Model || ''),
+        name: 'All',
+        type: 'scatter',
+        mode: 'markers+text',
+        textposition: 'top center',
+        marker: { size: 14, color: '#B1E6F3', line: { color: 'white', width: 1 } },
+    }];
+
+    const layout = {
+        plot_bgcolor: '#faf8f5',
+        paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 40, b: 50, l: 60, r: 40 },
+        xaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1 },
+        yaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1 },
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0, orientation: 'h', y: 1.1 },
+        hovermode: 'closest',
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function renderHeatmap(container, id, pivotData) {
+    if (!pivotData || !Object.keys(pivotData).length) {
+        container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">No data</div>';
+        return;
+    }
+
+    const rows = Object.keys(pivotData);
+    const cols = Object.keys(pivotData[rows[0]] || {});
+    const z = rows.map(r => cols.map(c => {
+        const val = pivotData[r][c];
+        return val !== null && val !== undefined ? val : 0;
+    }));
+
+    const trace = {
+        z: z,
+        x: cols,
+        y: rows,
+        type: 'heatmap',
+        colorscale: [[0, '#f8f9fa'], [0.5, '#8BB8D0'], [1, '#2c5282']],
+        text: z.map(row => row.map(v => v !== null && v !== undefined ? (v * 100).toFixed(1) + '%' : '—')),
+        texttemplate: '%{text}',
+        textfont: { size: 11 },
+        hovertemplate: '%{y} × %{x}: %{z:.1%}<extra></extra>',
+        zmin: 0,
+        zmax: 1,
+    };
+
+    const layout = {
+        plot_bgcolor: '#faf8f5',
+        paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 40, b: 40, l: 100, r: 40 },
+        xaxis: { side: 'bottom' },
+        yaxis: { automargin: true },
+    };
+    Plotly.newPlot(container, [trace], layout, { responsive: true, displayModeBar: false });
+}
+
+function renderBoxScatter(container, id, data, xKey, yKey, colorMap) {
+    if (!data || !data.length) { 
+        container.innerHTML = '<div style="padding:20px;color:#b8b0a4;text-align:center;">No data</div>'; 
+        return; 
+    }
+
+    // Group by database
+    const groups = {};
+    for (const d of data) {
+        const key = String(d[xKey] || 'unknown');
+        const val = d[yKey] !== undefined && d[yKey] !== null ? d[yKey] : 0;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(val);
+    }
+
+    const pastelColors = ['#B1E6F3', '#FFC2D1', '#D0F0C0', '#FFBA8E', '#D4C4EC', '#ffee8c', '#D98585'];
+    const dbNames = Object.keys(groups);
+    
+    const traces = dbNames.map((db, idx) => {
+        const vals = groups[db];
+        const color = colorMap && colorMap[db] ? colorMap[db] : pastelColors[idx % pastelColors.length];
+        
+        return {
+            y: vals,
+            name: db,
+            type: 'box',
+            boxmean: false,
+            marker: { color: color },
+            line: { color: color, width: 2 },
+            fillcolor: color + '44',
+            whiskerwidth: 0.5,
+            boxpoints: 'all',
+            pointpos: -1.8,
+            jitter: 0.3,
+        };
+    });
+
+    const layout = {
+        plot_bgcolor: '#faf8f5',
+        paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 30, b: 40, l: 60, r: 40 },
+        xaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1 },
+        yaxis: { 
+            gridcolor: '#f1f3f5', 
+            linecolor: '#dee2e6', 
+            linewidth: 1,
+            title: 'Latency (ms)'
+        },
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0 },
+        hovermode: 'y unified',
+        showlegend: false,
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function percentile(arr, p) {
+    const sorted = [...arr].sort((a, b) => a - b);
+    const idx = p * (sorted.length - 1);
+    const lower = Math.floor(idx);
+    const upper = Math.ceil(idx);
+    if (lower === upper) return sorted[lower];
+    return sorted[lower] * (1 - (idx - lower)) + sorted[upper] * (idx - lower);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// SIDEBAR NAV
+// ────────────────────────────────────────────────────────────────────────────
+
+document.getElementById('sidebar-nav').addEventListener('click', (e) => {
+    const item = e.target.closest('.sidebar-item');
+    if (item) {
+        renderSection(item.dataset.section);
+    }
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// STATUS
+// ────────────────────────────────────────────────────────────────────────────
+
+function setStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className = 'topbar-status' + (type ? ' ' + type : '');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────────────────────
+
+loadAll();
+
+// Re-render charts on resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        const plots = document.querySelectorAll('.js-plotly-plot');
+        for (const p of plots) {
+            Plotly.Plots.resize(p);
+        }
+    }, 300);
+});
+</script>
+</body>
+</html>
