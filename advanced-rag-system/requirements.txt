@@ -3,3 +3,6 @@ python-dotenv
 openai
 faiss-cpu
 numpy
+kiwipiepy
+rank_bm25
+sentence-transformers
