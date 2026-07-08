@@ -1,0 +1,5 @@
+groq
+python-dotenv
+openai
+faiss-cpu
+numpy
