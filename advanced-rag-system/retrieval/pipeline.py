@@ -14,7 +14,7 @@ from retrieval.rerank import rerank
 from retrieval.bootstrap import get_index
 
 
-def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 15) -> list[tuple[str, dict, float]]:
+def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10) -> list[tuple[str, dict, float]]:
     _, text_by_id = get_index()
 
     rewritten = rewrite_query(raw_query)
@@ -27,10 +27,18 @@ def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 15) -> list[t
             if cid not in seen:
                 seen[cid] = score
 
-    # Cap total candidates before reranking — keep only the top N by
-    # RRF fusion score, regardless of how many variants contributed
+    top_candidates_sorted = sorted(seen.items(), key=lambda x: x[1], reverse=True)
+
+    if top_candidates_sorted:
+        top_score = top_candidates_sorted[0][1]
+        MIN_RELATIVE_SCORE = 0.5  # keep only candidates scoring at least 50% of the top RRF score
+        top_candidates_sorted = [
+            (cid, score) for cid, score in top_candidates_sorted
+            if score >= top_score * MIN_RELATIVE_SCORE
+        ]
+
     MAX_RERANK_CANDIDATES = 40
-    top_candidates = sorted(seen.items(), key=lambda x: x[1], reverse=True)[:MAX_RERANK_CANDIDATES]
+    top_candidates = top_candidates_sorted[:MAX_RERANK_CANDIDATES]
 
     candidates = [(cid, text_by_id[cid]) for cid, _score in top_candidates]
     final = rerank(raw_query, candidates, top_k=top_k)

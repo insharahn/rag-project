@@ -32,7 +32,7 @@ def _looks_valid(response_text: str) -> bool:
     return True
 
 
-def call_llm(messages, model=DEFAULT_MODEL, max_retries=3, temperature=0.3):
+def call_llm(messages, model=DEFAULT_MODEL, max_retries=2, temperature=0.3, timeout=20):
     last_error = None
     for attempt in range(max_retries):
         try:
@@ -40,6 +40,7 @@ def call_llm(messages, model=DEFAULT_MODEL, max_retries=3, temperature=0.3):
                 model=model,
                 messages=messages,
                 temperature=temperature,
+                timeout=timeout,   # hard cap per HTTP call, don't let one call hang forever
             )
             text = response.choices[0].message.content.strip()
 
@@ -52,12 +53,12 @@ def call_llm(messages, model=DEFAULT_MODEL, max_retries=3, temperature=0.3):
 
         except RateLimitError as e:
             last_error = e
-            wait = 25 * (attempt + 1)
+            wait = 8 * (attempt + 1)   # was 25 * (attempt+1) — 8/16s instead of 25/50/75s
             print(f"[llm] Rate limited, retrying in {wait}s... (attempt {attempt+1}/{max_retries})")
             time.sleep(wait)
         except APITimeoutError as e:
             last_error = e
             print(f"[llm] Timeout, retrying... (attempt {attempt+1}/{max_retries})")
-            time.sleep(5)
+            time.sleep(3)
 
     raise RuntimeError(f"LLM call failed after {max_retries} retries: {last_error}")

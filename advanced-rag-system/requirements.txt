@@ -6,3 +6,5 @@ numpy
 kiwipiepy
 rank_bm25
 sentence-transformers
+fastapi
+uvicorn
