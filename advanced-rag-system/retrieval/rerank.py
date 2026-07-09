@@ -25,7 +25,7 @@ MODEL_ID = "BAAI/bge-reranker-base"
 def _get_reranker():
     if "reranker" not in _state:
         print(f"[rerank] loading {MODEL_ID}...")
-        _state["reranker"] = CrossEncoder(MODEL_ID, device="cpu")
+        _state["reranker"] = CrossEncoder(MODEL_ID, device="cpu", max_length=256)
     return _state["reranker"]
 
 
