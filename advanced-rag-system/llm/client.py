@@ -1,7 +1,5 @@
 """
-client.py — shared OpenRouter LLM client with retry logic.
-Every LLM call in this project (query rewriting, multi-query, citation
-generation) goes through call_llm() so retry/fallback behavior is consistent.
+client.py — shared OpenRouter LLM client with retry logic + basic output validation.
 """
 import os
 import time
@@ -15,12 +13,26 @@ client = OpenAI(
     api_key=os.environ.get("OPENROUTER_API_KEY"),
 )
 
-DEFAULT_MODEL = "openrouter/free"   # auto-router, avoids single-model congestion
+DEFAULT_MODEL = "openrouter/free"
+#DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+#DEFAULT_MODEL = "qwen/qwen3-next-80b-a3b-instruct:free"
+
+
+def _looks_valid(response_text: str) -> bool:
+    """Cheap sanity check, not a quality check. Rejects empty/near-empty
+    responses and known-bad boilerplate patterns seen in practice."""
+    if not response_text or len(response_text.strip()) < 3:
+        return False
+    bad_patterns = ["user safety:", "i cannot assist", "i'm unable to help with that"]
+    lowered = response_text.lower()
+    if any(p in lowered for p in bad_patterns) and len(response_text) < 60:
+        # short + matches a known bad-output pattern = likely a misroute,
+        # not a genuine refusal of a real harmful request
+        return False
+    return True
 
 
 def call_llm(messages, model=DEFAULT_MODEL, max_retries=3, temperature=0.3):
-    """Call the LLM with retry on rate limits / timeouts.
-    Returns the response text (str)."""
     last_error = None
     for attempt in range(max_retries):
         try:
@@ -29,7 +41,15 @@ def call_llm(messages, model=DEFAULT_MODEL, max_retries=3, temperature=0.3):
                 messages=messages,
                 temperature=temperature,
             )
-            return response.choices[0].message.content.strip()
+            text = response.choices[0].message.content.strip()
+
+            if not _looks_valid(text):
+                print(f"[llm] Suspicious output, retrying... (attempt {attempt+1}/{max_retries}): {text[:80]!r}")
+                last_error = f"invalid output: {text[:80]!r}"
+                continue
+
+            return text
+
         except RateLimitError as e:
             last_error = e
             wait = 25 * (attempt + 1)
