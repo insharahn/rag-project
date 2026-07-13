@@ -1,6 +1,6 @@
 """
-pipeline.py — full retrieval pipeline: rewrite -> multi-query -> hybrid
-search (per variant) -> merge -> rerank.
+pipeline.py — full retrieval pipeline:   
+rewrite -> multi-query -> hybrid search -> graph search -> merge -> rerank
 """
 import sys
 from pathlib import Path
@@ -13,6 +13,12 @@ from retrieval.rerank import rerank
 from retrieval.bootstrap import get_index
 
 
+try:
+    from retrieval.graph_search import graph_search
+    _GRAPH_AVAILABLE = True
+except Exception:
+    _GRAPH_AVAILABLE = False
+    
 def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10) -> list[tuple[str, dict, float]]:
     _, text_by_id = get_index()
 
@@ -25,7 +31,7 @@ def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10) -> list[t
             if cid not in seen or score > seen[cid]:
                 seen[cid] = score
                 
-    """ # --- graph search on the raw query ---
+    # --- graph search on the raw query ---
     # Graph hits are added to the same pool before filtering.
     # Scores are scaled to the same order of magnitude as RRF scores so
     # the relative-score filter treats them fairly.
@@ -37,7 +43,6 @@ def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10) -> list[t
             scaled = gscore * top_hybrid_score
             if cid not in seen or scaled > seen[cid]:
                 seen[cid] = scaled
-    """
 
     top_candidates_sorted = sorted(seen.items(), key=lambda x: x[1], reverse=True)
     if top_candidates_sorted:

@@ -14,7 +14,7 @@ from retrieval.pipeline import retrieve
 from retrieval.bootstrap import PROJ2_SRC
 
 EVAL_QUERIES_PATH = PROJ2_SRC.parent / "eval" / "eval_queries.json"
-RESULTS_PATH = Path(__file__).resolve().parent / "results" / "retrieval_results.json"
+RESULTS_PATH = Path(__file__).resolve().parent / "results_with_graph_search" / "retrieval_results.json"
 RESULTS_PATH.parent.mkdir(exist_ok=True)
 
 

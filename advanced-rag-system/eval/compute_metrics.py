@@ -10,7 +10,7 @@ is binary (1 if found in top-k, else 0), and precision@k = 1/k on a hit,
 import json
 from pathlib import Path
 
-RESULTS_PATH = Path(__file__).resolve().parent / "results" / "retrieval_results.json"
+RESULTS_PATH = Path(__file__).resolve().parent / "results_with_graph_search" / "retrieval_results.json"
 K_VALUES = [1, 3, 5, 10]
 
 

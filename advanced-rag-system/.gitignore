@@ -221,5 +221,6 @@ __marimo__/
 #mine
 notes.txt
 eval/results/
+eval/results_with_graph_search/
 graphs.ipynb
 graphs/graph.pkl
