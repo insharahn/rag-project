@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi import FastAPI
 from pydantic import BaseModel
+from langdetect import detect, LangDetectException
+
 
 from retrieval.bootstrap import get_index
 from retrieval.bm25_index import get_bm25_index
@@ -19,14 +21,22 @@ from retrieval.vector_search import _get_model as _get_embed_model
 from retrieval.pipeline import retrieve
 from generation.citation_generator import generate_answer
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Advanced RAG System", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+SUPPORTED_QUERY_LANGUAGES = {"en", "ko", "ur"}
 
 
 @app.on_event("startup")
 def load_everything():
-    """Warm every component once, so no request pays index-build or
-    model-load cost. This is the fix validated in test_warm_latency.py —
-    warm local components are fast; only LLM calls remain variable."""
     print("[startup] loading corpus + FAISS index...")
     get_index()
     print("[startup] loading BM25 index...")
@@ -35,6 +45,13 @@ def load_everything():
     _get_embed_model()
     print("[startup] loading reranker...")
     _get_reranker()
+    # graph (skipped if not built yet)
+    try:
+        from graphs.graph_index import get_graph
+        get_graph()
+        print("[startup] graph loaded.")
+    except FileNotFoundError:
+        print("[startup] graph not found — run python graphs/build_graph.py to enable graph retrieval.")
     print("[startup] ready.")
 
 
@@ -53,6 +70,19 @@ class QueryResponse(BaseModel):
 
 @app.post("/query", response_model=QueryResponse)
 async def query(req: QueryRequest):
+     # Language gate — only English, Korean, Urdu are supported
+    try:
+        if len(req.query.strip()) >= 20:  # langdetect is unreliable on very short strings
+            detected = detect(req.query)
+            if detected not in SUPPORTED_QUERY_LANGUAGES:
+                return QueryResponse(
+                    answer=f"This system only supports queries in English, Korean, or Urdu. Detected language: {detected}.",
+                    sources={}, confidence="low", top_score=0.0,
+                    latency_seconds=0.0,
+                )
+    except LangDetectException:
+        pass  # detection failed, let the query through rather than blocking valid input
+
     t0 = time.time()
     try:
         chunks = await asyncio.wait_for(

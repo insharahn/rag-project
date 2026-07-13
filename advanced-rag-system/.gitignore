@@ -221,3 +221,5 @@ __marimo__/
 #mine
 notes.txt
 eval/results/
+graphs.ipynb
+graphs/graph.pkl
