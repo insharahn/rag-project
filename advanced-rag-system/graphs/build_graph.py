@@ -28,42 +28,6 @@ PROCESSED   = (
     / "processed_documents"
 )
 
-def canonicalize_entities_per_document(doc_chunks: list[dict]) -> dict[str, str]:
-    """
-    Within a single document's chunks, build an alias map: short entity -> 
-    canonical (longest) form, when the short form's words are a subset of
-    the long form's words. E.g. "sydney" -> "sydney carton" if both appear
-    in the same document.
-
-    Scoped per-document deliberately: merging "sydney" -> "sydney carton"
-    is safe within one book, but merging across unrelated documents that
-    happen to share a common first name would create false connections.
-    """
-    all_entities = set()
-    for chunk in doc_chunks:
-        all_entities |= extract_entities(chunk["text"], chunk.get("language"))
-
-    # sort longest-first so we always prefer the most complete form as canonical
-    sorted_ents = sorted(all_entities, key=lambda e: -len(e.split()))
-
-    alias_map = {}
-    for short in sorted_ents:
-        short_words = set(short.split())
-        if short in alias_map:
-            continue
-        best_match = None
-        for long in sorted_ents:
-            if long == short or len(long.split()) <= len(short_words):
-                continue
-            long_words = set(long.split())
-            if short_words.issubset(long_words):
-                # prefer the shortest superset match (most specific canonical form)
-                if best_match is None or len(long.split()) < len(best_match.split()):
-                    best_match = long
-        alias_map[short] = best_match if best_match else short
-
-    return alias_map
-
 # ---------------------------------------------------------------------------
 # English: capitalized-sequence heuristic (no spacy needed)
 # ---------------------------------------------------------------------------
@@ -130,6 +94,8 @@ def _extract_ko(text: str) -> set[str]:
             entities.add(tok.form)
     return entities
 
+
+
 # ---------------------------------------------------------------------------
 # Urdu: frequency + length heuristics over Arabic-script tokens
 # ---------------------------------------------------------------------------
@@ -146,7 +112,7 @@ def _extract_ur(text: str) -> set[str]:
 
 
 # ---------------------------------------------------------------------------
-# Script detection
+# Script detection (no langdetect — just Unicode block counts)
 # ---------------------------------------------------------------------------
 def detect_script(text: str) -> str:
     hangul = len(re.findall(r"[\uAC00-\uD7A3]", text))
@@ -159,48 +125,38 @@ def detect_script(text: str) -> str:
     return "en"
 
 
-def normalize_entity(ent: str) -> str:
-    """Lowercase, strip accents, collapse whitespace."""
-    nfkd = unicodedata.normalize("NFKD", ent)
-    stripped = "".join(c for c in nfkd if not unicodedata.combining(c))
-    return " ".join(stripped.lower().split())
-
 def extract_entities(text: str, lang: str | None = None) -> set[str]:
     if lang is None:
         lang = detect_script(text)
     if lang == "ko":
-        raw = _extract_ko(text)
-    elif lang == "ur":  
-        raw = _extract_ur(text)
-    else:
-        raw = _extract_en(text)
-    return {normalize_entity(e) for e in raw if normalize_entity(e)}
-
+        return _extract_ko(text)
+    if lang == "ur":
+        return _extract_ur(text)
+    return _extract_en(text)
 
 
 # ---------------------------------------------------------------------------
 # Graph construction
 # ---------------------------------------------------------------------------
 def build_graph(corpus: list[dict]) -> dict:
+    """
+    Returns:
+        entity_to_chunks : entity_str -> set of chunk_ids
+        chunk_to_entities: chunk_id  -> set of entity_strs
+        co_occurrence    : entity    -> set of entities co-occurring in same chunk
+    """
     entity_to_chunks  = defaultdict(set)
     chunk_to_entities = defaultdict(set)
 
-    # group chunks by source document (chunk_id format is "{doc_stem}__{index}")
-    by_doc = defaultdict(list)
-    for chunk in corpus:
-        doc_stem = chunk["chunk_id"].rsplit("__", 1)[0]
-        by_doc[doc_stem].append(chunk)
-
-    print(f"[build_graph] extracting entities from {len(corpus)} chunks across {len(by_doc)} documents…")
-    for doc_stem, doc_chunks in by_doc.items():
-        alias_map = canonicalize_entities_per_document(doc_chunks)
-        for chunk in doc_chunks:
-            cid = chunk["chunk_id"]
-            raw_entities = extract_entities(chunk["text"], chunk.get("language"))
-            canon_entities = {alias_map.get(e, e) for e in raw_entities}
-            for ent in canon_entities:
-                entity_to_chunks[ent].add(cid)
-                chunk_to_entities[cid].add(ent)
+    print(f"[build_graph] extracting entities from {len(corpus)} chunks…")
+    for i, chunk in enumerate(corpus):
+        if i % 1000 == 0:
+            print(f"  {i}/{len(corpus)}")
+        cid  = chunk["chunk_id"]
+        lang = chunk.get("language")
+        for ent in extract_entities(chunk["text"], lang):
+            entity_to_chunks[ent].add(cid)
+            chunk_to_entities[cid].add(ent)
 
     print("[build_graph] computing co-occurrence edges…")
     co_occurrence = defaultdict(set)
