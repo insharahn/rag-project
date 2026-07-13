@@ -42,6 +42,9 @@ app.mount("/ui", StaticFiles(directory="ui", html=True), name="ui")
 #week 2
 app.mount("/week2", StaticFiles(directory="ui_week2", html=True), name="week2")
 
+#week 3
+app.mount("/week3", StaticFiles(directory="ui_week3", html=True), name="week3")
+
 WEEK2_RESULTS = Path("../proj-emb-vec") 
 
 @app.get("/week2-data/{strategy}")
