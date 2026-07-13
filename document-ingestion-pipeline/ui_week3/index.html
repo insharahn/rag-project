@@ -245,7 +245,7 @@ body {
 <div class="main">
     <div class="container">
         <h1>Ask the corpus</h1>
-        <p class="subtitle">Query rewriting → multi-query → hybrid search → reranking → cited answer generation.</p>
+        <p class="subtitle">The query runs through a full pipeline, so please be patient :)</p>
 
         <div class="query-box">
             <div class="query-row">
@@ -395,10 +395,10 @@ function renderResult(data) {
     document.getElementById('score-stat').textContent = `top score: ${data.top_score.toFixed(3)}`;
     document.getElementById('latency-stat').textContent = `${data.latency_seconds.toFixed(1)}s`;
 
-    const answerHtml = esc(data.answer).replace(/\[(\d+)\]/g, (m, n) => {
-        return lastSources[n]
-            ? `<span class="cite-chip" onclick="toggleSource('${n}')">[${n}]</span>`
-            : m;
+    const answerHtml = esc(data.answer).replace(/[\[【](\d+)[\]】]/g, (m, n) => {
+    return lastSources[n]
+        ? `<span class="cite-chip" onclick="toggleSource('${n}')">[${n}]</span>`
+        : m;
     });
     document.getElementById('answer-box').innerHTML = answerHtml;
 
