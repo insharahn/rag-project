@@ -24,6 +24,20 @@ def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10) -> list[t
         for cid, score in hybrid_search(variant, k=candidate_pool):
             if cid not in seen or score > seen[cid]:
                 seen[cid] = score
+                
+    """ # --- graph search on the raw query ---
+    # Graph hits are added to the same pool before filtering.
+    # Scores are scaled to the same order of magnitude as RRF scores so
+    # the relative-score filter treats them fairly.
+    if _GRAPH_AVAILABLE and seen:
+        top_hybrid_score = max(seen.values())
+        for cid, gscore in graph_search(raw_query, top_k=candidate_pool):
+            # A graph score of 1.0 (perfect entity match) maps to the top hybrid score.
+            # This keeps high-entity-match chunks competitive without dominating.
+            scaled = gscore * top_hybrid_score
+            if cid not in seen or scaled > seen[cid]:
+                seen[cid] = scaled
+    """
 
     top_candidates_sorted = sorted(seen.items(), key=lambda x: x[1], reverse=True)
     if top_candidates_sorted:
