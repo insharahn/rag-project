@@ -814,9 +814,32 @@ async function upload(files) {
 // reindexing
 const RAG_API = 'http://127.0.0.1:8001';
 
-function showReindexPrompt() {
-    document.getElementById('reindex-banner').style.display = 'flex';
-    document.getElementById('reindex-status').textContent = '';
+async function showReindexPrompt() {
+    const banner = document.getElementById('reindex-banner');
+    const textEl = document.getElementById('reindex-banner-text');
+    const actionsEl = document.querySelector('.reindex-actions');
+
+    banner.style.display = 'flex';
+    document.getElementById('reindex-status').textContent = 'Checking index status...';
+    actionsEl.style.display = 'none';
+
+    try {
+        const r = await fetch(`${RAG_API}/reindex/status`);
+        const data = await r.json();
+
+        document.getElementById('reindex-status').textContent = '';
+        if (data.pending_new_chunks > 0) {
+            textEl.textContent = `${data.pending_new_chunks} unindexed chunk(s) found — index the RAG system now?`;
+            actionsEl.style.display = 'flex';
+        } else {
+            textEl.textContent = 'Index is already up to date — nothing to reindex.';
+            actionsEl.style.display = 'none';
+            setTimeout(dismissReindexBanner, 3000);
+        }
+    } catch {
+        textEl.textContent = 'Could not check index status — is the RAG API running (port 8001)?';
+        actionsEl.style.display = 'none';
+    }
 }
 
 function dismissReindexBanner() {

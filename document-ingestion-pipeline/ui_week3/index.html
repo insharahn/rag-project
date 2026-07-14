@@ -50,6 +50,9 @@ body {
 .container h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
 .container .subtitle { font-size: 14px; color: #a09888; margin-bottom: 24px; }
 
+.answer-box p { margin: 0 0 10px 0; }
+.answer-box p:last-child { margin-bottom: 0; }
+
 .index-status.current { color: #6a9a7a; }
 .index-status.stale {
     color: #c08030;
@@ -423,6 +426,14 @@ async function ask() {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
+function renderMarkdownLite(text) {
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')   // **bold**
+        .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')  // *italic* (not part of **)
+        .replace(/\n\n/g, '</p><p>')                          // paragraph breaks
+        .replace(/\n/g, '<br>');                              // single line breaks
+}
+
 function renderResult(data) {
     lastSources = data.sources || {};
 
@@ -433,10 +444,12 @@ function renderResult(data) {
     document.getElementById('score-stat').textContent = `top score: ${data.top_score.toFixed(3)}`;
     document.getElementById('latency-stat').textContent = `${data.latency_seconds.toFixed(1)}s`;
 
-    const answerHtml = esc(data.answer).replace(/[\[【](\d+)[\]】]/g, (m, n) => {
-    return lastSources[n]
-        ? `<span class="cite-chip" onclick="toggleSource('${n}')">[${n}]</span>`
-        : m;
+    let answerHtml = renderMarkdownLite(esc(data.answer));
+    answerHtml = `<p>${answerHtml}</p>`;
+    answerHtml = answerHtml.replace(/[\[【](\d+)[\]】]/g, (m, n) => {
+        return lastSources[n]
+            ? `<span class="cite-chip" onclick="toggleSource('${n}')">[${n}]</span>`
+            : m;
     });
     document.getElementById('answer-box').innerHTML = answerHtml;
 
