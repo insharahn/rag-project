@@ -1,8 +1,6 @@
 """
-query_rewrite.py — task 1: rewrite a raw user query into a cleaner search
+query_rewrite.py: rewrite a raw user query into a cleaner search
 query before retrieval. 
-Handles vague/colloquial phrasing, expands implicit
-context, keeps it as a single focused query (multi-query variants come later).
 """
 import sys
 from pathlib import Path

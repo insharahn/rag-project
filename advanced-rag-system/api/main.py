@@ -1,7 +1,7 @@
 """
-main.py — end-to-end RAG API. Loads all models/indices ONCE at startup
-(not per-request), exposes a single /query endpoint that runs the full
-pipeline: rewrite -> multi-query -> hybrid search -> rerank -> cited answer.
+main.py — end-to-end RAG API
+runs the full pipeline: 
+rewrite -> multi-query -> hybrid search -> rerank -> cited answer.
 """
 import sys
 import time
@@ -40,8 +40,7 @@ SUPPORTED_QUERY_LANGUAGES = {"en", "ko", "ur"}
 @app.post("/reindex/partial")
 def reindex_partial():
     """Detect and index any chunks in the corpus not yet in FAISS/BM25/graph.
-    Self-detecting — no need to specify which document is new; diffs the
-    full corpus against what's currently indexed."""
+    Diffs the full corpus against what's currently indexed."""
     import numpy as np
     from sentence_transformers import SentenceTransformer
     from retrieval.bootstrap import save_current_state as save_faiss
@@ -104,11 +103,10 @@ def reindex_full():
     """Rebuild FAISS, BM25, and the graph from scratch using the FULL
     current corpus (all documents, old and new). Reuses the same build
     functions bootstrap.py and bm25_index.py already use for the very
-    first startup build — this just re-triggers that path on demand.
+    first startup build, just re-triggers that path on demand.
 
     WARNING: re-embeds the entire corpus on CPU. It will take a LONG time 
-    to run. Intended to be run rarely/manually, not from the UI without a 
-    clear warning to the user.
+    to run. 
     """
     import numpy as np
     from sentence_transformers import SentenceTransformer
@@ -159,8 +157,8 @@ def reindex_full():
     
 @app.get("/reindex/status")
 def reindex_status():
-    """Read-only check: how many corpus chunks are not yet indexed.
-    Does NOT trigger any embedding/indexing — safe to poll."""
+    """check how many corpus chunks are not yet indexed.
+    """
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "proj-emb-vec" / "src"))
     from loader import load_corpus
 
@@ -171,6 +169,9 @@ def reindex_status():
 
     return {"pending_new_chunks": len(new_ids), "total_indexed": len(current_ids)}
 
+"""
+load on startup so the first query doesn't have to pay the model load penalty
+"""
 @app.on_event("startup")
 def load_everything():
     print("[startup] loading corpus + FAISS index...")
@@ -206,9 +207,9 @@ class QueryResponse(BaseModel):
 
 @app.post("/query", response_model=QueryResponse)
 async def query(req: QueryRequest):
-     # Language gate — only English, Korean, Urdu are supported
+    #only allow korean. urdu, or eng queries
     try:
-        if len(req.query.strip()) >= 20:  # langdetect is unreliable on very short strings
+        if len(req.query.strip()) >= 20:  # langdetect unreliable on very short strings
             detected = detect(req.query)
             if detected not in SUPPORTED_QUERY_LANGUAGES:
                 return QueryResponse(

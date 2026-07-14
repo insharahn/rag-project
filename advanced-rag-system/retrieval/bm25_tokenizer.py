@@ -1,7 +1,5 @@
 """
 bm25_tokenizer.py — language-aware tokenization for BM25.
-BM25 has no language logic of its own; it just scores pre-tokenized token
-lists. This module is where "language-awareness" actually lives.
 """
 import re
 import unicodedata

@@ -1,15 +1,8 @@
 """
-rerank.py — task 4: cross-encoder reranking. Takes the fused candidate pool
-from hybrid_search and re-scores each (query, chunk) pair jointly — this is
-more accurate than bi-encoder similarity (vector search) or lexical overlap
-(BM25) because the model reads the query and chunk together, rather than
-comparing precomputed independent representations. Too slow to run on the
-whole corpus, which is why it's a second-stage filter over ~30 candidates,
-not a first-stage retriever.
-
-Using BAAI/bge-reranker-base — same family as bge-m3, multilingual, so it's
-consistent with the rest of the pipeline for the Korean/Urdu portion of the
-corpus too (ms-marco-MiniLM alternatives are English-only).
+rerank.py: cross-encoder reranking. Takes the fused candidate pool
+from hybrid_search and re-scores each (query, chunk) pair jointly
+using BAAI/bge-reranker-base cause
+same family as bge-m3, multilingual, so it's consistent with the rest of the pipeline
 """
 import sys
 from pathlib import Path

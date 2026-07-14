@@ -1,7 +1,7 @@
 """
 graphs/graph_index.py
 
-Loads the pickled graph once and exposes a scored chunk-lookup interface.
+Loads the graph once and exposes a scored chunk-lookup interface.
 """
 import pickle
 from functools import lru_cache
@@ -37,7 +37,7 @@ def get_chunks_for_entities(entities: list[str], hop: int = 1) -> dict[str, floa
       direct hit  — fraction of query entities present in that chunk (0–1)
       one-hop hit — same but multiplied by 0.5 (co-occurring entity, not direct)
 
-    Returns {} gracefully if graph is not built yet.
+    Returns empty dict if graph is not built yet.
     """
     try:
         graph = get_graph()
@@ -45,8 +45,8 @@ def get_chunks_for_entities(entities: list[str], hop: int = 1) -> dict[str, floa
         return {}
 
     entity_to_chunks = graph["entity_to_chunks"]
-    co_occurrence    = graph["co_occurrence"]
-    n                = max(len(entities), 1)
+    co_occurrence = graph["co_occurrence"]
+    n = max(len(entities), 1)
 
     # --- direct hits ---
     scores: dict[str, float] = {}

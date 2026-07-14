@@ -1,10 +1,6 @@
 """
-citation_generator.py — task 5: generates an answer with inline citations
-[1], [2], etc. mapped back to source chunks. Uses the reranker's top score
-as a confidence gate — below threshold, the system hedges/refuses rather
-than let the LLM confidently answer off weak grounding (validated need for
-this: see "the outsider guy's job" query, which retrieved nothing above 0.35
-rerank score because no chunk actually states the answer).
+citation_generator.py — generates an answer with inline citations
+[1], [2], etc. mapped back to source chunks.
 """
 import sys
 import re
@@ -13,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
 
-CONFIDENCE_THRESHOLD = 0.5  # below this top rerank score, hedge instead of answer
+CONFIDENCE_THRESHOLD = 0.5  # chance to hallucinate below this
 
 CITATION_SYSTEM_PROMPT = """You are a question-answering assistant that MUST
 ground every claim in the provided context chunks.

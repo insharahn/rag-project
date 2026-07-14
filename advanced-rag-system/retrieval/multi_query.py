@@ -1,8 +1,6 @@
 """
-multi_query.py — task 2: generate multiple query variants from a rewritten
-query to cast a wider net during retrieval. Variants explore different
-angles/phrasings/possible resolutions of ambiguous references, so retrieval
-isn't betting everything on one phrasing.
+multi_query.py: generate multiple query variants from a rewritten
+query to cast a wider net during retrieval.
 """
 import sys
 from pathlib import Path

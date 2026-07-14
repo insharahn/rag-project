@@ -1,6 +1,6 @@
 """
-vector_search.py — task 3 (vector half): embeds a query with bge-m3 (same
-model/config as project 2's corpus embeddings) and searches the FAISS index
+vector_search.py: embeds a query with bge-m3 (same
+model/config as week 2's corpus embeddings) and searches the FAISS index
 from bootstrap.py. Returns results in the same (chunk_id, score) convention
 as bm25_index.py, so fusion can treat both identically.
 """
@@ -14,7 +14,7 @@ from retrieval.bootstrap import get_index
 _state = {}
 
 MODEL_ID = "BAAI/bge-m3"
-QUERY_PREFIX = ""  # bge-m3 query prefix is empty, per project 2's embed_queries.py
+QUERY_PREFIX = ""  # bge-m3 query prefix is empty
 
 
 def _get_model():
@@ -35,7 +35,7 @@ def embed_query(query: str):
 
 
 def search(query: str, k: int = 10) -> list[tuple[str, float]]:
-    """Returns top-k [(chunk_id, score), ...] sorted best-first."""
+    """Returns top-k [(chunk_id, score), ...] sorted."""
     db, _ = get_index()
     query_vec = embed_query(query)
     return db.search(query_vec, k=k)

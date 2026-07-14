@@ -1,7 +1,5 @@
 """
-bootstrap.py — loads project 2's corpus + bge-m3 embeddings, builds (or
-loads a persisted) FAISS index. This is the single source of truth for
-retrieval state; call get_index() once at API startup, not per-request.
+bootstrap.py — loads project 2's corpus + bge-m3 embeddings, builds/loads FAISS index
 """
 import sys
 import json
@@ -16,9 +14,7 @@ from loader import load_corpus
 from emb_store import load_embeddings
 from db.faiss_db import FaissDB
 
-# Persisted index lives inside advanced-rag-system itself, not proj-emb-vec —
-# this is OUR mutable retrieval state now, separate from phase 2's read-only
-# benchmark artifacts.
+# persisted index lives inside advanced-rag-system itself, not proj-emb-vec (week 2)
 INDEX_DIR = Path(__file__).resolve().parent.parent / "index_data"
 INDEX_DIR.mkdir(exist_ok=True)
 FAISS_PATH = INDEX_DIR / "faiss.index"

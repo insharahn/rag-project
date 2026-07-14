@@ -1,15 +1,9 @@
 """
 graphs/build_graph.py
 
-Offline graph construction. Run once:
-    python graphs/build_graph.py
-
 Reads the corpus from the ingestion pipeline, extracts entities per chunk
 using language-appropriate heuristics, builds a co-occurrence graph, and
 pickles it to graphs/graph.pkl.
-
-No new dependencies — uses kiwipiepy (already installed) for Korean,
-stdlib re/unicodedata for English and Urdu.
 """
 import json
 import pickle
@@ -29,7 +23,7 @@ PROCESSED   = (
 )
 
 # ---------------------------------------------------------------------------
-# English: capitalized-sequence heuristic (no spacy needed)
+# English: capitalized-sequence heuristic
 # ---------------------------------------------------------------------------
 _EN_STOP = {
     "the","a","an","and","or","but","in","on","at","to","for","of","with",
@@ -112,7 +106,7 @@ def _extract_ur(text: str) -> set[str]:
 
 
 # ---------------------------------------------------------------------------
-# Script detection (no langdetect — just Unicode block counts)
+# Script detection uwing Unicode block counts
 # ---------------------------------------------------------------------------
 def detect_script(text: str) -> str:
     hangul = len(re.findall(r"[\uAC00-\uD7A3]", text))
@@ -142,8 +136,8 @@ def build_graph(corpus: list[dict]) -> dict:
     """
     Returns:
         entity_to_chunks : entity_str -> set of chunk_ids
-        chunk_to_entities: chunk_id  -> set of entity_strs
-        co_occurrence    : entity    -> set of entities co-occurring in same chunk
+        chunk_to_entities: chunk_id -> set of entity_strs
+        co_occurrence : entity -> set of entities co-occurring in same chunk
     """
     entity_to_chunks  = defaultdict(set)
     chunk_to_entities = defaultdict(set)
@@ -176,7 +170,7 @@ def build_graph(corpus: list[dict]) -> dict:
     return {
         "entity_to_chunks":  dict(entity_to_chunks),
         "chunk_to_entities": dict(chunk_to_entities),
-        "co_occurrence":     dict(co_occurrence),
+        "co_occurrence": dict(co_occurrence),
     }
 
 

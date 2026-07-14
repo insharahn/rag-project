@@ -1,6 +1,5 @@
 """
-hybrid_search.py — orchestrates BM25 + vector search + RRF fusion into one
-callable, the actual "hybrid search" from task 3.
+hybrid_search.py — orchestrates BM25 + vector search + RRF fusion into one callable
 """
 import sys
 from pathlib import Path

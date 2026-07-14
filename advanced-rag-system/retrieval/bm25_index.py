@@ -1,5 +1,5 @@
 """
-bm25_index.py — task 3 (BM25 half): builds (or loads a persisted) BM25
+bm25_index.py: builds (or loads a persisted) BM25
 index over the full corpus using language-aware tokenization.
 """
 import sys
@@ -40,7 +40,7 @@ def _save_state(bm25, ids):
 
 
 def get_bm25_index():
-    """Lazy singleton — loads persisted index if present, otherwise builds
+    """loads persisted index if present, otherwise builds
     fresh from the corpus and persists it."""
     if "bm25" not in _state:
         if BM25_PATH.exists():
