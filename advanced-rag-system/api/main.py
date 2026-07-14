@@ -16,7 +16,6 @@ from langdetect import detect, LangDetectException
 
 from retrieval.bootstrap import get_index
 from retrieval.bm25_index import get_bm25_index
-from retrieval.bm25_index import build_bm25_index
 from retrieval.rerank import _get_reranker
 from retrieval.vector_search import _get_model as _get_embed_model
 from retrieval.vector_search import embed_query
@@ -39,51 +38,65 @@ SUPPORTED_QUERY_LANGUAGES = {"en", "ko", "ur"}
 
 
 @app.post("/reindex/partial")
-def reindex_partial(req: ReindexRequest):
-    """Embed and index only the newly uploaded documents' chunks.
-    Appends to FAISS, rebuilds BM25 (cheap), merges new entities into graph."""
+def reindex_partial():
+    """Detect and index any chunks in the corpus not yet in FAISS/BM25/graph.
+    Self-detecting — no need to specify which document is new; diffs the
+    full corpus against what's currently indexed."""
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+    from retrieval.bootstrap import save_current_state as save_faiss
+    from retrieval.bm25_index import _build_fresh, save_current_state as save_bm25
+    from retrieval import bm25_index as bm25_module
+    from graphs.build_graph import extract_entities
+    from graphs.graph_index import get_graph, save_graph
+
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "proj-emb-vec" / "src"))
     from loader import load_corpus
 
     db, text_by_id = get_index()
-
-    # 1. load ONLY the new docs' chunks (loader already reads the full metadata.json,
-    #    so filter to just the new stems)
+    current_ids = set(db.ids)
     full_corpus = load_corpus(strategy="semantic")
-    new_chunks = [c for c in full_corpus if c["chunk_id"].split("__")[0] in req.new_doc_stems]
+    new_chunks = [c for c in full_corpus if c["chunk_id"] not in current_ids]
 
     if not new_chunks:
-        return {"status": "no new chunks found", "indexed": 0}
+        return {"status": "up to date", "new_chunks_indexed": 0, "total_chunks": len(db.ids)}
 
-    # 2. embed just the new chunks (fast — few hundred chunks max)
-    from sentence_transformers import SentenceTransformer
+    # FAISS
     model = SentenceTransformer("BAAI/bge-m3", device="cpu")
-    texts = [c["text"] for c in new_chunks]
-    new_vecs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True).astype("float32")
-
-    # 3. FAISS: append, don't rebuild
+    new_vecs = model.encode([c["text"] for c in new_chunks], normalize_embeddings=True, convert_to_numpy=True).astype(np.float32)
     db.index.add(new_vecs)
     db.ids.extend([c["chunk_id"] for c in new_chunks])
-
-    # 4. update in-memory text lookup so retrieval can find the new chunks' text
     for c in new_chunks:
         text_by_id[c["chunk_id"]] = c
+    save_faiss()
 
-    # 5. BM25: rebuild from the FULL corpus (old + new) — cheap, no GPU
-    build_bm25_index(full_corpus)
+    # BM25
+    new_bm25, new_ids = _build_fresh(full_corpus)
+    bm25_module._state["bm25"] = new_bm25
+    bm25_module._state["ids"] = new_ids
+    save_bm25()
 
-    # 6. graph: extract + merge entities from new chunks only
+    # Graph
     graph = get_graph()
     for c in new_chunks:
         cid = c["chunk_id"]
         ents = extract_entities(c["text"], c.get("language"))
         for ent in ents:
             graph["entity_to_chunks"].setdefault(ent, set()).add(cid)
-            graph["chunk_to_entities"].setdefault(cid, set()).update(ents)
-    # (co_occurrence update omitted here for brevity — same pairwise loop as build_graph.py,
-    #  scoped to just the new chunks' entity sets)
+        graph["chunk_to_entities"][cid] = ents
+        ent_list = list(ents)
+        for i, e1 in enumerate(ent_list):
+            for e2 in ent_list[i+1:]:
+                graph["co_occurrence"].setdefault(e1, set()).add(e2)
+                graph["co_occurrence"].setdefault(e2, set()).add(e1)
+    save_graph(graph)
 
-    return {"status": "ok", "indexed": len(new_chunks), "total_chunks": len(db.ids)}
+    return {
+        "status": "ok",
+        "new_chunks_indexed": len(new_chunks),
+        "new_chunk_ids": [c["chunk_id"] for c in new_chunks],
+        "total_chunks": len(db.ids),
+    }
 
 
 @app.post("/reindex/full")

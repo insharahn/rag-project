@@ -20,6 +20,14 @@ def get_graph() -> dict:
     with open(GRAPH_PATH, "rb") as f:
         return pickle.load(f)
 
+def save_graph(graph: dict):
+    """Persist the (possibly mutated) graph back to disk. Call after any
+    merge operation (e.g. partial reindex adding new chunks' entities)."""
+    import pickle
+    with open(GRAPH_PATH, "wb") as f:
+        pickle.dump(graph, f)
+    get_graph.cache_clear()  # force next get_graph() to reload from disk, not the stale lru_cache
+    print(f"[graph] persisted -> {GRAPH_PATH} ({len(graph['entity_to_chunks'])} entities)")
 
 def get_chunks_for_entities(entities: list[str], hop: int = 1) -> dict[str, float]:
     """
