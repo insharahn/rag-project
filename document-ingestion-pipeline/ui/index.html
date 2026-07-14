@@ -82,6 +82,35 @@ body {
 .status.err     { color: #c07060; }
 .status.loading { color: #b8965a; }
 
+/* reindexing thing */
+.reindex-banner {
+    background: #fef9e8;
+    border-bottom: 1.5px solid #e0c880;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #6a5a30;
+}
+.reindex-actions { display: flex; gap: 8px; margin-left: auto; }
+.reindex-btn {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.reindex-btn:hover { opacity: 0.85; }
+.reindex-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.reindex-btn.partial { background: #7aaa8f; color: #fff; }
+.reindex-btn.full { background: #c07060; color: #fff; }
+.reindex-btn.dismiss { background: #e8e3db; color: #6a6258; }
+.reindex-status { width: 100%; font-size: 12px; color: #8a7a50; }
+
 /* ── Layout ── */
 .main { display: flex; flex: 1; overflow: hidden; }
 
@@ -441,7 +470,18 @@ body {
     </div>
     <button class="upload-btn" id="upload-btn" onclick="triggerUpload()">Upload</button>
     <input type="file" id="file-input" multiple accept=".pdf,.docx,.html,.htm">
+    <button class="upload-btn" id="reindex-anytime-btn" onclick="showReindexPrompt()" style="background:#8a9ab0;">Reindex</button>
     <span class="status" id="status">Ready</span>
+</div>
+
+<div class="reindex-banner" id="reindex-banner" style="display:none;">
+    <span id="reindex-banner-text">New document(s) uploaded — index the RAG system now?</span>
+    <div class="reindex-actions">
+        <button class="reindex-btn partial" onclick="triggerReindex('partial')">Partial reindex (new docs only)</button>
+        <button class="reindex-btn full" onclick="confirmFullReindex()">Full reindex (entire corpus)</button>
+        <button class="reindex-btn dismiss" onclick="dismissReindexBanner()">Later</button>
+    </div>
+    <div class="reindex-status" id="reindex-status"></div>
 </div>
 
 <div class="main">
@@ -760,11 +800,67 @@ async function upload(files) {
 
         const first = data.results.find(r => r.status === 'success');
         if (first) selectDoc(first.filename);
+        if (ok > 0) {
+            showReindexPrompt();
+        }
     } catch {
         setStatus('Upload failed — is the server running?', 'err');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Upload';
+    }
+}
+
+// reindexing
+const RAG_API = 'http://127.0.0.1:8001';
+
+function showReindexPrompt() {
+    document.getElementById('reindex-banner').style.display = 'flex';
+    document.getElementById('reindex-status').textContent = '';
+}
+
+function dismissReindexBanner() {
+    document.getElementById('reindex-banner').style.display = 'none';
+}
+
+async function triggerReindex(mode) {
+    const statusEl = document.getElementById('reindex-status');
+    const buttons = document.querySelectorAll('.reindex-btn');
+    buttons.forEach(b => b.disabled = true);
+
+    statusEl.textContent = mode === 'full'
+        ? 'Full reindex running — this re-embeds the ENTIRE corpus and may take a very long time on CPU...'
+        : 'Indexing new document(s)...';
+
+    try {
+        const r = await fetch(`${RAG_API}/reindex/${mode}`, { method: 'POST' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+
+        if (mode === 'partial') {
+            statusEl.textContent = data.new_chunks_indexed > 0
+                ? `Done — indexed ${data.new_chunks_indexed} new chunk(s). Total: ${data.total_chunks}.`
+                : `Nothing new to index. Total: ${data.total_chunks}.`;
+        } else {
+            statusEl.textContent = `Full reindex complete — ${data.total_chunks} chunks, ${data.elapsed_seconds}s.`;
+        }
+        setTimeout(dismissReindexBanner, 5000);
+    } catch (e) {
+        statusEl.textContent = `Reindex failed: ${e.message}. Is the RAG API running on port 8001?`;
+        buttons.forEach(b => b.disabled = false);
+    }
+}
+
+function confirmFullReindex() {
+    const confirmed = confirm(
+        "Full reindex will re-embed the ENTIRE document corpus (10,000+ chunks) " +
+        "on CPU, which can take several hours and will block the RAG API during " +
+        "that time. Partial reindex (indexing only the new document) is almost " +
+        "always what you want instead.\n\n" +
+        "Are you sure you want to proceed with a FULL reindex?"
+    );
+    if (confirmed) {
+        triggerReindex('full');
     }
 }
 
