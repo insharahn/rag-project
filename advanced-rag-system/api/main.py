@@ -101,14 +101,75 @@ def reindex_partial():
 
 @app.post("/reindex/full")
 def reindex_full():
-    """Rebuild everything from scratch — full corpus, full re-embed.
-    WARNING: this re-embeds the entire corpus on CPU and will take hours.
-    Consider running this as a background task, not a blocking request."""
-    # same steps as bootstrap.get_index()'s build path, just forced fresh
-    # rather than using the cached singleton — reuses existing build_graph.py,
-    # FaissDB.build(), build_bm25_index() unchanged, just called on the FULL
-    # reloaded corpus instead of only new chunks.
-    ...
+    """Rebuild FAISS, BM25, and the graph from scratch using the FULL
+    current corpus (all documents, old and new). Reuses the same build
+    functions bootstrap.py and bm25_index.py already use for the very
+    first startup build — this just re-triggers that path on demand.
+
+    WARNING: re-embeds the entire corpus on CPU. It will take a LONG time 
+    to run. Intended to be run rarely/manually, not from the UI without a 
+    clear warning to the user.
+    """
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+    from retrieval.bootstrap import _build_fresh as faiss_build_fresh, _save_state as faiss_save_state, _state as faiss_state
+    from retrieval.bm25_index import _build_fresh as bm25_build_fresh, _save_state as bm25_save_state, _state as bm25_state
+    from graphs.build_graph import build_graph
+    from graphs.graph_index import save_graph, get_graph
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "proj-emb-vec" / "src"))
+    from loader import load_corpus
+
+    t0 = time.time()
+    full_corpus = load_corpus(strategy="semantic")
+
+    # --- FAISS: full rebuild (re-embeds every chunk, not just new ones) ---
+    from db.faiss_db import FaissDB  # via proj-emb-vec/src on sys.path
+    model = SentenceTransformer("BAAI/bge-m3", device="cpu")
+    texts = [c["text"] for c in full_corpus]
+    ids = [c["chunk_id"] for c in full_corpus]
+    all_vecs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True).astype(np.float32)
+
+    db = FaissDB()
+    db.build(all_vecs, ids)
+    text_by_id = {c["chunk_id"]: c for c in full_corpus}
+
+    faiss_state["db"] = db
+    faiss_state["ids"] = ids
+    faiss_state["text_by_id"] = text_by_id
+    faiss_save_state(db, ids, text_by_id)
+
+    # --- BM25: full rebuild ---
+    new_bm25, bm25_ids = bm25_build_fresh(full_corpus)
+    bm25_state["bm25"] = new_bm25
+    bm25_state["ids"] = bm25_ids
+    bm25_save_state(new_bm25, bm25_ids)
+
+    # --- Graph: full rebuild ---
+    new_graph = build_graph(full_corpus)
+    save_graph(new_graph)
+
+    elapsed = time.time() - t0
+    return {
+        "status": "ok",
+        "total_chunks": len(full_corpus),
+        "elapsed_seconds": round(elapsed, 2),
+        "note": "Full rebuild complete. All three indices (FAISS, BM25, graph) were reconstructed from the entire current corpus.",
+    }
+    
+@app.get("/reindex/status")
+def reindex_status():
+    """Read-only check: how many corpus chunks are not yet indexed.
+    Does NOT trigger any embedding/indexing — safe to poll."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "proj-emb-vec" / "src"))
+    from loader import load_corpus
+
+    db, _ = get_index()
+    current_ids = set(db.ids)
+    full_corpus = load_corpus(strategy="semantic")
+    new_ids = [c["chunk_id"] for c in full_corpus if c["chunk_id"] not in current_ids]
+
+    return {"pending_new_chunks": len(new_ids), "total_indexed": len(current_ids)}
 
 @app.on_event("startup")
 def load_everything():
