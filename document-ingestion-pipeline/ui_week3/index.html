@@ -472,6 +472,23 @@ function renderResult(data) {
             `).join('');
     }
 
+    // ── Follow-up question suggestions ──
+    let followupSection = document.getElementById('followup-section');
+    if (!followupSection) {
+        followupSection = document.createElement('div');
+        followupSection.id = 'followup-section';
+        document.getElementById('result-box').appendChild(followupSection);
+    }
+    const followups = data.followup_questions || [];
+    if (followups.length) {
+        followupSection.innerHTML = `<div class="sources-hd" style="margin-top:16px;">You might also ask</div>` +
+            `<div class="example-chips">` +
+            followups.map(q => `<div class="chip" onclick="document.getElementById('query-input').value = this.textContent; ask();">${esc(q)}</div>`).join('') +
+            `</div>`;
+    } else {
+        followupSection.innerHTML = '';
+    }
+
     document.getElementById('result-box').classList.add('show');
 }
 
