@@ -21,7 +21,13 @@ Rules:
 - Do NOT state anything not directly supported by the context.
 - If the context does not contain enough information to answer the question,
   say so plainly instead of guessing or filling gaps with outside knowledge.
-- Keep the answer concise and directly responsive to the question."""
+- Keep the answer concise and directly responsive to the question.
+
+After your answer, on a new line, output exactly:
+FOLLOWUPS:
+Then list exactly 3 short follow-up questions a curious reader might ask
+next, based ONLY on topics actually present in the context chunks above
+(not general knowledge). One per line, no numbering, no extra text."""
 
 
 def _format_context(chunks: list[tuple[str, dict, float]]) -> str:
@@ -43,6 +49,16 @@ def _extract_cited_indices(answer: str) -> set:
     matches = re.findall(r"\[(\d+)\]", answer)
     return {int(m) for m in matches}
 
+def _split_answer_and_followups(raw_response: str) -> tuple[str, list[str]]:
+    """Splits the LLM's raw output into the answer text and follow-up
+    questions, based on the FOLLOWUPS: marker."""
+    if "FOLLOWUPS:" not in raw_response:
+        return raw_response.strip(), []
+
+    answer_part, followups_part = raw_response.split("FOLLOWUPS:", 1)
+    followups = [line.strip("- ").strip() for line in followups_part.strip().split("\n") if line.strip()]
+    return answer_part.strip(), followups[:3]
+
 
 def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, float]]) -> dict:
     if not retrieved_chunks:
@@ -51,6 +67,7 @@ def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, floa
             "sources": {},
             "confidence": "low",
             "top_score": 0.0,
+            "followup_questions": [],
         }
 
     top_score = retrieved_chunks[0][2]
@@ -65,6 +82,7 @@ def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, floa
             "sources": _build_source_map(retrieved_chunks),
             "confidence": "low",
             "top_score": top_score,
+            "followup_questions": [],
         }
 
     context = _format_context(retrieved_chunks)
@@ -72,7 +90,9 @@ def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, floa
         {"role": "system", "content": CITATION_SYSTEM_PROMPT},
         {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {raw_query}"},
     ]
-    answer = call_llm(messages, temperature=0.2)
+    
+    answer_raw = call_llm(messages, temperature=0.2)
+    answer, followups = _split_answer_and_followups(answer_raw)
 
     full_sources = _build_source_map(retrieved_chunks)
     cited_indices = _extract_cited_indices(answer)
@@ -83,4 +103,5 @@ def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, floa
         "sources": cited_sources,
         "confidence": "high",
         "top_score": top_score,
+        "followup_questions": followups,
     }

@@ -203,6 +203,7 @@ class QueryResponse(BaseModel):
     confidence: str
     top_score: float
     latency_seconds: float
+    followup_questions: list[str] = []
 
 
 @app.post("/query", response_model=QueryResponse)
@@ -242,6 +243,7 @@ async def query(req: QueryRequest):
         answer=result["answer"], sources=result["sources"],
         confidence=result["confidence"], top_score=result["top_score"],
         latency_seconds=round(t1 - t0, 2),
+        followup_questions=result.get("followup_questions", []),
     )
 
 
