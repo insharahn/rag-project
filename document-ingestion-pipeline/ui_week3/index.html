@@ -53,6 +53,37 @@ body {
 .answer-box p { margin: 0 0 10px 0; }
 .answer-box p:last-child { margin-bottom: 0; }
 
+.chat-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-right: 4px;
+}
+.chat-container:empty { display: none; }
+.msg-user {
+    align-self: flex-end;
+    background: #e8f5ee;
+    border-radius: 12px 12px 2px 12px;
+    padding: 10px 16px;
+    max-width: 80%;
+    font-size: 14px;
+    color: #2e5c40;
+}
+.msg-assistant {
+    align-self: flex-start;
+    max-width: 100%;
+    width: 100%;
+}
+
+.clear-history-link:disabled {
+    color: #c8c0b4;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
 .index-status.current { color: #6a9a7a; }
 .index-status.stale {
     color: #c08030;
@@ -73,7 +104,7 @@ body {
     border: 1.5px solid #e8e3db;
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
 }
 .query-row { display: flex; gap: 10px; }
 .query-input {
@@ -107,6 +138,18 @@ body {
     font-size: 12px; background: #fffef9; cursor: pointer;
 }
 .query-hint { font-size: 11px; color: #c8c0b4; margin-top: 8px; }
+
+.clear-history-row { text-align: right; margin-bottom: 20px; }
+.clear-history-link {
+    background: none;
+    border: none;
+    color: #a09888;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px 2px;
+}
+.clear-history-link:hover { color: #7a7268; }
 
 .example-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
 .chip {
@@ -154,9 +197,6 @@ body {
     margin-bottom: 20px;
 }
 .error-box.show { display: block; }
-
-.result-box { display: none; }
-.result-box.show { display: block; }
 
 .result-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 .badge {
@@ -266,6 +306,16 @@ body {
         <h1>Ask the corpus</h1>
         <p class="subtitle">The query runs through a full pipeline, so please be patient :)</p>
 
+        <div class="chat-container" id="chat-container"></div>
+
+        <div class="loading-box" id="loading-box">
+            <div class="spinner"></div>
+            <div class="loading-text">Thinking this through…</div>
+            <div class="loading-timer" id="loading-timer">0s elapsed</div>
+        </div>
+
+        <div class="error-box" id="error-box"></div>
+
         <div class="query-box">
             <div class="query-row">
                 <textarea class="query-input" id="query-input" rows="2" placeholder="e.g. What does Camus say about death?"></textarea>
@@ -283,28 +333,14 @@ body {
             <div class="query-hint">Supported languages: English, Urdu, Korean.</div>
         </div>
 
+        <div class="clear-history-row">
+            <button class="clear-history-link" id="clear-history-btn" onclick="clearHistory()">Clear history</button>
+        </div>
+
         <div class="example-chips" id="example-chips">
             <div class="chip" onclick="setQuery(this)">main function in c programming</div>
             <div class="chip" onclick="setQuery(this)">what is a class in oop</div>
             <div class="chip" onclick="setQuery(this)">what is an adjective with examples</div>
-        </div>
-
-        <div class="loading-box" id="loading-box">
-            <div class="spinner"></div>
-            <div class="loading-text">Thinking this through…</div>
-            <div class="loading-timer" id="loading-timer">0s elapsed</div>
-        </div>
-
-        <div class="error-box" id="error-box"></div>
-
-        <div class="result-box" id="result-box">
-            <div class="result-meta">
-                <span class="badge" id="confidence-badge"></span>
-                <span class="meta-stat" id="score-stat"></span>
-                <span class="meta-stat" id="latency-stat"></span>
-            </div>
-            <div class="answer-box" id="answer-box"></div>
-            <div id="sources-section"></div>
         </div>
     </div>
 </div>
@@ -313,10 +349,12 @@ body {
 const RAG_API = 'http://127.0.0.1:8001';
 const INGESTION_API = 'http://127.0.0.1:8000';
 
-let lastSources = {};
 let timerInterval = null;
+let msgCounter = 0;
+let allSources = {};  // msgId -> sources dict, replaces the old single `lastSources`
+let chatHistory = JSON.parse(localStorage.getItem('chat_history') || '[]');
 
-// ── Health check: poll continuously so the badge self-corrects ─────────────
+// ── Health check ─────────────────────────────────────────────────────────
 async function checkHealth() {
     const statusEl = document.getElementById('status');
     try {
@@ -333,14 +371,13 @@ async function checkHealth() {
 checkHealth();
 setInterval(checkHealth, 10000);
 
-// ── Index staleness check: read-only, polls /reindex/status ────────────────
+// ── Index staleness check ───────────────────────────────────────────────
 async function checkIndexStatus() {
     const el = document.getElementById('index-status');
     try {
         const r = await fetch(`${RAG_API}/reindex/status`);
         if (!r.ok) throw new Error();
         const data = await r.json();
-
         if (data.pending_new_chunks > 0) {
             el.innerHTML = `Index stale <span class="pending-count">${data.pending_new_chunks} unindexed chunk${data.pending_new_chunks > 1 ? 's' : ''}</span>`;
             el.className = 'topbar-right index-status stale';
@@ -349,7 +386,7 @@ async function checkIndexStatus() {
             el.className = 'topbar-right index-status current';
         }
     } catch {
-        el.textContent = '';  // RAG API unreachable — the other status badge already covers this
+        el.textContent = '';
     }
 }
 checkIndexStatus();
@@ -359,13 +396,25 @@ function setQuery(el) {
     document.getElementById('query-input').value = el.textContent;
 }
 
+function clearHistory() {
+    const clearBtn = document.getElementById('clear-history-btn');
+    if (clearBtn.disabled) return;
+    chatHistory = [];
+    localStorage.removeItem('chat_history');
+    document.getElementById('chat-container').innerHTML = '';
+    allSources = {};
+    msgCounter = 0;
+    document.getElementById('query-input').value = '';
+}
+
 document.getElementById('query-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!document.getElementById('ask-btn').disabled) ask();
+    }
 });
 
-// ── Language gating: only English, Urdu, Korean scripts allowed ────────────
-// Ranges: Basic Latin + Latin-1 supplement (English), Arabic block (Urdu),
-// Hangul syllables + Jamo (Korean). Whitespace/digits/punctuation are always allowed.
+// ── Language gating ─────────────────────────────────────────────────────
 const ALLOWED_CHAR_RE = /[\u0000-\u024F\u0600-\u06FF\u0750-\u077F\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F\s\d\p{P}]/u;
 
 function isAllowedLanguage(query) {
@@ -375,29 +424,33 @@ function isAllowedLanguage(query) {
     return true;
 }
 
-// ── Main ask flow ─────────────────────────────────────────────────────────
+// ── Main ask flow ────────────────────────────────────────────────────────
 async function ask() {
     const query = document.getElementById('query-input').value.trim();
     if (!query) return;
 
     const errorBox = document.getElementById('error-box');
-    const resultBox = document.getElementById('result-box');
 
     if (!isAllowedLanguage(query)) {
         errorBox.textContent = 'This system only supports queries in English, Urdu, or Korean. Please rephrase your query in one of these languages.';
         errorBox.classList.add('show');
-        resultBox.classList.remove('show');
         return;
     }
 
     const topK = document.getElementById('topk-select').value;
     const askBtn = document.getElementById('ask-btn');
+    const clearBtn = document.getElementById('clear-history-btn');
+    if (askBtn.disabled) return;
     const loadingBox = document.getElementById('loading-box');
 
     askBtn.disabled = true;
+    clearBtn.disabled = true;
     errorBox.classList.remove('show');
-    resultBox.classList.remove('show');
     loadingBox.classList.add('show');
+
+    // show the user's message immediately, before the response comes back
+    appendUserMessage(query);
+    document.getElementById('query-input').value = '';
 
     let elapsed = 0;
     document.getElementById('loading-timer').textContent = '0s elapsed';
@@ -410,11 +463,30 @@ async function ask() {
         const r = await fetch(`${RAG_API}/query`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, top_k: parseInt(topK) }),
+            body: JSON.stringify({ query, top_k: parseInt(topK), history: chatHistory.slice(-6) }),
         });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
-        renderResult(data);
+
+        appendAssistantMessage(data);
+
+        // Don't persist hedged/failed turns — they add no useful context
+        // and can derail the next query's rewrite (poisons history with
+        // "corpus doesn't address this" type text).
+        const isHedge = data.confidence === 'low' && data.answer.includes("doesn't clearly address");
+        if (!isHedge) {
+            chatHistory.push({ role: 'user', content: query });
+            chatHistory.push({
+                role: 'assistant',
+                content: data.answer,
+                sources: data.sources,
+                confidence: data.confidence,
+                top_score: data.top_score,
+                followup_questions: data.followup_questions,
+            });
+            if (chatHistory.length > 40) chatHistory = chatHistory.slice(-40);
+            localStorage.setItem('chat_history', JSON.stringify(chatHistory));
+        }
     } catch (e) {
         errorBox.textContent = `Request failed: ${e.message}. Is the RAG API running on port 8001?`;
         errorBox.classList.add('show');
@@ -422,93 +494,111 @@ async function ask() {
         clearInterval(timerInterval);
         loadingBox.classList.remove('show');
         askBtn.disabled = false;
+        clearBtn.disabled = false;
     }
 }
 
-// ── Render ────────────────────────────────────────────────────────────────
+// ── Render helpers ───────────────────────────────────────────────────────
 function renderMarkdownLite(text) {
     return text
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')   // **bold**
-        .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')  // *italic* (not part of **)
-        .replace(/\n\n/g, '</p><p>')                          // paragraph breaks
-        .replace(/\n/g, '<br>');                              // single line breaks
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
 }
 
-function renderResult(data) {
-    lastSources = data.sources || {};
+function appendUserMessage(text) {
+    const container = document.getElementById('chat-container');
+    const div = document.createElement('div');
+    div.className = 'msg-user';
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
 
-    const badge = document.getElementById('confidence-badge');
-    badge.textContent = data.confidence === 'high' ? 'High confidence' : 'Low confidence';
-    badge.className = 'badge ' + (data.confidence === 'high' ? 'high' : 'low');
-
-    document.getElementById('score-stat').textContent = `top score: ${data.top_score.toFixed(3)}`;
-    document.getElementById('latency-stat').textContent = `${data.latency_seconds.toFixed(1)}s`;
-
+function buildAssistantHTML(data, msgId) {
+    const sources = data.sources || {};
     let answerHtml = renderMarkdownLite(esc(data.answer));
     answerHtml = `<p>${answerHtml}</p>`;
     answerHtml = answerHtml.replace(/[\[【](\d+)[\]】]/g, (m, n) => {
-        return lastSources[n]
-            ? `<span class="cite-chip" onclick="toggleSource('${n}')">[${n}]</span>`
+        return sources[n]
+            ? `<span class="cite-chip" onclick="toggleSource(${msgId}, '${n}')">[${n}]</span>`
             : m;
     });
-    document.getElementById('answer-box').innerHTML = answerHtml;
 
-    const sourcesSection = document.getElementById('sources-section');
-    const entries = Object.entries(lastSources);
-    if (!entries.length) {
-        sourcesSection.innerHTML = '';
-    } else {
-        sourcesSection.innerHTML = `<div class="sources-hd">Sources</div>` +
-            entries.map(([n, src]) => `
-                <div class="source-card" id="source-${n}">
-                    <div class="source-hd" onclick="toggleSource('${n}')">
-                        <span class="source-num">[${n}]</span>
-                        <span class="source-name">${esc(src.source_doc)}</span>
-                        <span class="source-score">rerank: ${src.rerank_score.toFixed(3)}</span>
-                        <span class="source-arrow">▶</span>
-                    </div>
-                    <div class="source-body" id="source-body-${n}"></div>
+    const badgeClass = data.confidence === 'high' ? 'high' : 'low';
+    const badgeText  = data.confidence === 'high' ? 'High confidence' : 'Low confidence';
+    const topScore   = typeof data.top_score === 'number' ? data.top_score.toFixed(3) : 'n/a';
+    const latency    = typeof data.latency_seconds === 'number' ? `${data.latency_seconds.toFixed(1)}s` : '';
+
+    const entries = Object.entries(sources);
+    const sourcesHtml = entries.length
+        ? `<div class="sources-hd">Sources</div>` + entries.map(([n, src]) => `
+            <div class="source-card" id="source-${msgId}-${n}">
+                <div class="source-hd" onclick="toggleSource(${msgId}, '${n}')">
+                    <span class="source-num">[${n}]</span>
+                    <span class="source-name">${esc(src.source_doc)}</span>
+                    <span class="source-score">rerank: ${src.rerank_score.toFixed(3)}</span>
+                    <span class="source-arrow">▶</span>
                 </div>
-            `).join('');
-    }
+                <div class="source-body" id="source-body-${msgId}-${n}"></div>
+            </div>
+        `).join('')
+        : '';
 
-    // ── Follow-up question suggestions ──
-    let followupSection = document.getElementById('followup-section');
-    if (!followupSection) {
-        followupSection = document.createElement('div');
-        followupSection.id = 'followup-section';
-        document.getElementById('result-box').appendChild(followupSection);
-    }
     const followups = data.followup_questions || [];
-    if (followups.length) {
-        followupSection.innerHTML = `<div class="sources-hd" style="margin-top:16px;">You might also ask</div>` +
-            `<div class="example-chips">` +
-            followups.map(q => `<div class="chip" onclick="document.getElementById('query-input').value = this.textContent; ask();">${esc(q)}</div>`).join('') +
-            `</div>`;
-    } else {
-        followupSection.innerHTML = '';
-    }
+    const followupHtml = followups.length
+        ? `<div class="sources-hd" style="margin-top:16px;">You might also ask</div>
+           <div class="example-chips">${followups.map(q =>
+               `<div class="chip" onclick="document.getElementById('query-input').value = this.textContent; ask();">${esc(q)}</div>`
+           ).join('')}</div>`
+        : '';
 
-    document.getElementById('result-box').classList.add('show');
+    return `
+        <div class="result-meta">
+            <span class="badge ${badgeClass}">${badgeText}</span>
+            <span class="meta-stat">top score: ${topScore}</span>
+            ${latency ? `<span class="meta-stat">${latency}</span>` : ''}
+        </div>
+        <div class="answer-box">${answerHtml}</div>
+        <div>${sourcesHtml}</div>
+        ${followupHtml}
+    `;
+}
+
+function appendAssistantMessage(data) {
+    const id = msgCounter++;
+    allSources[id] = data.sources || {};
+
+    const container = document.getElementById('chat-container');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-assistant';
+    wrap.innerHTML = buildAssistantHTML(data, id);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
 }
 
 // ── Expand a source: fetch the real chunk text from week 1's API ───────────
-async function toggleSource(n) {
-    const card = document.getElementById(`source-${n}`);
-    const body = document.getElementById(`source-body-${n}`);
+async function toggleSource(msgId, n) {
+    const card = document.getElementById(`source-${msgId}-${n}`);
+    const body = document.getElementById(`source-body-${msgId}-${n}`);
     if (!card) return;
 
     const wasOpen = card.classList.contains('open');
     card.classList.toggle('open');
     if (wasOpen) return;
-
     if (body.dataset.loaded) return;
 
     body.innerHTML = '<div class="source-chunk-loading">Loading source chunk…</div>';
 
-    const src = lastSources[n];
+    const src = allSources[msgId] ? allSources[msgId][n] : null;
+    if (!src) {
+        body.innerHTML = '<div class="source-chunk-loading">Source data not available.</div>';
+        return;
+    }
+
     const stem = src.source_doc.replace(/\.[^.]+$/, '');
-    const chunkIndex = src.chunk_id.includes('__') ? src.chunk_id.split('__').pop() : null;
+    const chunkIndex = src.chunk_id && src.chunk_id.includes('__') ? src.chunk_id.split('__').pop() : null;
 
     try {
         const r = await fetch(`${INGESTION_API}/documents/${encodeURIComponent(stem)}`);
@@ -530,6 +620,25 @@ async function toggleSource(n) {
 function esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ── Replay stored history on page load ──────────────────────────────────
+function replayHistory() {
+    for (const msg of chatHistory) {
+        if (msg.role === 'user') {
+            appendUserMessage(msg.content);
+        } else if (msg.role === 'assistant') {
+            appendAssistantMessage({
+                answer: msg.content,
+                sources: msg.sources || {},
+                confidence: msg.confidence,
+                top_score: msg.top_score,
+                followup_questions: msg.followup_questions,
+                latency_seconds: null,
+            });
+        }
+    }
+}
+replayHistory();
 </script>
 </body>
 </html>
