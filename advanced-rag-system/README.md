@@ -1,12 +1,13 @@
 # Advanced RAG System
 
-An end-to-end Retrieval-Augmented Generation (RAG) API that combines BM25 lexical search, FAISS vector search, optional graph search, reranking, and cited answer generation.
+An end-to-end Retrieval-Augmented Generation (RAG) API that combines BM25 lexical search, FAISS vector search, optional graph search, reranking, and cited answer generation with language detection and chat history.
 
 ## What It Does
 
 - Loads the heavy retrieval models and indexes once at startup.
 - Accepts a query, rewrites it, expands it into multiple variants, retrieves candidates, reranks them, and generates a cited answer.
 - Supports English, Korean, and Urdu queries.
+- Records chat history. 
 - Exposes partial and full reindex endpoints for keeping the indexes in sync with new corpus chunks.
 
 ## Quick Start
