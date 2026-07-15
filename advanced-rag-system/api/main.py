@@ -195,6 +195,7 @@ def load_everything():
 class QueryRequest(BaseModel):
     query: str
     top_k: int = 5
+    history: list[dict] = []
 
 
 class QueryResponse(BaseModel):
@@ -224,7 +225,7 @@ async def query(req: QueryRequest):
     t0 = time.time()
     try:
         chunks = await asyncio.wait_for(
-            asyncio.to_thread(retrieve, req.query, req.top_k),
+            asyncio.to_thread(retrieve, req.query, req.top_k, 10, req.history),
             timeout=120,
         )
         result = await asyncio.wait_for(

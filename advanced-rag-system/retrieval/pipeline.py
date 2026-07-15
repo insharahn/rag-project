@@ -19,10 +19,13 @@ try:
 except Exception:
     _GRAPH_AVAILABLE = False
     
-def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10) -> list[tuple[str, dict, float]]:
+def retrieve(raw_query: str, top_k: int = 5, candidate_pool: int = 10, history: list[dict] | None = None) -> list[tuple[str, dict, float]]:
     _, text_by_id = get_index()
 
-    rewritten = rewrite_query(raw_query)
+   # rewritten = rewrite_query(raw_query)
+    rewritten = rewrite_query(raw_query, history=history)
+    print(f"[DEBUG] raw={raw_query!r} -> rewritten={rewritten!r}")
+
     variants = generate_query_variants(raw_query, rewritten, n=3)
 
     seen: dict[str, float] = {}
