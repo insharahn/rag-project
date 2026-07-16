@@ -14,6 +14,7 @@ over a specific document corpus.
 Rules:
 - Preserve the original intent exactly, do not answer the question.
 - Remove filler words and fix ambiguity using only what's implied by the query itself.
+- If you identify a typo, correct it in the rewritten query. If you identify a vague pronoun or reference, resolve it into a specific noun phrase using only what's implied by the query itself.
 - Do NOT invent specific titles, names, or facts not stated or clearly implied by the query.
 - Do NOT state whether the corpus contains or lacks information on any topic —
   you have no access to the corpus and must never claim otherwise. Your only
