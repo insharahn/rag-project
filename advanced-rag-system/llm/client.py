@@ -8,6 +8,7 @@ from openai import OpenAI, RateLimitError, APITimeoutError
 
 load_dotenv()
 
+'''
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.environ.get("OPENROUTER_API_KEY"),
@@ -16,7 +17,14 @@ client = OpenAI(
 DEFAULT_MODEL = "openrouter/free"
 #DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 #DEFAULT_MODEL = "qwen/qwen3-next-80b-a3b-instruct:free"
+'''
 
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.environ.get("GROQ_API_KEY"),     
+)
+
+DEFAULT_MODEL = "llama-3.3-70b-versatile"  
 
 def _looks_valid(response_text: str) -> bool:
     """Cheap sanity check, not a quality check. Rejects empty/near-empty
