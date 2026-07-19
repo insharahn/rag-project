@@ -9,7 +9,9 @@ Categories covered:
     confirmed gap where Prompt Guard 2 missed this specific pattern in KO/UR
   - toxicity                -> textdetox classifier + KO/UR regex supplement
   - data exfiltration       -> custom regex (guardrails/exfiltration_detector.py)
-  - PII                     -> Presidio (EN) + custom regex (guardrails/pii_detector.py)
+  - PII                     -> Presidio (EN) + custom regex (guardrails/pii_detector.py),
+    blocked on both input and output — even a user's own PII is not
+    passed through to retrieval/generation.
 
 All checks run once per request, not per query-variant/chunk — kept
 lightweight and fast relative to the LLM-bound stages of the pipeline.
@@ -48,14 +50,13 @@ def check_input(text: str, language: str = "en") -> GuardrailResult:
     details = {}
 
     # 1. Injection / direct jailbreak (classifier)
-    inj_result = _injection_classifier(text)[0]
+    inj_result = _injection_classifier(text, truncation=True, max_length=512)[0]
     inj_label = INJECTION_LABEL_MAP.get(inj_result["label"].lower(), "benign")
     if inj_label == "malicious" and inj_result["score"] >= INJECTION_THRESHOLD:
         reasons.append("injection_or_jailbreak")
         details["injection_score"] = round(inj_result["score"], 3)
 
-    # 1b. Jailbreak roleplay/persona-override (regex supplement — closes a
-    # confirmed KO/UR gap in the classifier above)
+    # 1b. Jailbreak roleplay/persona-override (regex supplement)
     roleplay = detect_jailbreak_roleplay(text, language=language)
     if roleplay.is_jailbreak_attempt:
         reasons.append("jailbreak_roleplay")
@@ -74,14 +75,13 @@ def check_input(text: str, language: str = "en") -> GuardrailResult:
         details["toxicity_source"] = tox.source
         details["toxicity_score"] = tox.model_score
 
-    # 4. PII (flag, don't necessarily block — PII in a query might just be
-    # the user pasting their own info, arguably lower severity than the above)
+    # 4. PII —  blocking on input as well as output 
+    # even a user's own PII shouldn't flow into retrieval/generation
+    # unnecessarily
     pii = detect_pii(text, language=language)
     if pii.has_pii:
+        reasons.append("pii_detected")
         details["pii_entities"] = pii.entities
-        # not added to `reasons` -> doesn't block by default, just logged.
-        # Revisit this policy decision once the full eval set gives real
-        # severity data to base it on.
 
     return GuardrailResult(blocked=bool(reasons), reasons=reasons, details=details)
 
