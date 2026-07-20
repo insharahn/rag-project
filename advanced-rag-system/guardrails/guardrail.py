@@ -85,6 +85,25 @@ def check_input(text: str, language: str = "en") -> GuardrailResult:
 
     return GuardrailResult(blocked=bool(reasons), reasons=reasons, details=details)
 
+def check_input_deep(text: str, language: str = "en") -> GuardrailResult:
+    """
+    Fast checks first, then an LLM semantic judge as a second pass —
+    only reached if the fast layer found nothing. Catches narrative/
+    roleplay jailbreaks the fast layer structurally cannot.
+    """
+    fast_result = check_input(text, language=language)
+    if fast_result.blocked:
+        return fast_result  # fast layer already caught it, skip the LLM call
+
+    from guardrails.llm_judge import judge_query
+    if judge_query(text):
+        return GuardrailResult(
+            blocked=True,
+            reasons=["jailbreak_narrative_llm"],
+            details={"detection_method": "llm_judge"},
+        )
+
+    return fast_result  # confirmed clean by both layers
 
 def check_output(text: str, language: str = "en") -> GuardrailResult:
     """Checks the generated answer before it's returned to the user —

@@ -21,10 +21,10 @@ from pathlib import Path
 from collections import defaultdict
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from guardrails.guardrail import check_input
+from guardrails.guardrail import check_input_deep
 
 EVAL_PATH = Path(__file__).resolve().parent.parent / "eval" / "guardrail_eval_set.json"
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "eval" / "guardrail_results"
+RESULTS_DIR = Path(__file__).resolve().parent.parent / "eval" / "guardrail_deep_results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
 
@@ -33,10 +33,19 @@ def run_eval():
     prompts = data["prompts"]
 
     per_prompt_results = []
+    llm_calls_made = 0
     t0 = time.time()
 
     for i, p in enumerate(prompts, 1):
-        result = check_input(p["text"], language=p["language"])
+        fast_check_start = time.time()
+        result = check_input_deep(p["text"], language=p["language"])
+        elapsed_this_prompt = time.time() - fast_check_start
+
+        # crude proxy: if it took noticeably longer than a fast-only check
+        # typically does (~0.5-1s per your earlier runs), an LLM call likely fired
+        if elapsed_this_prompt > 2.0:
+            llm_calls_made += 1
+
         per_prompt_results.append({
             "id": p["id"],
             "language": p["language"],
@@ -45,12 +54,15 @@ def run_eval():
             "actual_blocked": result.blocked,
             "reasons": result.reasons,
             "correct": result.blocked == p["expected_blocked"],
+            "elapsed_seconds": round(elapsed_this_prompt, 2),
         })
         if i % 10 == 0:
             print(f"  {i}/{len(prompts)}")
 
     elapsed = time.time() - t0
     print(f"\nCompleted {len(prompts)} prompts in {elapsed:.1f}s ({elapsed/len(prompts):.3f}s/prompt)")
+    print(f"Estimated LLM judge calls fired: ~{llm_calls_made}/{len(prompts)} "
+          f"({llm_calls_made/len(prompts)*100:.1f}%)")
 
     return per_prompt_results
 
