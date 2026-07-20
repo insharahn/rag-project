@@ -1,7 +1,8 @@
 """
 main.py — end-to-end RAG API
 runs the full pipeline: 
-rewrite -> multi-query -> hybrid search -> rerank -> cited answer.
+guardrail check -> rewrite -> multi-query -> hybrid search -> rerank ->
+cited answer -> guardrail check.
 """
 import sys
 import time
@@ -23,6 +24,7 @@ from retrieval.pipeline import retrieve
 from generation.citation_generator import generate_answer
 from graphs.build_graph import extract_entities
 from graphs.graph_index import get_graph
+from guardrails.guardrail import check_input_deep, check_output
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Advanced RAG System", version="1.0")
@@ -35,6 +37,10 @@ app.add_middleware(
 )
 
 SUPPORTED_QUERY_LANGUAGES = {"en", "ko", "ur"}
+
+# Deliberately terse and non-explanatory — never reveal which detector
+# fired or why, since that teaches an attacker what to avoid next time.
+REFUSAL_MESSAGE = "This request cannot be processed."
 
 
 @app.post("/reindex/partial")
@@ -60,7 +66,6 @@ def reindex_partial():
     if not new_chunks:
         return {"status": "up to date", "new_chunks_indexed": 0, "total_chunks": len(db.ids)}
 
-    # FAISS
     model = SentenceTransformer("BAAI/bge-m3", device="cpu")
     new_vecs = model.encode([c["text"] for c in new_chunks], normalize_embeddings=True, convert_to_numpy=True).astype(np.float32)
     db.index.add(new_vecs)
@@ -69,13 +74,11 @@ def reindex_partial():
         text_by_id[c["chunk_id"]] = c
     save_faiss()
 
-    # BM25
     new_bm25, new_ids = _build_fresh(full_corpus)
     bm25_module._state["bm25"] = new_bm25
     bm25_module._state["ids"] = new_ids
     save_bm25()
 
-    # Graph
     graph = get_graph()
     for c in new_chunks:
         cid = c["chunk_id"]
@@ -101,13 +104,7 @@ def reindex_partial():
 @app.post("/reindex/full")
 def reindex_full():
     """Rebuild FAISS, BM25, and the graph from scratch using the FULL
-    current corpus (all documents, old and new). Reuses the same build
-    functions bootstrap.py and bm25_index.py already use for the very
-    first startup build, just re-triggers that path on demand.
-
-    WARNING: re-embeds the entire corpus on CPU. It will take a LONG time 
-    to run. 
-    """
+    current corpus (all documents, old and new)."""
     import numpy as np
     from sentence_transformers import SentenceTransformer
     from retrieval.bootstrap import _build_fresh as faiss_build_fresh, _save_state as faiss_save_state, _state as faiss_state
@@ -121,8 +118,7 @@ def reindex_full():
     t0 = time.time()
     full_corpus = load_corpus(strategy="semantic")
 
-    # --- FAISS: full rebuild (re-embeds every chunk, not just new ones) ---
-    from db.faiss_db import FaissDB  # via proj-emb-vec/src on sys.path
+    from db.faiss_db import FaissDB
     model = SentenceTransformer("BAAI/bge-m3", device="cpu")
     texts = [c["text"] for c in full_corpus]
     ids = [c["chunk_id"] for c in full_corpus]
@@ -137,13 +133,11 @@ def reindex_full():
     faiss_state["text_by_id"] = text_by_id
     faiss_save_state(db, ids, text_by_id)
 
-    # --- BM25: full rebuild ---
     new_bm25, bm25_ids = bm25_build_fresh(full_corpus)
     bm25_state["bm25"] = new_bm25
     bm25_state["ids"] = bm25_ids
     bm25_save_state(new_bm25, bm25_ids)
 
-    # --- Graph: full rebuild ---
     new_graph = build_graph(full_corpus)
     save_graph(new_graph)
 
@@ -154,11 +148,10 @@ def reindex_full():
         "elapsed_seconds": round(elapsed, 2),
         "note": "Full rebuild complete. All three indices (FAISS, BM25, graph) were reconstructed from the entire current corpus.",
     }
-    
+
+
 @app.get("/reindex/status")
 def reindex_status():
-    """check how many corpus chunks are not yet indexed.
-    """
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "proj-emb-vec" / "src"))
     from loader import load_corpus
 
@@ -169,9 +162,7 @@ def reindex_status():
 
     return {"pending_new_chunks": len(new_ids), "total_indexed": len(current_ids)}
 
-"""
-load on startup so the first query doesn't have to pay the model load penalty
-"""
+
 @app.on_event("startup")
 def load_everything():
     print("[startup] loading corpus + FAISS index...")
@@ -182,13 +173,18 @@ def load_everything():
     _get_embed_model()
     print("[startup] loading reranker...")
     _get_reranker()
-    # graph (skipped if not built yet)
     try:
         from graphs.graph_index import get_graph
         get_graph()
         print("[startup] graph loaded.")
     except FileNotFoundError:
         print("[startup] graph not found — run python graphs/build_graph.py to enable graph retrieval.")
+    # guardrail models (Prompt Guard 2, toxicity classifier) load lazily on
+    # first import of guardrails.guardrail — trigger that now so the first
+    # real query doesn't pay the load cost
+    print("[startup] loading guardrail models...")
+    from guardrails.guardrail import check_input_deep as _warm
+    print("[startup] guardrail ready.")
     print("[startup] ready.")
 
 
@@ -209,20 +205,33 @@ class QueryResponse(BaseModel):
 
 @app.post("/query", response_model=QueryResponse)
 async def query(req: QueryRequest):
-    #only allow korean. urdu, or eng queries
+    t0 = time.time()
+
+    # --- language detection (reused below for guardrail checks) ---
+    detected_lang = "en"  # default fallback
     try:
-        if len(req.query.strip()) >= 20:  # langdetect unreliable on very short strings
+        if len(req.query.strip()) >= 20:
             detected = detect(req.query)
             if detected not in SUPPORTED_QUERY_LANGUAGES:
                 return QueryResponse(
                     answer=f"This system only supports queries in English, Korean, or Urdu. Detected language: {detected}.",
                     sources={}, confidence="low", top_score=0.0,
-                    latency_seconds=0.0,
+                    latency_seconds=round(time.time() - t0, 2),
                 )
+            detected_lang = detected
     except LangDetectException:
         pass  # detection failed, let the query through rather than blocking valid input
 
-    t0 = time.time()
+    # --- guardrail: input check, before any retrieval/generation ---
+    guard_result = await asyncio.to_thread(check_input_deep, req.query, detected_lang)
+    if guard_result.blocked:
+        print(f"[guardrail] blocked input — reasons={guard_result.reasons}")
+        return QueryResponse(
+            answer=REFUSAL_MESSAGE,
+            sources={}, confidence="low", top_score=0.0,
+            latency_seconds=round(time.time() - t0, 2),
+        )
+
     try:
         chunks = await asyncio.wait_for(
             asyncio.to_thread(retrieve, req.query, req.top_k, 10, req.history),
@@ -238,6 +247,17 @@ async def query(req: QueryRequest):
             sources={}, confidence="low", top_score=0.0,
             latency_seconds=round(time.time() - t0, 2),
         )
+
+    # --- guardrail: output check, before the answer is returned ---
+    output_guard = await asyncio.to_thread(check_output, result["answer"], detected_lang)
+    if output_guard.blocked:
+        print(f"[guardrail] blocked output — reasons={output_guard.reasons}")
+        return QueryResponse(
+            answer=REFUSAL_MESSAGE,
+            sources={}, confidence="low", top_score=0.0,
+            latency_seconds=round(time.time() - t0, 2),
+        )
+
     t1 = time.time()
 
     return QueryResponse(
