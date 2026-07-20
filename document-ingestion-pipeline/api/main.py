@@ -60,6 +60,24 @@ def get_week2_metrics(strategy: str):
         raise HTTPException(404, f"No metrics found for strategy '{strategy}'")
     return json.loads(p.read_text(encoding="utf-8"))
 
+#week 4
+app.mount("/week4", StaticFiles(directory="ui_week4", html=True), name="week4")
+
+WEEK4_RESULTS = Path("../advanced-rag-system/eval/guardrail_deep_results")
+
+@app.get("/week4-data")
+def get_week4_metrics():
+    """Serve project 4's guardrail eval results (fast+LLM configuration)."""
+    metrics_path = WEEK4_RESULTS / "metrics_report.json"
+    per_prompt_path = WEEK4_RESULTS / "per_prompt_results.json"
+
+    if not metrics_path.exists():
+        raise HTTPException(404, "No guardrail metrics found. Run scripts/run_guardrail_eval.py first.")
+
+    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    per_prompt = json.loads(per_prompt_path.read_text(encoding="utf-8")) if per_prompt_path.exists() else []
+
+    return {"metrics": metrics, "per_prompt": per_prompt}
 
 @app.get("/")
 def root():

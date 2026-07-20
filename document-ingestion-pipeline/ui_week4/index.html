@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardrails — Week 4</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f3ef;
+    color: #2e2b27;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.topbar {
+    background: #fffef9;
+    border-bottom: 1.5px solid #e8e3db;
+    padding: 0 20px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+.topbar-title { font-size: 14px; font-weight: 600; color: #2e2b27; letter-spacing: -0.2px; }
+.topbar-title span { color: #7aaa8f; }
+.nav-links { display: flex; gap: 6px; margin-left: 12px; }
+.nav-link {
+    padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500;
+    color: #7a7268; text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.nav-link:hover { background: #f0ede8; color: #2e2b27; }
+.nav-link.active { background: #e8f5ee; color: #3a8858; font-weight: 600; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.topbar-status { font-size: 12px; color: #a8a098; }
+.topbar-status.ok { color: #6a9a7a; }
+.topbar-status.err { color: #c07060; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+.sidebar {
+    width: 200px;
+    background: #eeeae3;
+    border-right: 1.5px solid #e0dbd2;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+.sidebar-hd {
+    padding: 11px 14px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #a09888;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    border-bottom: 1px solid #ddd8cf;
+}
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.sidebar-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.1s, border-color 0.1s;
+    font-size: 13px;
+    color: #5a5248;
+    user-select: none;
+}
+.sidebar-item:hover { background: #e5e0d8; }
+.sidebar-item.active { background: #ddf0e6; border-left-color: #7aaa8f; font-weight: 500; }
+
+.content { flex: 1; overflow-y: auto; padding: 20px 28px 40px; background: #faf8f5; }
+.content h1 { font-size: 22px; font-weight: 600; color: #2e2b27; margin-bottom: 4px; }
+.content .subtitle { font-size: 14px; color: #a09888; margin-bottom: 20px; }
+.content h2 {
+    font-size: 17px; font-weight: 600; color: #3a3630;
+    margin: 28px 0 14px 0; border-bottom: 1.5px solid #e8e3db; padding-bottom: 8px;
+}
+.content h3 { font-size: 14px; font-weight: 600; color: #4a4238; margin: 18px 0 10px 0; }
+.content p { font-size: 13.5px; line-height: 1.7; color: #5a5248; margin-bottom: 10px; }
+
+.note {
+    background: #f8f5f0;
+    border-left: 3px solid #b8b0a4;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #5a5248;
+    margin: 10px 0 16px 0;
+    line-height: 1.6;
+}
+.note.warn { background: #fef9e8; border-left-color: #e0b050; }
+.note.good { background: #f0faf4; border-left-color: #7aaa8f; }
+
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 12px 0 18px 0; }
+.metric-card {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.metric-card .label { font-size: 10.5px; font-weight: 700; color: #a09888; text-transform: uppercase; letter-spacing: 0.4px; }
+.metric-card .value { font-size: 26px; font-weight: 700; color: #2e2b27; line-height: 1.2; margin: 4px 0 2px 0; }
+.metric-card .sub { font-size: 11.5px; color: #a09888; }
+.metric-card.green { border-color: #b8ddc8; background: #f0faf4; }
+.metric-card.green .label { color: #4a7c59; }
+.metric-card.green .value { color: #2d6a4f; }
+.metric-card.blue { border-color: #b3cde8; background: #f0f6fc; }
+.metric-card.blue .label { color: #3a6186; }
+.metric-card.blue .value { color: #2c5282; }
+
+.chart-box { background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 10px; padding: 8px 6px 4px 6px; margin: 6px 0 12px 0; }
+.chart-box .chart-title { font-size: 13px; font-weight: 500; color: #4a4238; padding: 0 10px 4px 10px; }
+.chart-container { width: 100%; min-height: 340px; }
+
+.table-wrap { background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 10px; overflow: auto; margin: 8px 0 12px 0; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.table-wrap th { background: #f8f5f0; padding: 8px 12px; text-align: left; font-weight: 600; color: #5a5248; border-bottom: 1.5px solid #e0dbd2; white-space: nowrap; }
+.table-wrap td { padding: 7px 12px; border-bottom: 1px solid #eeeae3; color: #3a3630; }
+.table-wrap tr:hover td { background: #f8f5f0; }
+
+.module-card {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+.module-card .mod-name { font-size: 13.5px; font-weight: 600; color: #2e2b27; margin-bottom: 3px; }
+.module-card .mod-method { font-size: 12px; color: #7aaa8f; font-weight: 500; margin-bottom: 6px; }
+.module-card .mod-rationale { font-size: 12.5px; color: #5a5248; line-height: 1.6; }
+
+.example-card {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+}
+.example-card .ex-text {
+    font-size: 13px;
+    color: #3a3630;
+    background: #f8f5f0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 6px 0;
+    direction: auto;
+}
+.example-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-right: 6px;
+}
+.example-badge.blocked { background: #f0faf4; color: #2d6a4f; }
+.example-badge.passed { background: #fef0e0; color: #a06820; }
+.example-badge.fp { background: #fef0f0; color: #c05050; }
+.example-meta { font-size: 11.5px; color: #a09888; margin-top: 4px; }
+
+.tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #eeeae3;
+    color: #7a7268;
+    margin-right: 4px;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4cfc8; border-radius: 3px; }
+
+@media (max-width: 768px) {
+    .sidebar { width: 140px; }
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .content { padding: 14px 16px 30px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-title">Guardrail <span>Evaluation</span></div>
+    <div class="nav-links">
+        <a class="nav-link" href="/ui">Week 1 · Ingestion</a>
+        <a class="nav-link" href="/week2">Week 2 · Benchmark</a>
+        <a class="nav-link" href="/week3">Week 3 · Advanced RAG</a>
+        <a class="nav-link active" href="/week4">Week 4 · Guardrails</a>
+    </div>
+    <div class="topbar-right">
+        <span class="topbar-status" id="status">Loading…</span>
+    </div>
+</div>
+
+<div class="main">
+    <div class="sidebar">
+        <div class="sidebar-hd">Sections</div>
+        <div class="sidebar-nav" id="sidebar-nav">
+            <div class="sidebar-item active" data-section="overview">Overview</div>
+            <div class="sidebar-item" data-section="modules">Detection Modules</div>
+            <div class="sidebar-item" data-section="results">Results</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="page-content"></div>
+    </div>
+</div>
+
+<script>
+const PASTEL = {
+    blue: '#B1E6F3', pink: '#FFC2D1', green: '#D0F0C0',
+    orange: '#FFBA8E', purple: '#D4C4EC', yellow: '#ffee8c', red: '#D98585',
+};
+
+const CATEGORY_COLORS = {
+    injection: PASTEL.blue, exfiltration: PASTEL.green, pii: PASTEL.purple,
+    toxicity: PASTEL.orange, jailbreak: PASTEL.red, benign: PASTEL.yellow,
+};
+const LANGUAGE_COLORS = { en: PASTEL.blue, ko: PASTEL.green, ur: PASTEL.orange };
+const LANGUAGE_LABELS = { en: 'English', ko: 'Korean', ur: 'Urdu' };
+const CATEGORY_ORDER = ['injection', 'exfiltration', 'pii', 'toxicity', 'jailbreak'];
+const LANGUAGE_ORDER = ['en', 'ko', 'ur'];
+
+const MODULES = [
+    { name: 'Injection / Direct Jailbreak', method: 'Meta Llama Prompt Guard 2 (86M param classifier)',
+      rationale: 'Selected after head-to-head testing against ProtectAI\'s DeBERTa-v3; Prompt Guard 2 showed no false positives on Urdu where ProtectAI did.' },
+    { name: 'Jailbreak (Roleplay / Persona-Override)', method: 'Custom regex, EN/KO/UR',
+      rationale: 'Closes a gap found during smoke testing: Prompt Guard 2 catches direct override phrasing but missed DAN-style roleplay framing in Korean and Urdu.' },
+    { name: 'Jailbreak (Narrative Framing)', method: 'LLM semantic judge, second-pass',
+      rationale: 'Reached only when the fast layer finds nothing (~9% of traffic). Catches jailbreaks expressed through story/professional framing rather than a surface trigger phrase — the fast layer\'s largest remaining gap.' },
+    { name: 'Data Exfiltration', method: 'Custom regex, 4 sub-categories, EN/KO/UR',
+      rationale: 'No pretrained classifier exists purpose-built for this task. Covers system-prompt extraction, credential extraction, indirection/bypass, and bulk corpus dumping.' },
+    { name: 'Toxicity', method: 'textdetox/bert-multilingual-toxicity-classifier + regex (KO/UR)',
+      rationale: 'Classifier tested clean on English but missed real toxic content in Korean/Urdu during smoke testing — supplemented with hand-written patterns for direct insults and discriminatory generalizations.' },
+    { name: 'PII', method: 'Microsoft Presidio (English) + custom regex (all 3 languages)',
+      rationale: 'Presidio\'s built-in SSN recognizer was found broken via isolated testing; Presidio also has zero Korean/Urdu language support. Structured identifiers rebuilt as regex.' },
+];
+
+let metrics = null;
+let perPrompt = [];
+let overall = null, byCategory = null, byLanguage = null;
+
+async function loadAll() {
+    const statusEl = document.getElementById('status');
+    try {
+        const r = await fetch('/week4-data');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        metrics = data.metrics;
+        perPrompt = data.per_prompt || [];
+        overall = metrics.overall;
+        byCategory = metrics.by_category;
+        byLanguage = metrics.by_language;
+        statusEl.textContent = 'Ready';
+        statusEl.className = 'topbar-status ok';
+        renderSection('overview');
+    } catch (e) {
+        statusEl.textContent = 'No data — run eval first';
+        statusEl.className = 'topbar-status err';
+        document.getElementById('page-content').innerHTML = `
+            <div style="padding:40px;text-align:center;color:#b8b0a4;">
+                <h2 style="font-weight:400;">No guardrail results found</h2>
+                <p style="margin-top:8px;">Run <code>scripts/run_guardrail_eval.py</code> in the advanced-rag-system folder first.</p>
+            </div>`;
+    }
+}
+
+function renderSection(section) {
+    document.querySelectorAll('.sidebar-item').forEach(el =>
+        el.classList.toggle('active', el.dataset.section === section));
+    if (!metrics) return;
+    switch (section) {
+        case 'overview': renderOverview(); break;
+        case 'modules': renderModules(); break;
+        case 'results': renderResults(); break;
+    }
+}
+
+function renderOverview() {
+    const html = [];
+    html.push(`<h1>Guardrail Evaluation</h1>`);
+    html.push(`<p class="subtitle">Multilingual (EN/KO/UR) detection across five attack categories: injection, jailbreak, exfiltration, toxicity, and PII.</p>`);
+
+    html.push(`<div class="metric-grid">`);
+    html.push(`<div class="metric-card green"><div class="label">Accuracy</div><div class="value">${(overall.accuracy*100).toFixed(1)}%</div><div class="sub">fast + LLM judge</div></div>`);
+    html.push(`<div class="metric-card green"><div class="label">Precision</div><div class="value">${(overall.precision*100).toFixed(1)}%</div><div class="sub">${overall.false_positives} false positive of ${overall.n_benign}</div></div>`);
+    html.push(`<div class="metric-card blue"><div class="label">Recall</div><div class="value">${(overall.recall*100).toFixed(1)}%</div><div class="sub">${overall.n_attacks - overall.false_negatives} of ${overall.n_attacks} attacks caught</div></div>`);
+    html.push(`<div class="metric-card blue"><div class="label">Test Set Size</div><div class="value">${overall.n_total}</div><div class="sub">${overall.n_attacks} attacks · ${overall.n_benign} benign</div></div>`);
+    html.push(`</div>`);
+
+    html.push(`<h2>Two-stage architecture</h2>`);
+    html.push(`<p>A fast layer (small classifier + regex, no LLM cost) runs on every request. If it finds nothing, a single LLM semantic judge checks the query for narrative-framed jailbreak intent before proceeding — reached on roughly 9% of traffic, keeping the added cost bounded.</p>`);
+    html.push(`<div class="note good"><strong>This is the production configuration.</strong> The fast layer alone reaches 84.0% accuracy; adding the LLM judge as a second pass raises this to ${(overall.accuracy*100).toFixed(1)}%, closing most of the fast layer's largest gap (narrative jailbreak) without adding cost to the ~91% of traffic that never needs it.</div>`);
+
+    html.push(`<h2>Fast layer vs. fast + LLM judge</h2>`);
+    const compData = [
+        { config: 'Fast layer only', accuracy: 0.840, recall: 0.798, precision: 0.987 },
+        { config: 'Fast + LLM judge', accuracy: overall.accuracy, recall: overall.recall, precision: overall.precision },
+    ];
+    html.push(makeChartDiv('comparison', 'Accuracy / Recall / Precision', compData, 'config',
+        ['accuracy', 'recall', 'precision'], null));
+
+    html.push(`<h2>Test set composition</h2>`);
+    const langData = [
+        { Language: 'English', Attacks: 34, Benign: 19, Total: 53 },
+        { Language: 'Korean', Attacks: 30, Benign: 6, Total: 36 },
+        { Language: 'Urdu', Attacks: 30, Benign: 6, Total: 36 },
+    ];
+    html.push(`<div class="table-wrap"><table><thead><tr>${Object.keys(langData[0]).map(k=>`<th>${k}</th>`).join('')}</tr></thead>
+        <tbody>${langData.map(r=>`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
+    html.push(`<div class="note">English prompts sourced from a public aggregate safety dataset (Necent), manually reviewed. Korean and Urdu prompts were entirely hand-written — direct testing confirmed the same dataset had no usable non-English content for this project.</div>`);
+
+    document.getElementById('page-content').innerHTML = html.join('');
+    renderAllCharts();
+}
+
+function renderModules() {
+    const html = [];
+    html.push(`<h1>Detection Modules</h1>`);
+    html.push(`<p class="subtitle">Every tool was tested directly against hand-picked EN/KO/UR prompts before being trusted — none adopted on documentation alone.</p>`);
+
+    for (const m of MODULES) {
+        html.push(`<div class="module-card">
+            <div class="mod-name">${m.name}</div>
+            <div class="mod-method">${m.method}</div>
+            <div class="mod-rationale">${m.rationale}</div>
+        </div>`);
+    }
+
+    html.push(`<h2>Tools tested and rejected</h2>`);
+    html.push(`<div class="module-card">
+        <div class="mod-name">protectai/deberta-v3-base-prompt-injection-v2</div>
+        <div class="mod-rationale">English-only base model. Flagged a completely benign Urdu query ("What is the capital of France?") as injection at 0.980 confidence.</div>
+    </div>`);
+    html.push(`<div class="module-card">
+        <div class="mod-name">meta-llama/Llama-Guard-3-8B</div>
+        <div class="mod-rationale">Disqualified on practical grounds — a 91-minute, 16.1GB download was followed by an indefinite hang during weight loading on available hardware.</div>
+    </div>`);
+    html.push(`<div class="module-card">
+        <div class="mod-name">Microsoft Presidio's US_SSN recognizer</div>
+        <div class="mod-rationale">Confirmed broken via isolated testing — returned zero results even when called standalone with an unambiguous test string, despite a syntactically valid regex present in the recognizer's own pattern list.</div>
+    </div>`);
+
+    document.getElementById('page-content').innerHTML = html.join('');
+}
+
+function renderResults() {
+    const html = [];
+    html.push(`<h1>Evaluation Results</h1>`);
+    html.push(`<p class="subtitle">Fast + LLM judge configuration, 125-prompt test set.</p>`);
+
+    html.push(`<h2>Recall by category</h2>`);
+    const catData = CATEGORY_ORDER.map(c => ({
+        category: c, recall: byCategory[c] ? byCategory[c].recall : 0,
+    }));
+    html.push(makeChartDiv('recall-cat', 'Recall by Attack Category', catData, 'category', 'recall', CATEGORY_COLORS));
+    html.push(`<div class="note">Exfiltration and PII sit at 100%. Toxicity and jailbreak are lower — see Limitations for why.</div>`);
+
+    html.push(`<h2>Accuracy by language</h2>`);
+    const langData = LANGUAGE_ORDER.map(l => ({
+        language: LANGUAGE_LABELS[l], accuracy: byLanguage[l] ? byLanguage[l].accuracy : 0,
+    }));
+    html.push(makeChartDiv('accuracy-lang', 'Accuracy by Language', langData, 'language', 'accuracy', null));
+    html.push(`<div class="note">Korean and Urdu outperform English — the reverse of the usual multilingual pattern. This reflects category composition, not superior non-English detection: English's remaining misses concentrate in a toxicity-classifier formatting gap the LLM judge isn't scoped to fix.</div>`);
+
+    html.push(`<h2>Recall: category × language</h2>`);
+    html.push(makeHeatmapDiv('heatmap', 'Recall Heatmap'));
+
+    document.getElementById('page-content').innerHTML = html.join('');
+    renderAllCharts();
+}
+
+// ── Chart helpers ────────────────────────────────────────────────────────
+function makeChartDiv(id, title, data, xKey, yKey, colorMap) {
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart="${id}" data-x="${xKey}"
+             data-y='${JSON.stringify(Array.isArray(yKey)?yKey:[yKey])}'
+             data-color='${colorMap ? JSON.stringify(colorMap) : 'null'}'>${JSON.stringify(data)}</div>
+    </div>`;
+}
+
+function makeHeatmapDiv(id, title) {
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart="${id}" data-type="heatmap"></div>
+    </div>`;
+}
+
+function renderAllCharts() {
+    requestAnimationFrame(() => {
+        document.querySelectorAll('[data-chart]').forEach(el => {
+            const id = el.dataset.chart;
+            const container = document.getElementById(`container-${id}`);
+            if (!container) return;
+            if (el.dataset.type === 'heatmap') {
+                renderHeatmap(container);
+                return;
+            }
+            const data = JSON.parse(el.textContent);
+            const xKey = el.dataset.x;
+            const yKeys = JSON.parse(el.dataset.y);
+            const colorMap = el.dataset.color ? JSON.parse(el.dataset.color) : null;
+            renderBar(container, data, xKey, yKeys, colorMap);
+        });
+    });
+}
+
+function renderBar(container, data, xKey, yKeys, colorMap) {
+    const pastelSeq = [PASTEL.blue, PASTEL.green, PASTEL.orange, PASTEL.purple, PASTEL.pink];
+    const xVals = data.map(d => String(d[xKey]));
+
+    const traces = yKeys.map((yk, i) => {
+        const values = data.map(d => d[yk] ?? 0);
+        let color;
+        if (yKeys.length === 1 && colorMap) {
+            color = xVals.map(x => colorMap[x.toLowerCase()] || colorMap[x] || pastelSeq[0]);
+        } else if (colorMap && colorMap[yk]) {
+            color = colorMap[yk];
+        } else {
+            color = pastelSeq[i % pastelSeq.length];
+        }
+        return {
+            x: xVals, y: values, name: yk, type: 'bar',
+            text: values.map(v => (v * 100).toFixed(1) + '%'),
+            textposition: 'outside',
+            marker: { color },
+        };
+    });
+
+    const layout = {
+        plot_bgcolor: '#faf8f5', paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 30, b: 50, l: 50, r: 30 },
+        barmode: 'group',
+        showlegend: yKeys.length > 1,
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0, orientation: 'h', y: 1.15 },
+        xaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1 },
+        yaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1, tickformat: '.0%', range: [0, 1.1] },
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function renderHeatmap(container) {
+    const rows = CATEGORY_ORDER;
+    const cols = LANGUAGE_ORDER;
+
+    const joint = {};
+    for (const r of perPrompt) {
+        if (!r.expected_blocked) continue;
+        const key = `${r.category}|${r.language}`;
+        if (!joint[key]) joint[key] = { tp: 0, fn: 0 };
+        if (r.actual_blocked) joint[key].tp++; else joint[key].fn++;
+    }
+
+    const z = rows.map(cat => cols.map(lang => {
+        const j = joint[`${cat}|${lang}`];
+        if (!j) return NaN;
+        const total = j.tp + j.fn;
+        return total > 0 ? j.tp / total : NaN;
+    }));
+
+    const trace = {
+        z, x: cols.map(l => LANGUAGE_LABELS[l]), y: rows, type: 'heatmap',
+        colorscale: [[0, '#f8f9fa'], [0.5, '#B1E6F3'], [1, '#5a9bc4']],
+        zmin: 0, zmax: 1,
+        hoverongaps: false,
+        showscale: true,
+    };
+
+    // manual annotations so N/A cells always render text, even where z is NaN
+    const annotations = [];
+    for (let i = 0; i < rows.length; i++) {
+        for (let j = 0; j < cols.length; j++) {
+            const val = z[i][j];
+            annotations.push({
+                x: LANGUAGE_LABELS[cols[j]], y: rows[i],
+                text: isNaN(val) ? 'N/A' : (val * 100).toFixed(0) + '%',
+                showarrow: false,
+                font: { size: 12, color: isNaN(val) ? '#a09888' : '#2e2b27' },
+            });
+        }
+    }
+
+    const layout = {
+        plot_bgcolor: '#faf8f5', paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 20, b: 40, l: 90, r: 30 },
+        annotations,
+    };
+    Plotly.newPlot(container, [trace], layout, { responsive: true, displayModeBar: false });
+}
+
+document.getElementById('sidebar-nav').addEventListener('click', e => {
+    const item = e.target.closest('.sidebar-item');
+    if (item) renderSection(item.dataset.section);
+});
+
+loadAll();
+</script>
+</body>
+</html>
