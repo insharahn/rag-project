@@ -205,6 +205,7 @@ body {
 }
 .badge.high { background: #e6f5ec; color: #3a8858; }
 .badge.low  { background: #fef0e0; color: #c08030; }
+.badge.blocked { background: #fef0f0; color: #c05050; }
 .meta-stat { font-size: 12px; color: #a09888; }
 
 .answer-box {
@@ -519,6 +520,8 @@ function appendUserMessage(text) {
 }
 
 function buildAssistantHTML(data, msgId) {
+    const isBlocked = data.answer === "This request cannot be processed.";
+
     const sources = data.sources || {};
     let answerHtml = renderMarkdownLite(esc(data.answer));
     answerHtml = `<p>${answerHtml}</p>`;
@@ -528,8 +531,8 @@ function buildAssistantHTML(data, msgId) {
             : m;
     });
 
-    const badgeClass = data.confidence === 'high' ? 'high' : 'low';
-    const badgeText  = data.confidence === 'high' ? 'High confidence' : 'Low confidence';
+    const badgeClass = isBlocked ? 'blocked' : (data.confidence === 'high' ? 'high' : 'low');
+    const badgeText  = isBlocked ? 'Blocked' : (data.confidence === 'high' ? 'High confidence' : 'Low confidence');
     const topScore   = typeof data.top_score === 'number' ? data.top_score.toFixed(3) : 'n/a';
     const latency    = typeof data.latency_seconds === 'number' ? `${data.latency_seconds.toFixed(1)}s` : '';
 
@@ -559,7 +562,7 @@ function buildAssistantHTML(data, msgId) {
     return `
         <div class="result-meta">
             <span class="badge ${badgeClass}">${badgeText}</span>
-            <span class="meta-stat">top score: ${topScore}</span>
+            ${!isBlocked ? `<span class="meta-stat">top score: ${topScore}</span>` : ''}
             ${latency ? `<span class="meta-stat">${latency}</span>` : ''}
         </div>
         <div class="answer-box">${answerHtml}</div>
