@@ -475,7 +475,8 @@ async function ask() {
         // and can derail the next query's rewrite (poisons history with
         // "corpus doesn't address this" type text).
         const isHedge = data.confidence === 'low' && data.answer.includes("doesn't clearly address");
-        if (!isHedge) {
+        const isRefusal = data.answer === "This request cannot be processed.";
+        if (!isHedge && !isRefusal) {
             chatHistory.push({ role: 'user', content: query });
             chatHistory.push({
                 role: 'assistant',
