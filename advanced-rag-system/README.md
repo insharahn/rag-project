@@ -7,6 +7,7 @@ An end-to-end Retrieval-Augmented Generation (RAG) API that combines BM25 lexica
 - Loads the heavy retrieval models and indexes once at startup.
 - Accepts a query, rewrites it, expands it into multiple variants, retrieves candidates, reranks them, and generates a cited answer.
 - Supports English, Korean, and Urdu queries.
+- Includes a security layer in `guardrails/` that screens for prompt injection, jailbreak attempts, PII leakage, data exfiltration, and toxicity.
 - Records chat history. 
 - Exposes partial and full reindex endpoints for keeping the indexes in sync with new corpus chunks.
 
@@ -45,6 +46,8 @@ The retrieval flow is:
 5. Candidate merge and filtering
 6. Cross-encoder reranking
 7. Citation-based answer generation
+
+The request flow also passes through guardrails that block prompt injection, jailbreak attempts, PII leakage, data exfiltration, and toxicity.
 
 ## Index Files
 
