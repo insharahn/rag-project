@@ -3,9 +3,6 @@
 Data exfiltration detector: regex/keyword-based detection for attempts to
 extract system prompt content, credentials/secrets, or bulk raw corpus
 content rather than a normal answer.
-
-No model required — this is a fast, deterministic first-pass filter,
-designed to run on every incoming query before retrieval.
 """
 import re
 from dataclasses import dataclass, field

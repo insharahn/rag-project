@@ -1,22 +1,10 @@
 # guardrails/jailbreak_detector.py
 """
 Jailbreak roleplay/persona-override detector: regex supplement to
-Prompt Guard 2, closing a confirmed gap found during smoke testing.
-
-Prompt Guard 2 reliably caught direct instruction-override injection
-across EN/KO/UR (10/12 overall), but missed DAN-style roleplay/persona
-jailbreak framing specifically in Korean and Urdu (caught correctly in
-English). This detector targets that specific pattern — "pretend you are
-an unrestricted AI", "act as if you have no rules", "you are now [X]" —
-as a narrow supplement, not a replacement for the classifier.
-
-CONFIDENCE NOTE: Korean patterns are reasonably confident. Urdu patterns
-should be reviewed by a native speaker before production use — same
-caveat applied to every Urdu regex layer built in this project.
+Prompt Guard 2 cause it fails on urdu/korean roleplay jailbreaks
 """
 import re
 from dataclasses import dataclass
-
 
 @dataclass
 class JailbreakResult:
@@ -53,7 +41,7 @@ ROLEPLAY_JAILBREAK_PATTERNS = {
 def detect_jailbreak_roleplay(text: str, language: str | None = None) -> JailbreakResult:
     """
     Check text against known roleplay/persona-override jailbreak patterns.
-    Supplements Prompt Guard 2, not a replacement.
+    Supplements Prompt Guard 2
     """
     langs_to_check = [language] if language else ["en", "ko", "ur"]
 

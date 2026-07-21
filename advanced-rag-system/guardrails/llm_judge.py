@@ -1,14 +1,9 @@
 # guardrails/llm_judge.py
 """
-LLM-based semantic security judge — a slower, more expensive but
-semantically capable check for attack patterns that structural regex/
-classifier tools cannot reliably catch: narrative/roleplay-framed
-jailbreaks and dialogue-format toxicity (both documented as needing
-this kind of tool in Section 8 of the guardrail report).
-
-Runs AFTER check_input's fast layer, only if check_input passes clean —
-most traffic never reaches this stage, keeping the added LLM cost bounded
-to the cases that matter most.
+LLM-based semantic security judge
+slower, more expensive but semantically capable check for attack patterns 
+that structural regex/ classifier tools cannot reliably catch: n
+arrative/roleplay-framed jailbreaks and dialogue-format toxicity
 """
 from llm.client import call_llm
 

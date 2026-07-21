@@ -1,16 +1,8 @@
 # guardrails/toxicity_detector.py
 """
 Toxicity detection: hybrid approach.
-- English: textdetox/bert-multilingual-toxicity-classifier alone (tested 3/3).
-- Korean/Urdu: same classifier PLUS a regex supplement, since smoke testing
-  confirmed the model misses real toxic content in these languages
-  (defaults to 'neutral' rather than false-flagging — the worse failure
-  direction for a safety layer). Same reasoning as the exfiltration
-  detector's design.
-
-CONFIDENCE NOTE: Korean patterns are reasonably confident. Urdu patterns
-should be reviewed by a native speaker before production use — same
-caveat applied throughout this project's Urdu regex work.
+- English: textdetox/bert-multilingual-toxicity-classifier.
+- Korean/Urdu: same classifier PLUS a regex supplement
 """
 import re
 from dataclasses import dataclass
@@ -25,7 +17,7 @@ _classifier = pipeline(
 @dataclass
 class ToxicityResult:
     is_toxic: bool
-    source: str        # 'model' | 'regex' | 'model+regex'
+    source: str # 'model' | 'regex' | 'model+regex'
     model_score: float
     language: str
 

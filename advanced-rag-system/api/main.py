@@ -38,8 +38,7 @@ app.add_middleware(
 
 SUPPORTED_QUERY_LANGUAGES = {"en", "ko", "ur"}
 
-# Deliberately terse and non-explanatory — never reveal which detector
-# fired or why, since that teaches an attacker what to avoid next time.
+# never reveal which detector fired or why, since that teaches an attacker what to avoid next time.
 REFUSAL_MESSAGE = "This request cannot be processed."
 
 
@@ -179,9 +178,7 @@ def load_everything():
         print("[startup] graph loaded.")
     except FileNotFoundError:
         print("[startup] graph not found — run python graphs/build_graph.py to enable graph retrieval.")
-    # guardrail models (Prompt Guard 2, toxicity classifier) load lazily on
-    # first import of guardrails.guardrail — trigger that now so the first
-    # real query doesn't pay the load cost
+    # guardrail models (Prompt Guard 2, toxicity classifier)
     print("[startup] loading guardrail models...")
     from guardrails.guardrail import check_input_deep as _warm
     print("[startup] guardrail ready.")
@@ -207,7 +204,7 @@ class QueryResponse(BaseModel):
 async def query(req: QueryRequest):
     t0 = time.time()
 
-    # --- language detection (reused below for guardrail checks) ---
+    # --- language detection ---
     detected_lang = "en"  # default fallback
     try:
         if len(req.query.strip()) >= 20:

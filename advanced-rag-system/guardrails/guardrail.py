@@ -5,16 +5,10 @@ and output-side checks on the generated answer before it's returned.
 
 Categories covered:
   - injection / direct jailbreak -> Prompt Guard 2 (meta-llama/Llama-Prompt-Guard-2-86M)
-  - jailbreak (roleplay/persona-override) -> custom regex, supplementing a
-    confirmed gap where Prompt Guard 2 missed this specific pattern in KO/UR
-  - toxicity                -> textdetox classifier + KO/UR regex supplement
-  - data exfiltration       -> custom regex (guardrails/exfiltration_detector.py)
-  - PII                     -> Presidio (EN) + custom regex (guardrails/pii_detector.py),
-    blocked on both input and output — even a user's own PII is not
-    passed through to retrieval/generation.
-
-All checks run once per request, not per query-variant/chunk — kept
-lightweight and fast relative to the LLM-bound stages of the pipeline.
+  - jailbreak (roleplay/persona-override) -> custom regex
+  - toxicity -> textdetox classifier + KO/UR regex
+  - data exfiltration -> custom regex (guardrails/exfiltration_detector.py)
+  - PII -> Presidio (EN) + custom regex (guardrails/pii_detector.py)
 """
 import sys
 from pathlib import Path
