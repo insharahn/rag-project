@@ -452,10 +452,57 @@ function setQuery(el) {
 // ── Speech-to-text (mic input) ──────────────────────────────────────────
 let recognition = null;
 let isListening = false;
+let mediaRecorder = null;
+let audioChunks = [];
 
-function toggleListening() {
+async function toggleListening() {
     const micBtn = document.getElementById('mic-btn');
+    const lang = document.getElementById('voice-lang-select').value;
 
+    if (lang === 'ur-PK') {
+        // Urdu: browser SpeechRecognition has no Urdu support in most
+        // browsers, so record audio and transcribe via backend Whisper
+        if (isListening) {
+            mediaRecorder?.stop();
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstart = () => {
+                isListening = true;
+                micBtn.classList.add('listening');
+            };
+            mediaRecorder.onstop = async () => {
+                isListening = false;
+                micBtn.classList.remove('listening');
+                stream.getTracks().forEach(t => t.stop());
+
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+
+                try {
+                    const r = await fetch(`${RAG_API}/stt/urdu`, { method: 'POST', body: formData });
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    const data = await r.json();
+                    document.getElementById('query-input').value = data.text;
+                } catch (e) {
+                    console.error('Urdu STT failed:', e);
+                    alert('Failed to transcribe audio.');
+                }
+            };
+            mediaRecorder.start();
+        } catch (e) {
+            alert('Microphone access was denied.');
+        }
+        return;
+    }
+
+    // EN/KO: browser SpeechRecognition
     if (isListening) {
         recognition?.stop();
         return;
@@ -468,21 +515,20 @@ function toggleListening() {
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = document.getElementById('voice-lang-select').value;
+    recognition.lang = lang;
     recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onstart = () => {
-    isListening = true;
-    micBtn.classList.add('listening');
+        isListening = true;
+        micBtn.classList.add('listening');
     };
     recognition.onend = () => {
         isListening = false;
         micBtn.classList.remove('listening');
     };
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('query-input').value = transcript;
+        document.getElementById('query-input').value = event.results[0][0].transcript;
     };
     recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
@@ -496,10 +542,44 @@ function toggleListening() {
 
 // ── Text-to-speech (read answer aloud) ──────────────────────────────────
 let currentUtterance = null;
-let voicesReady = false;
-window.speechSynthesis.onvoiceschanged = () => { voicesReady = true; };
+let currentAudio = null;
 
-function speakAnswer(text, btn) {
+async function speakAnswer(text, btn) {
+    const lang = document.getElementById('voice-lang-select').value;
+
+    if (lang === 'ur-PK') {
+        // Urdu: no browser voice available on most systems, use backend gTTS
+        if (currentAudio && !currentAudio.paused) {
+            currentAudio.pause();
+            document.querySelectorAll('.speak-btn.speaking').forEach(b => b.classList.remove('speaking'));
+            currentAudio = null;
+            return;
+        }
+        btn.classList.add('speaking');
+        try {
+            const r = await fetch(`${RAG_API}/tts/urdu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+            if (!r.ok) throw new Error('TTS request failed');
+            const audioBlob = await r.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            currentAudio = new Audio(audioUrl);
+            currentAudio.onended = () => {
+                btn.classList.remove('speaking');
+                currentAudio = null;
+            };
+            currentAudio.play();
+        } catch (e) {
+            console.error('Urdu TTS failed:', e);
+            btn.classList.remove('speaking');
+            alert('Failed to generate Urdu speech.');
+        }
+        return;
+    }
+
+    // EN/KO: browser SpeechSynthesis
     if (!('speechSynthesis' in window)) {
         alert('Text-to-speech is not supported in this browser.');
         return;
@@ -515,20 +595,10 @@ function speakAnswer(text, btn) {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    const requestedLang = document.getElementById('voice-lang-select').value;
-    utterance.lang = requestedLang;
+    utterance.lang = lang;
     utterance.wasThisButton = btn;
 
-    // Diagnostic: warn if no voice is installed for the requested language
-    const voices = window.speechSynthesis.getVoices();
-    const hasVoice = voices.some(v => v.lang === requestedLang || v.lang.startsWith(requestedLang.split('-')[0]));
-    if (!hasVoice && voices.length > 0) {
-        console.warn(`No installed voice found for ${requestedLang}. Available:`, voices.map(v => v.lang));
-    }
-
-    utterance.onstart = () => {
-        btn.classList.add('speaking');
-    };
+    utterance.onstart = () => btn.classList.add('speaking');
     utterance.onend = () => {
         btn.classList.remove('speaking');
         currentUtterance = null;
@@ -537,9 +607,6 @@ function speakAnswer(text, btn) {
         console.error('Speech synthesis error:', e.error);
         btn.classList.remove('speaking');
         currentUtterance = null;
-        if (e.error === 'language-unavailable' || e.error === 'voice-unavailable') {
-            alert(`No text-to-speech voice available for ${requestedLang} on this system.`);
-        }
     };
 
     currentUtterance = utterance;
