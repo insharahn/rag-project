@@ -132,6 +132,42 @@ body {
 }
 .ask-btn:hover:not(:disabled) { background: #6a9a7f; }
 .ask-btn:disabled { background: #c8ddd2; color: #8ab8a0; cursor: not-allowed; }
+.mic-btn {
+    background: #fffef9;
+    color: #7aaa8f;
+    border: 1.5px solid #7aaa8f;
+    padding: 0 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+}
+.mic-btn:hover:not(:disabled) { background: #e8f5ee; }
+.mic-btn.listening {
+    background: #7aaa8f;
+    color: #fff;
+    animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+.mic-btn:disabled { border-color: #c8ddd2; color: #8ab8a0; cursor: not-allowed; }
+
+.speak-btn {
+    background: none;
+    border: none;
+    color: #a09888;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+}
+.speak-btn:hover { background: #f0ede8; color: #5a5248; }
+.speak-btn.speaking { color: #7aaa8f; animation: pulse 1.2s ease-in-out infinite; }
 .query-opts { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: #a09888; }
 .query-opts select {
     border: 1.5px solid #ddd8cf; border-radius: 6px; padding: 3px 8px;
@@ -322,6 +358,14 @@ body {
             <div class="query-row">
                 <textarea class="query-input" id="query-input" rows="2" placeholder="e.g. What does Camus say about death?"></textarea>
                 <button class="ask-btn" id="ask-btn" onclick="ask()">Ask</button>
+                <button class="mic-btn" id="mic-btn" onclick="toggleListening()" title="Speak your query">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
             </div>
             <div class="query-opts">
                 <span>Top-k:</span>
@@ -329,6 +373,12 @@ body {
                     <option value="3">3</option>
                     <option value="5" selected>5</option>
                     <option value="10">10</option>
+                </select>
+                <span>Voice:</span>
+                <select id="voice-lang-select">
+                    <option value="en-US">English</option>
+                    <option value="ko-KR">한국어</option>
+                    <option value="ur-PK">اردو</option>
                 </select>
                 <span style="margin-left:auto;">Typical response time: 40–90s (free-tier LLM)</span>
             </div>
@@ -353,7 +403,8 @@ const INGESTION_API = 'http://127.0.0.1:8000';
 
 let timerInterval = null;
 let msgCounter = 0;
-let allSources = {};  // msgId -> sources dict, replaces the old single `lastSources`
+let allSources = {};  // msgId -> sources dict
+let allAnswers = {};  // msgId -> raw answer text, for TTS lookup without stringifying into HTML
 let chatHistory = JSON.parse(localStorage.getItem('chat_history') || '[]');
 
 // ── Health check ─────────────────────────────────────────────────────────
@@ -396,6 +447,103 @@ setInterval(checkIndexStatus, 10000);
 
 function setQuery(el) {
     document.getElementById('query-input').value = el.textContent;
+}
+
+// ── Speech-to-text (mic input) ──────────────────────────────────────────
+let recognition = null;
+let isListening = false;
+
+function toggleListening() {
+    const micBtn = document.getElementById('mic-btn');
+
+    if (isListening) {
+        recognition?.stop();
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert('Speech recognition is not supported in this browser. Try Chrome.');
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = document.getElementById('voice-lang-select').value;
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+    isListening = true;
+    micBtn.classList.add('listening');
+    };
+    recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+    };
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('query-input').value = transcript;
+    };
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+            alert('Microphone access was denied. Please allow microphone permissions.');
+        }
+    };
+
+    recognition.start();
+}
+
+// ── Text-to-speech (read answer aloud) ──────────────────────────────────
+let currentUtterance = null;
+let voicesReady = false;
+window.speechSynthesis.onvoiceschanged = () => { voicesReady = true; };
+
+function speakAnswer(text, btn) {
+    if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in this browser.');
+        return;
+    }
+
+    if (currentUtterance && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('.speak-btn.speaking').forEach(b => b.classList.remove('speaking'));
+        if (currentUtterance.wasThisButton === btn) {
+            currentUtterance = null;
+            return;
+        }
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const requestedLang = document.getElementById('voice-lang-select').value;
+    utterance.lang = requestedLang;
+    utterance.wasThisButton = btn;
+
+    // Diagnostic: warn if no voice is installed for the requested language
+    const voices = window.speechSynthesis.getVoices();
+    const hasVoice = voices.some(v => v.lang === requestedLang || v.lang.startsWith(requestedLang.split('-')[0]));
+    if (!hasVoice && voices.length > 0) {
+        console.warn(`No installed voice found for ${requestedLang}. Available:`, voices.map(v => v.lang));
+    }
+
+    utterance.onstart = () => {
+        btn.classList.add('speaking');
+    };
+    utterance.onend = () => {
+        btn.classList.remove('speaking');
+        currentUtterance = null;
+    };
+    utterance.onerror = (e) => {
+        console.error('Speech synthesis error:', e.error);
+        btn.classList.remove('speaking');
+        currentUtterance = null;
+        if (e.error === 'language-unavailable' || e.error === 'voice-unavailable') {
+            alert(`No text-to-speech voice available for ${requestedLang} on this system.`);
+        }
+    };
+
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
 }
 
 function clearHistory() {
@@ -564,6 +712,13 @@ function buildAssistantHTML(data, msgId) {
             <span class="badge ${badgeClass}">${badgeText}</span>
             ${!isBlocked ? `<span class="meta-stat">top score: ${topScore}</span>` : ''}
             ${latency ? `<span class="meta-stat">${latency}</span>` : ''}
+            ${!isBlocked ? `<button class="speak-btn" data-msg-id="${msgId}">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                </button>` : ''}
         </div>
         <div class="answer-box">${answerHtml}</div>
         <div>${sourcesHtml}</div>
@@ -574,6 +729,7 @@ function buildAssistantHTML(data, msgId) {
 function appendAssistantMessage(data) {
     const id = msgCounter++;
     allSources[id] = data.sources || {};
+    allAnswers[id] = data.answer;
 
     const container = document.getElementById('chat-container');
     const wrap = document.createElement('div');
@@ -581,6 +737,16 @@ function appendAssistantMessage(data) {
     wrap.innerHTML = buildAssistantHTML(data, id);
     container.appendChild(wrap);
     container.scrollTop = container.scrollHeight;
+
+    // wire the speak button here in JS, not via inline onclick, since
+    // JSON.stringify-ing arbitrary text (Urdu/Korean/quotes/apostrophes)
+    // into an HTML attribute breaks the HTML parser
+    const speakBtn = wrap.querySelector('.speak-btn');
+    if (speakBtn) {
+        speakBtn.addEventListener('click', () => {
+            speakAnswer(allAnswers[id], speakBtn);
+        });
+    }
 }
 
 // ── Expand a source: fetch the real chunk text from week 1's API ───────────

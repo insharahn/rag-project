@@ -27,3 +27,7 @@ python-multipart
 
 #ui
 aiofiles
+
+#tts/stt
+openai-whisper
+ffmpeg

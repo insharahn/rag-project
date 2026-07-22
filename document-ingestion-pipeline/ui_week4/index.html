@@ -366,7 +366,7 @@ function renderResults() {
         category: c, recall: byCategory[c] ? byCategory[c].recall : 0,
     }));
     html.push(makeChartDiv('recall-cat', 'Recall by Attack Category', catData, 'category', 'recall', CATEGORY_COLORS));
-    html.push(`<div class="note">Exfiltration and PII sit at 100%. Toxicity and jailbreak are lower — see Limitations for why.</div>`);
+    html.push(`<div class="note">Exfiltration and PII sit at 100%. Toxicity and jailbreak are lower as they don't contain any fixed trigger phrase — the harmful intent is expressed through story structure and implication. .</div>`);
 
     html.push(`<h2>Accuracy by language</h2>`);
     const langData = LANGUAGE_ORDER.map(l => ({
