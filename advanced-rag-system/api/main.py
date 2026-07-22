@@ -8,10 +8,14 @@ import sys
 import time
 import numpy as np
 import asyncio
+import io
+
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi import FastAPI
+from fastapi import UploadFile, File
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from langdetect import detect, LangDetectException
 
@@ -41,7 +45,47 @@ SUPPORTED_QUERY_LANGUAGES = {"en", "ko", "ur"}
 # never reveal which detector fired or why, since that teaches an attacker what to avoid next time.
 REFUSAL_MESSAGE = "This request cannot be processed."
 
+#tts/stt for urdu
+_whisper_model = None
 
+def get_whisper_model():
+    global _whisper_model
+    if _whisper_model is None:
+        import whisper
+        print("[startup] loading Whisper (tiny) for Urdu STT...")
+        _whisper_model = whisper.load_model("tiny")
+    return _whisper_model
+
+
+class TTSRequest(BaseModel):
+    text: str
+
+
+@app.post("/tts/urdu")
+async def synthesize_urdu(req: TTSRequest):
+    from gtts import gTTS
+    tts = gTTS(text=req.text, lang='ur')
+    buf = io.BytesIO()
+    tts.write_to_fp(buf)
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="audio/mpeg")
+
+
+@app.post("/stt/urdu")
+async def transcribe_urdu(audio: UploadFile = File(...)):
+    import tempfile
+    model = get_whisper_model()
+
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp:
+        tmp.write(await audio.read())
+        tmp_path = tmp.name
+
+    try:
+        result = model.transcribe(tmp_path, language="ur")
+        return {"text": result["text"].strip()}
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+        
 @app.post("/reindex/partial")
 def reindex_partial():
     """Detect and index any chunks in the corpus not yet in FAISS/BM25/graph.
@@ -182,6 +226,8 @@ def load_everything():
     print("[startup] loading guardrail models...")
     from guardrails.guardrail import check_input_deep as _warm
     print("[startup] guardrail ready.")
+    print("[startup] loading Whisper for Urdu STT...")
+    get_whisper_model()
     print("[startup] ready.")
 
 
