@@ -454,14 +454,17 @@ let recognition = null;
 let isListening = false;
 let mediaRecorder = null;
 let audioChunks = [];
+let interimBaseText = '';  // text already in the box before this recording started
 
 async function toggleListening() {
     const micBtn = document.getElementById('mic-btn');
     const lang = document.getElementById('voice-lang-select').value;
+    const input = document.getElementById('query-input');
 
     if (lang === 'ur-PK') {
-        // Urdu: browser SpeechRecognition has no Urdu support in most
-        // browsers, so record audio and transcribe via backend Whisper
+        // Urdu: no live partial results possible — Whisper only returns
+        // a transcript after the full recording is sent. Record, then
+        // append the final transcript once it comes back.
         if (isListening) {
             mediaRecorder?.stop();
             return;
@@ -489,7 +492,9 @@ async function toggleListening() {
                     const r = await fetch(`${RAG_API}/stt/urdu`, { method: 'POST', body: formData });
                     if (!r.ok) throw new Error(`HTTP ${r.status}`);
                     const data = await r.json();
-                    document.getElementById('query-input').value = data.text;
+                    // append rather than overwrite
+                    const existing = input.value.trim();
+                    input.value = existing ? `${existing} ${data.text}` : data.text;
                 } catch (e) {
                     console.error('Urdu STT failed:', e);
                     alert('Failed to transcribe audio.');
@@ -502,7 +507,7 @@ async function toggleListening() {
         return;
     }
 
-    // EN/KO: browser SpeechRecognition
+    // EN/KO: browser SpeechRecognition, with live interim results
     if (isListening) {
         recognition?.stop();
         return;
@@ -517,7 +522,10 @@ async function toggleListening() {
     recognition = new SpeechRecognition();
     recognition.lang = lang;
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;  // enable live partial updates
+
+    // remember what was already typed, so live updates append rather than overwrite
+    interimBaseText = input.value.trim();
 
     recognition.onstart = () => {
         isListening = true;
@@ -528,7 +536,24 @@ async function toggleListening() {
         micBtn.classList.remove('listening');
     };
     recognition.onresult = (event) => {
-        document.getElementById('query-input').value = event.results[0][0].transcript;
+        let finalTranscript = '';
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        const combined = (finalTranscript + interimTranscript).trim();
+        input.value = interimBaseText ? `${interimBaseText} ${combined}` : combined;
+
+        // once a chunk is finalized, lock it into the base so future
+        // interim updates append after it instead of re-showing it
+        if (finalTranscript) {
+            interimBaseText = input.value.trim();
+        }
     };
     recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
@@ -657,11 +682,13 @@ async function ask() {
     const topK = document.getElementById('topk-select').value;
     const askBtn = document.getElementById('ask-btn');
     const clearBtn = document.getElementById('clear-history-btn');
+    const micBtn = document.getElementById('mic-btn');
     if (askBtn.disabled) return;
     const loadingBox = document.getElementById('loading-box');
 
     askBtn.disabled = true;
     clearBtn.disabled = true;
+    micBtn.disabled = true;
     errorBox.classList.remove('show');
     loadingBox.classList.add('show');
 
@@ -713,6 +740,7 @@ async function ask() {
         loadingBox.classList.remove('show');
         askBtn.disabled = false;
         clearBtn.disabled = false;
+        micBtn.disabled = false;
     }
 }
 
