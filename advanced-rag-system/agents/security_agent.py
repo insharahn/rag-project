@@ -1,6 +1,6 @@
 # agents/security_agent.py
 """
-Security agent — LangGraph node wrapper around the existing Week 4
+Security agent:LangGraph node wrapper around the existing Week 4
 guardrail module. 
 Adapts check_input_deep and check_output to the graph's state/node 
 interface.

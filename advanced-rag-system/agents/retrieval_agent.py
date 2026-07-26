@@ -1,6 +1,6 @@
 # agents/retrieval_agent.py
 """
-Retrieval agent — LangGraph node wrapper around the existing retrieve()
+Retrieval agent: LangGraph node wrapper around the existing retrieve()
 pipeline (rewrite -> multi-query -> hybrid search -> graph search -> 
 RRF fusion -> rerank). 
 """
