@@ -24,3 +24,7 @@ gTTS
 openai-whisper
 python-multipart
 #also needs ffmpeg
+
+#agents
+langgraph
+langchain-core
