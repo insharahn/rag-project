@@ -24,9 +24,7 @@ def security_input_node(state: dict) -> dict:
 
 
 def security_output_node(state: dict) -> dict:
-    """Runs after generation. Blocks the final answer if it leaks
-    exfiltration/PII content."""
-    answer = state.get("answer", "")
+    answer = state.get("draft_answer", "")
     result = check_output(answer, language=state.get("language", "en"))
     return {
         **state,
