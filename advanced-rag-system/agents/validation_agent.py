@@ -1,6 +1,6 @@
 # agents/validation_agent.py
 """
-Validation agent — independently checks the summarization agent's draft
+Validation agent: independently checks the summarization agent's draft
 answer against the retrieved chunks it was supposedly grounded in.
 Distinct from generate_answer()'s confidence score (which reflects
 retrieval quality) — this checks whether the answer text itself is

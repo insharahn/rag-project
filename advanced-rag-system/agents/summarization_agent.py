@@ -1,6 +1,6 @@
 # agents/summarization_agent.py
 """
-Summarization agent — synthesizes retrieved chunks (possibly expanded by
+Summarization agent: synthesizes retrieved chunks (possibly expanded by
 the research agent) into a draft answer. Reuses the existing citation
 generation logic, but treats its output as a draft for the validation
 agent to check, not a final answer.

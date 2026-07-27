@@ -1,6 +1,6 @@
 # agents/workflow.py
 """
-Multi-agent workflow — wires all five agents into a LangGraph StateGraph.
+Multi-agent workflow: wires all five agents into a LangGraph StateGraph.
 
 Flow:
   security_input -> [blocked -> END]
@@ -52,6 +52,7 @@ class WorkflowState(TypedDict):
     output_blocked: bool
     output_block_reasons: list
     final_answer: str
+    blocked: bool
 
 
 def finalize_node(state: dict) -> dict:
