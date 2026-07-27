@@ -1,0 +1,44 @@
+[
+  {
+    "query": "What attributes does the Car class define in Python?",
+    "expected_expand": false,
+    "actual_expand": false,
+    "top_score": 0.62,
+    "correct": true
+  },
+  {
+    "query": "Who designed the C programming language and when?",
+    "expected_expand": false,
+    "actual_expand": false,
+    "top_score": 0.991,
+    "correct": true
+  },
+  {
+    "query": "What four basic functions does Matplotlib use for plotting?",
+    "expected_expand": false,
+    "actual_expand": false,
+    "top_score": 0.999,
+    "correct": true
+  },
+  {
+    "query": "How does the StringTokenizer work in the Java code example?",
+    "expected_expand": false,
+    "actual_expand": false,
+    "top_score": 0.991,
+    "correct": true
+  },
+  {
+    "query": "What is the definition of a sentence according to the grammar text?",
+    "expected_expand": false,
+    "actual_expand": false,
+    "top_score": 0.911,
+    "correct": true
+  },
+  {
+    "query": "What was Meursault's job and did his employer offer him a new position?",
+    "expected_expand": true,
+    "actual_expand": true,
+    "top_score": 0.005,
+    "correct": true
+  }
+]

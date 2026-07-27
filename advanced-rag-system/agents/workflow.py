@@ -26,7 +26,7 @@ from agents.retrieval_agent import retrieval_node
 from agents.research_agent import research_node
 from agents.summarization_agent import summarization_node
 from agents.validation_agent import validation_node
-
+from generation.citation_generator import generate_answer
 
 class WorkflowState(TypedDict):
     query: str
@@ -76,7 +76,32 @@ def blocked_input_node(state: dict) -> dict:
 def blocked_output_node(state: dict) -> dict:
     return {**state, "final_answer": "This request cannot be processed.", "blocked": True}
 
+def route_after_validation(state: dict) -> str:
+    if state.get("validation_passed", True):
+        return "passed"
+    if state.get("_retry_pass"):
+        # already retried once and still failed — stop looping, hedge instead
+        return "give_up"
+    return "retry"
 
+
+def mark_retry_node(state: dict) -> dict:
+    return {**state, "_retry_pass": True}
+
+
+def hedge_node(state: dict) -> dict:
+    """Validation failed even after one retry — don't serve a
+    known-flawed answer; degrade to an honest hedge instead."""
+    return {
+        **state,
+        "draft_answer": (
+            "I found some relevant information, but I'm not confident enough "
+            "in the accuracy of a direct answer to state one. "
+            f"({state.get('validation_issues', 'unspecified validation concern')})"
+        ),
+        "draft_confidence": "low",
+    }
+    
 def build_workflow():
     graph = StateGraph(WorkflowState)
 
@@ -89,6 +114,16 @@ def build_workflow():
     graph.add_node("security_output", security_output_node)
     graph.add_node("blocked_output", blocked_output_node)
     graph.add_node("finalize", finalize_node)
+    graph.add_node("mark_retry", mark_retry_node)
+    graph.add_node("hedge", hedge_node)
+
+    graph.add_conditional_edges(
+        "validation",
+        route_after_validation,
+        {"passed": "security_output", "retry": "mark_retry", "give_up": "hedge"},
+    )
+    graph.add_edge("mark_retry", "summarization")  # loop back, feedback now attached
+    graph.add_edge("hedge", "security_output")
 
     graph.set_entry_point("security_input")
 
@@ -102,7 +137,6 @@ def build_workflow():
     graph.add_edge("retrieval", "research")
     graph.add_edge("research", "summarization")
     graph.add_edge("summarization", "validation")
-    graph.add_edge("validation", "security_output")
 
     graph.add_conditional_edges(
         "security_output",

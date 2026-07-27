@@ -74,8 +74,7 @@ def _split_answer_and_followups(raw_response: str) -> tuple[str, list[str]]:
     followups = [line.strip("- ").strip() for line in followups_part.strip().split("\n") if line.strip()]
     return answer_part.strip(), followups[:3]
 
-
-def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, float]]) -> dict:
+def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, float]], feedback: str = None) -> dict:
     if not retrieved_chunks:
         return {
             "answer": "The corpus doesn't contain information relevant to this question.",
@@ -101,11 +100,18 @@ def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, floa
         }
 
     context = _format_context(retrieved_chunks)
+    user_content = f"Context:\n{context}\n\nQuestion: {raw_query}"
+    if feedback:
+        user_content += (
+            f"\n\nNote: a previous attempt at answering this question had the "
+            f"following problem, which you must fix this time: {feedback}"
+        )
+
     messages = [
         {"role": "system", "content": CITATION_SYSTEM_PROMPT},
-        {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {raw_query}"},
+        {"role": "user", "content": user_content},
     ]
-    
+
     answer_raw = call_llm(messages, temperature=0.2)
     answer, followups = _split_answer_and_followups(answer_raw)
 
