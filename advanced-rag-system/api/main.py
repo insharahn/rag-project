@@ -4,6 +4,7 @@ runs the full pipeline:
 guardrail check -> rewrite -> multi-query -> hybrid search -> rerank ->
 cited answer -> guardrail check.
 """
+import json
 import sys
 import time
 import numpy as np
@@ -30,6 +31,7 @@ from graphs.build_graph import extract_entities
 from graphs.graph_index import get_graph
 from guardrails.guardrail import check_input_deep, check_output
 from fastapi.middleware.cors import CORSMiddleware
+from agents.workflow import workflow
 
 app = FastAPI(title="Advanced RAG System", version="1.0")
 
@@ -221,7 +223,7 @@ def load_everything():
         get_graph()
         print("[startup] graph loaded.")
     except FileNotFoundError:
-        print("[startup] graph not found — run python graphs/build_graph.py to enable graph retrieval.")
+        print("[startup] graph not found: run python graphs/build_graph.py to enable graph retrieval.")
     # guardrail models (Prompt Guard 2, toxicity classifier)
     print("[startup] loading guardrail models...")
     from guardrails.guardrail import check_input_deep as _warm
@@ -319,3 +321,84 @@ def health():
 def stats():
     _, text_by_id = get_index()
     return {"total_chunks": len(text_by_id), "status": "ready"}
+
+#agents
+class AgentQueryRequest(BaseModel):
+    query: str
+    top_k: int = 5
+    history: list[dict] = []
+
+
+class AgentQueryResponse(BaseModel):
+    answer: str
+    sources: dict
+    confidence: str
+    top_score: float
+    latency_seconds: float
+    followup_questions: list[str] = []
+    blocked: bool = False
+    research_expanded: bool = False
+    sub_queries_used: list[str] | None = None
+    validated: bool = False
+    validation_issues: str = ""
+    retried: bool = False
+
+
+@app.post("/agent-query", response_model=AgentQueryResponse)
+async def agent_query(req: AgentQueryRequest):
+    t0 = time.time()
+
+    # same language gate as /query, since the security nodes read
+    # state["language"] and everything downstream assumes it's set
+    detected_lang = "en"
+    try:
+        if len(req.query.strip()) >= 20:
+            detected = detect(req.query)
+            if detected not in SUPPORTED_QUERY_LANGUAGES:
+                return AgentQueryResponse(
+                    answer=f"This system only supports queries in English, Korean, or Urdu. Detected language: {detected}.",
+                    sources={}, confidence="low", top_score=0.0,
+                    latency_seconds=round(time.time() - t0, 2),
+                )
+            detected_lang = detected
+    except LangDetectException:
+        pass  # let it through rather than block on a failed detection
+
+    initial_state = {
+        "query": req.query,
+        "language": detected_lang,
+        "top_k": req.top_k,
+        "history": req.history,
+    }
+
+    try:
+        # wider timeout than /query — a research-expansion + validation-retry
+        # run can hit 6-7 LLM calls, some with large context
+        final_state = await asyncio.wait_for(
+            asyncio.to_thread(workflow.invoke, initial_state),
+            timeout=180,
+        )
+    except asyncio.TimeoutError:
+        return AgentQueryResponse(
+            answer="Request timed out: the LLM provider may be experiencing high load. Please try again.",
+            sources={}, confidence="low", top_score=0.0,
+            latency_seconds=round(time.time() - t0, 2),
+        )
+
+    t1 = time.time()
+    print(json.dumps({k: v for k, v in final_state.items() if k not in ("retrieved_chunks", "draft_sources")}, default=str, indent=2))
+
+    return AgentQueryResponse(
+        answer=final_state.get("final_answer", ""),
+        sources=final_state.get("final_sources", {}),
+        confidence=final_state.get("final_confidence", "low"),
+        top_score=final_state.get("final_top_score", 0.0),
+        latency_seconds=round(t1 - t0, 2),
+        followup_questions=final_state.get("final_followups", []),
+        blocked=final_state.get("blocked", False),
+        research_expanded=final_state.get("final_research_expanded", False),
+        sub_queries_used=final_state.get("sub_queries_used"),
+        validated=final_state.get("final_validated", False),
+        validation_issues=final_state.get("final_validation_issues", ""),
+        retried=final_state.get("_retry_pass", False),
+    )
