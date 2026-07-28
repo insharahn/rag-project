@@ -52,6 +52,13 @@ class WorkflowState(TypedDict):
     output_blocked: bool
     output_block_reasons: list
     final_answer: str
+    final_sources: dict
+    final_confidence: str
+    final_top_score: float
+    final_followups: list
+    final_validated: bool
+    final_validation_issues: str
+    final_research_expanded: bool
     blocked: bool
     _retry_pass: bool
 

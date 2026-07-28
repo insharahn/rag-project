@@ -42,7 +42,7 @@ def validation_node(state: dict) -> dict:
         return {**state, "validation_passed": False, "validation_issues": "No draft answer or sources to validate."}
 
     cited_nums = set(re.findall(r'\[(\d+)\]', draft))
-    relevant_sources = {n: s for n, s in sources.items() if not cited_nums or n in cited_nums}
+    relevant_sources = {n: s for n, s in sources.items() if not cited_nums or str(n) in cited_nums}
 
     text_by_cid = {}
     for cid, chunk, _score in chunks:
