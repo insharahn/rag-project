@@ -38,9 +38,15 @@ def validation_node(state: dict) -> dict:
     sources = state.get("draft_sources", {})
     chunks = state.get("retrieved_chunks", [])
 
-    if not draft or not sources:
-        return {**state, "validation_passed": False, "validation_issues": "No draft answer or sources to validate."}
+    if not draft:
+        return {**state, "validation_passed": False, "validation_issues": "No draft answer was generated."}
 
+    if not sources:
+        return {
+            **state,
+            "validation_passed": False,
+            "validation_issues": "The draft answer did not cite any sources with [n] markers — every claim must include a citation.",
+        }
     cited_nums = set(re.findall(r'\[(\d+)\]', draft))
     relevant_sources = {n: s for n, s in sources.items() if not cited_nums or str(n) in cited_nums}
 
