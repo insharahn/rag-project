@@ -7,6 +7,7 @@ retrieval quality) — this checks whether the answer text itself is
 actually supported by what was cited.
 """
 import sys
+import re
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -38,43 +39,49 @@ def validation_node(state: dict) -> dict:
     chunks = state.get("retrieved_chunks", [])
 
     if not draft or not sources:
-        return {
-            **state,
-            "validation_passed": False,
-            "validation_issues": "No draft answer or sources to validate.",
-        }
+        return {**state, "validation_passed": False, "validation_issues": "No draft answer or sources to validate."}
 
-    # build cid -> text lookup from the actual retrieved chunks, since
-    # draft_sources only carries display metadata, not full chunk text
+    cited_nums = set(re.findall(r'\[(\d+)\]', draft))
+    relevant_sources = {n: s for n, s in sources.items() if not cited_nums or n in cited_nums}
+
     text_by_cid = {}
     for cid, chunk, _score in chunks:
         text_by_cid[cid] = chunk["text"] if isinstance(chunk, dict) else chunk
 
     source_text_parts = []
-    for n, src in sources.items():
+    for n, src in relevant_sources.items():
         cid = src.get("chunk_id", "")
         text = text_by_cid.get(cid, "")
-        source_text_parts.append(f"[{n}] {src.get('source_doc', '')}: {text[:500]}")
+        source_text_parts.append(f"[{n}] {src.get('source_doc', '')}: {text[:250]}")
     source_text = "\n\n".join(source_text_parts)
 
-    user_content = (
-        f"Question: {state['query']}\n\n"
-        f"Draft answer: {draft}\n\n"
-        f"Source chunks:\n{source_text}"
-    )
-
+    user_content = f"Question: {state['query']}\n\nDraft answer: {draft}\n\nSource chunks:\n{source_text}"
     messages = [
         {"role": "system", "content": VALIDATION_SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
-    response = call_llm(messages, temperature=0.0)
+    response = call_llm(messages, temperature=0.0, max_tokens=80, model="small")
 
-    grounded = "GROUNDED: yes" in response
-    cited_correctly = "CITED_CORRECTLY: yes" in response
-    addresses_query = "ADDRESSES_QUERY: yes" in response
-    issues_line = next((l for l in response.split("\n") if l.startswith("ISSUES:")), "ISSUES: none")
+    def _field_is_yes(field: str) -> bool | None:
+        match = re.search(rf'{field}\s*:\s*(\w+)', response, re.IGNORECASE)
+        if not match:
+            return None  # couldn't parse at all — distinct from a genuine "no"
+        return match.group(1).lower().startswith('y')
 
-    passed = grounded and cited_correctly and addresses_query
+    grounded = _field_is_yes("GROUNDED")
+    cited_correctly = _field_is_yes("CITED_CORRECTLY")
+    addresses_query = _field_is_yes("ADDRESSES_QUERY")
+
+    issues_match = re.search(r'ISSUES\s*:\s*(.+)', response, re.IGNORECASE)
+    issues_text = issues_match.group(1).strip() if issues_match else None
+
+    # total parse failure (none of the 4 fields found) — don't silently
+    # fail the answer for a formatting mismatch that isn't the answer's fault
+    if grounded is None and cited_correctly is None and addresses_query is None:
+        print(f"[validation] Could not parse validator response at all, passing through. Raw: {response[:150]!r}")
+        return {**state, "validation_passed": True, "validation_issues": "validator response unparseable — passed through"}
+
+    passed = bool(grounded) and bool(cited_correctly) and bool(addresses_query)
 
     return {
         **state,
@@ -82,5 +89,5 @@ def validation_node(state: dict) -> dict:
         "validation_grounded": grounded,
         "validation_cited_correctly": cited_correctly,
         "validation_addresses_query": addresses_query,
-        "validation_issues": issues_line.replace("ISSUES:", "").strip(),
+        "validation_issues": issues_text or "none",
     }

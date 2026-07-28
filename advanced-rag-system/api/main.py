@@ -10,6 +10,8 @@ import time
 import numpy as np
 import asyncio
 import io
+import queue
+import threading
 
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -54,7 +56,6 @@ def get_whisper_model():
     global _whisper_model
     if _whisper_model is None:
         import whisper
-        print("[startup] loading Whisper (tiny) for Urdu STT...")
         _whisper_model = whisper.load_model("tiny")
     return _whisper_model
 
@@ -343,6 +344,105 @@ class AgentQueryResponse(BaseModel):
     validation_issues: str = ""
     retried: bool = False
 
+def _summarize_node_output(node_name: str, output: dict) -> dict:
+    """Trim each node's full state dict down to just what the UI trace
+    needs — avoids pushing full chunk text over SSE."""
+    if node_name == "security_input":
+        return {"blocked": output.get("input_blocked", False)}
+    if node_name in ("blocked_input", "blocked_output"):
+        return {"blocked": True, "final_answer": output.get("final_answer", "")}
+    if node_name == "retrieval":
+        return {"top_score": output.get("top_score", 0.0)}
+    if node_name == "research":
+        return {
+            "research_expanded": output.get("research_expanded", False),
+            "sub_queries_used": output.get("sub_queries_used"),
+        }
+    if node_name == "summarization":
+        return {"retried": output.get("_retry_pass", False)}
+    if node_name == "validation":
+        return {
+            "validation_passed": output.get("validation_passed", False),
+            "validation_issues": output.get("validation_issues", ""),
+        }
+    if node_name == "mark_retry":
+        return {"retrying": True}
+    if node_name == "security_output":
+        return {"blocked": output.get("output_blocked", False)}
+    if node_name == "finalize":
+        return {
+            "final_answer": output.get("final_answer", ""),
+            "final_sources": output.get("final_sources", {}),
+            "final_confidence": output.get("final_confidence", "low"),
+            "final_top_score": output.get("final_top_score", 0.0),
+            "final_followups": output.get("final_followups", []),
+            "final_validated": output.get("final_validated", False),
+            "final_validation_issues": output.get("final_validation_issues", ""),
+            "final_research_expanded": output.get("final_research_expanded", False),
+        }
+    return {}
+
+
+def _stream_workflow(initial_state: dict, q: queue.Queue):
+    try:
+        t_prev = time.time()
+        for update in workflow.stream(initial_state, stream_mode="updates"):
+            for node_name, node_output in update.items():
+                now = time.time()
+                q.put({
+                    "node": node_name,
+                    "node_elapsed_seconds": round(now - t_prev, 2),
+                    **_summarize_node_output(node_name, node_output),
+                })
+                t_prev = now
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  
+        q.put({"node": "error", "error": str(e)})
+    finally:
+        q.put(None)
+        
+@app.post("/agent-query/stream")
+async def agent_query_stream(req: AgentQueryRequest):
+    t0 = time.time()
+
+    detected_lang = "en"
+    try:
+        if len(req.query.strip()) >= 20:
+            detected = detect(req.query)
+            if detected not in SUPPORTED_QUERY_LANGUAGES:
+                async def _lang_error():
+                    payload = json.dumps({
+                        "node": "error",
+                        "error": f"This system only supports English, Korean, or Urdu. Detected: {detected}.",
+                    })
+                    yield f"data: {payload}\n\n"
+                return StreamingResponse(_lang_error(), media_type="text/event-stream")
+            detected_lang = detected
+    except LangDetectException:
+        pass
+
+    initial_state = {
+        "query": req.query,
+        "language": detected_lang,
+        "top_k": req.top_k,
+        "history": req.history,
+    }
+
+    q: queue.Queue = queue.Queue()
+    threading.Thread(target=_stream_workflow, args=(initial_state, q), daemon=True).start()
+
+    async def event_generator():
+        loop = asyncio.get_event_loop()
+        while True:
+            item = await loop.run_in_executor(None, q.get)
+            if item is None:
+                payload = json.dumps({"node": "done", "elapsed_seconds": round(time.time() - t0, 2)})
+                yield f"data: {payload}\n\n"
+                break
+            yield f"data: {json.dumps(item, default=str)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.post("/agent-query", response_model=AgentQueryResponse)
 async def agent_query(req: AgentQueryRequest):

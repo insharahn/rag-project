@@ -53,6 +53,7 @@ class WorkflowState(TypedDict):
     output_block_reasons: list
     final_answer: str
     blocked: bool
+    _retry_pass: bool
 
 
 def finalize_node(state: dict) -> dict:

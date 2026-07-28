@@ -41,7 +41,7 @@ def decompose_query(query: str) -> list[str]:
         {"role": "system", "content": DECOMPOSE_SYSTEM_PROMPT},
         {"role": "user", "content": query},
     ]
-    response = call_llm(messages, temperature=0.1)
+    response = call_llm(messages, temperature=0.1, max_tokens=120, model="small")
 
     if response.strip().upper() == "SINGLE":
         return [query]
