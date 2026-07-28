@@ -268,6 +268,24 @@ body {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d4cfc8; border-radius: 3px; }
+
+.subquery-box {
+    background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 10px;
+    margin: 4px 0 8px; overflow: hidden;
+}
+.subquery-hd {
+    padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: #7a7268; cursor: pointer; transition: background 0.1s;
+}
+.subquery-hd:hover { background: #f8f5f0; }
+.subquery-hd .source-arrow { transition: transform 0.2s; }
+.subquery-box.open .subquery-hd .source-arrow { transform: rotate(90deg); }
+.subquery-list { display: none; padding: 0 14px 12px 32px; }
+.subquery-box.open .subquery-list { display: block; }
+.subquery-item {
+    font-size: 12px; color: #5a5248; padding: 4px 0;
+    border-left: 2px solid #b8ddc8; padding-left: 10px; margin-bottom: 4px;
+}
 </style>
 </head>
 <body>
@@ -342,7 +360,7 @@ body {
 
         <div class="example-chips">
             <div class="chip" onclick="setQuery(this)">what is a lambda function in python</div>
-            <div class="chip" onclick="setQuery(this)">what was Meursault's job and did his employer offer him a new position</div>
+            <div class="chip" onclick="setQuery(this)">symbolism of the house for the family in a raisin in the sun and what other themes persist throughout the play</div>
         </div>
     </div>
 </div>
@@ -572,14 +590,14 @@ function handleStreamEvent(event, wrap, liveState, originalQuery) {
 
     } else if (node === 'research') {
         if (event.research_expanded) {
-            const n = event.sub_queries_used ? event.sub_queries_used.length : 0;
-            setStep(wrap, 2, { state: 'done', detail: `expanded (${n} sub-q)` });
-            logAgentLine(wrap, `Research agent expanded the query into ${n} sub-question${n === 1 ? '' : 's'}`);
+            const subs = event.sub_queries_used || [];
+            setStep(wrap, 2, { state: 'done', detail: `expanded (${subs.length} sub-q)` });
+            logAgentLine(wrap, `Research agent expanded the query into ${subs.length} sub-question${subs.length === 1 ? '' : 's'}`);
+            if (subs.length) renderSubQueries(wrap, subs);
         } else {
             setStep(wrap, 2, { state: 'skipped', detail: 'not needed' });
             logAgentLine(wrap, 'Research agent judged the retrieval confident enough — no expansion');
         }
-
     } else if (node === 'summarization') {
         setStep(wrap, 3, { state: event.retried ? 'retried' : 'done', detail: event.retried ? 'retrying with feedback…' : 'drafted' });
         logAgentLine(wrap, event.retried ? 'Summarization agent is redrafting with validator feedback' : 'Summarization agent drafted an answer');
@@ -629,6 +647,21 @@ function logAgentLine(wrap, text, isError) {
     line.className = isError ? 'agent-log-line err' : 'agent-log-line';
     line.textContent = text;
     wrap.log.appendChild(line);
+}
+
+function renderSubQueries(wrap, subs) {
+    const holder = wrap.querySelector('.agent-log-holder');
+    const box = document.createElement('div');
+    box.className = 'subquery-box';
+    box.innerHTML = `
+        <div class="subquery-hd" onclick="this.parentElement.classList.toggle('open')">
+            <span class="source-arrow">▶</span> ${subs.length} sub-queries generated
+        </div>
+        <div class="subquery-list">
+            ${subs.map(q => `<div class="subquery-item">${esc(q)}</div>`).join('')}
+        </div>
+    `;
+    holder.appendChild(box);
 }
 
 function renderFinalAnswer(wrap, event, originalQuery, persist = true) {
