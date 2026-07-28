@@ -42,7 +42,16 @@ body {
 .container h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
 .container .subtitle { font-size: 14px; color: #a09888; margin-bottom: 24px; line-height: 1.6; }
 
-.chat-container { display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
+.chat-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding-right: 4px;
+}
+.chat-container:empty { display: none; }
 .msg-user {
     align-self: flex-end;
     background: #e8f5ee;
@@ -62,7 +71,7 @@ body {
     border: 1.5px solid #e8e3db;
     border-radius: 12px;
     padding: 12px 14px;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     gap: 4px;
     overflow-x: auto;
 }
@@ -102,9 +111,14 @@ body {
 .agent-step.skipped .agent-dot { background: #f5f3ef; border-color: #e8e3db; color: #c8c0b4; }
 .agent-step.retried .agent-dot { background: #fef0d8; border-color: #f0d4a0; color: #a06820; }
 .agent-step.blocked .agent-dot { background: #fef0f0; border-color: #f0c8b8; color: #c05050; }
+.agent-step.failed .agent-dot { background: #fef0f0; border-color: #f0c8b8; color: #c05050; }
 .agent-label { font-size: 10.5px; font-weight: 600; color: #7a7268; text-align: center; }
 .agent-step.done .agent-label { color: #3a3630; }
 .agent-detail { font-size: 9.5px; color: #b8b0a4; text-align: center; line-height: 1.3; }
+
+.agent-log { font-size: 11.5px; color: #a09888; padding: 2px 4px 12px; line-height: 1.8; }
+.agent-log-line::before { content: '· '; color: #b8ddc8; }
+.agent-log-line.err::before { content: '⚠ '; color: #c07060; }
 
 .result-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 .badge {
@@ -114,6 +128,7 @@ body {
 .badge.high { background: #e6f5ec; color: #3a8858; }
 .badge.low  { background: #fef0e0; color: #c08030; }
 .badge.blocked { background: #fef0f0; color: #c05050; }
+.badge.error { background: #fef0f0; color: #c05050; }
 .meta-stat { font-size: 12px; color: #a09888; }
 
 .answer-box {
@@ -126,14 +141,17 @@ body {
     line-height: 1.75;
     color: #3a3630;
 }
+.answer-box.error-text { color: #b85030; }
 .answer-box p { margin: 0 0 10px 0; }
 .answer-box p:last-child { margin-bottom: 0; }
 .cite-chip {
     display: inline-block;
     font-size: 11px; font-weight: 700; color: #3a8858;
     background: #e6f5ec; border: 1px solid #b8ddc8; border-radius: 4px;
-    padding: 0 5px; margin: 0 1px; vertical-align: super; line-height: 1.4;
+    padding: 0 5px; margin: 0 1px; cursor: pointer; vertical-align: super; line-height: 1.4;
+    transition: background 0.15s;
 }
+.cite-chip:hover { background: #ccecd9; }
 
 .sources-hd {
     font-size: 11px; font-weight: 700; color: #a09888; text-transform: uppercase;
@@ -141,13 +159,26 @@ body {
 }
 .source-card {
     background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 10px;
-    margin-bottom: 8px; padding: 10px 14px; font-size: 12.5px; color: #5a5248;
-    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px; overflow: hidden;
 }
+.source-hd { padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.1s; }
+.source-hd:hover { background: #f8f5f0; }
 .source-num {
     font-size: 11px; font-weight: 700; color: #3a8858; background: #e6f5ec;
     border-radius: 4px; padding: 1px 6px; flex-shrink: 0;
 }
+.source-name { font-size: 12.5px; color: #3a3630; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.source-score { font-size: 11px; color: #a09888; flex-shrink: 0; }
+.source-arrow { font-size: 10px; color: #c8c0b4; transition: transform 0.2s; flex-shrink: 0; }
+.source-card.open .source-arrow { transform: rotate(90deg); }
+.source-body { display: none; padding: 0 14px 14px 14px; border-top: 1px solid #eeeae3; }
+.source-card.open .source-body { display: block; }
+.source-chunk-text {
+    font-size: 12.5px; line-height: 1.7; color: #5a5248; background: #f8f5f0;
+    border-radius: 8px; padding: 12px 14px; margin-top: 10px; white-space: pre-wrap;
+    max-height: 220px; overflow-y: auto; font-family: Georgia, serif;
+}
+.source-chunk-loading { font-size: 12px; color: #b8b0a4; margin-top: 10px; }
 
 .loading-box {
     display: none;
@@ -194,7 +225,39 @@ body {
 }
 .ask-btn:hover:not(:disabled) { background: #6a9a7f; }
 .ask-btn:disabled { background: #c8ddd2; color: #8ab8a0; cursor: not-allowed; }
+.mic-btn {
+    background: #fffef9; color: #7aaa8f; border: 1.5px solid #7aaa8f;
+    padding: 0 14px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; transition: background 0.15s, color 0.15s;
+}
+.mic-btn:hover:not(:disabled) { background: #e8f5ee; }
+.mic-btn.listening { background: #7aaa8f; color: #fff; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+.mic-btn:disabled { border-color: #c8ddd2; color: #8ab8a0; cursor: not-allowed; }
+
+.speak-btn {
+    background: none; border: none; color: #a09888; cursor: pointer;
+    padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center;
+    transition: background 0.15s, color 0.15s;
+}
+.speak-btn:hover { background: #f0ede8; color: #5a5248; }
+.speak-btn.speaking { color: #7aaa8f; animation: pulse 1.2s ease-in-out infinite; }
+
+.query-opts { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: #a09888; flex-wrap: wrap; }
+.query-opts select {
+    border: 1.5px solid #ddd8cf; border-radius: 6px; padding: 3px 8px;
+    font-size: 12px; background: #fffef9; cursor: pointer;
+}
 .query-hint { font-size: 11px; color: #c8c0b4; margin-top: 8px; }
+
+.clear-history-row { text-align: right; margin-bottom: 20px; }
+.clear-history-link {
+    background: none; border: none; color: #a09888; font-size: 12px;
+    cursor: pointer; text-decoration: underline; padding: 4px 2px;
+}
+.clear-history-link:hover { color: #7a7268; }
+.clear-history-link:disabled { color: #c8c0b4; cursor: not-allowed; text-decoration: none; }
+
 .example-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
 .chip {
     font-size: 11.5px; padding: 5px 11px; border-radius: 14px;
@@ -246,21 +309,56 @@ body {
             <div class="query-row">
                 <textarea class="query-input" id="query-input" rows="2" placeholder="e.g. What was Meursault's job?"></textarea>
                 <button class="ask-btn" id="ask-btn" onclick="ask()">Ask</button>
+                <button class="mic-btn" id="mic-btn" onclick="toggleListening()" title="Speak your query">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
             </div>
-            <div class="query-hint">Supported languages: English, Urdu, Korean. Multi-agent queries run slower than the single-pass system (usually more LLM calls per answer).</div>
+            <div class="query-opts">
+                <span>Top-k:</span>
+                <select id="topk-select">
+                    <option value="3">3</option>
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
+                </select>
+                <span>Voice:</span>
+                <select id="voice-lang-select">
+                    <option value="en-US">English</option>
+                    <option value="ko-KR">한국어</option>
+                    <option value="ur-PK">اردو</option>
+                </select>
+                <span style="margin-left:auto;">Multi-agent queries run slower than the single-pass system.</span>
+            </div>
+            <div class="query-hint">Supported languages: English, Urdu, Korean.</div>
+        </div>
+
+        <div class="clear-history-row">
+            <button class="clear-history-link" id="clear-history-btn" onclick="clearHistory()">Clear history</button>
         </div>
 
         <div class="example-chips">
             <div class="chip" onclick="setQuery(this)">what is a lambda function in python</div>
-            <div class="chip" onclick="setQuery(this)">symbolism of the house for the family in a raisin in the sun</div>
+            <div class="chip" onclick="setQuery(this)">what was Meursault's job and did his employer offer him a new position</div>
         </div>
     </div>
 </div>
 
 <script>
 const AGENT_API = 'http://127.0.0.1:8001';
-let timerInterval = null;
+const INGESTION_API = 'http://127.0.0.1:8000';
+const STEP_ORDER = ['Security', 'Retrieval', 'Research', 'Summarization', 'Validation'];
 
+let timerInterval = null;
+let msgCounter = 0;
+let allSources = {};   // msgId -> sources dict
+let allAnswers = {};   // msgId -> raw answer text, for TTS
+let chatHistory = JSON.parse(localStorage.getItem('agent_chat_history') || '[]');
+
+// ── Health check ─────────────────────────────────────────────────────────
 async function checkHealth() {
     const statusEl = document.getElementById('status');
     try {
@@ -277,6 +375,29 @@ setInterval(checkHealth, 10000);
 
 function setQuery(el) { document.getElementById('query-input').value = el.textContent; }
 
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderMarkdownLite(text) {
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+}
+
+// ── Language gating (same as week 3) ─────────────────────────────────────
+const ALLOWED_CHAR_RE = /[\u0000-\u024F\u0600-\u06FF\u0750-\u077F\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F\s\d\p{P}]/u;
+function isAllowedLanguage(query) {
+    for (const ch of query) if (!ALLOWED_CHAR_RE.test(ch)) return false;
+    return true;
+}
+
+function isHedgeAnswer(answer) {
+    if (!answer) return false;
+    return answer.includes("doesn't clearly address") || answer.includes("not confident enough");
+}
+
 document.getElementById('query-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -284,16 +405,41 @@ document.getElementById('query-input').addEventListener('keydown', e => {
     }
 });
 
+function clearHistory() {
+    const clearBtn = document.getElementById('clear-history-btn');
+    if (clearBtn.disabled) return;
+    chatHistory = [];
+    localStorage.removeItem('agent_chat_history');
+    document.getElementById('chat-container').innerHTML = '';
+    allSources = {};
+    allAnswers = {};
+    msgCounter = 0;
+    document.getElementById('query-input').value = '';
+}
+
+// ── Main ask flow ─────────────────────────────────────────────────────────
 async function ask() {
     const query = document.getElementById('query-input').value.trim();
     if (!query) return;
 
     const errorBox = document.getElementById('error-box');
+
+    if (!isAllowedLanguage(query)) {
+        errorBox.textContent = 'This system only supports queries in English, Urdu, or Korean. Please rephrase your query in one of these languages.';
+        errorBox.classList.add('show');
+        return;
+    }
+
+    const topK = parseInt(document.getElementById('topk-select').value);
     const askBtn = document.getElementById('ask-btn');
+    const clearBtn = document.getElementById('clear-history-btn');
+    const micBtn = document.getElementById('mic-btn');
     const loadingBox = document.getElementById('loading-box');
     if (askBtn.disabled) return;
 
     askBtn.disabled = true;
+    clearBtn.disabled = true;
+    micBtn.disabled = true;
     errorBox.classList.remove('show');
     loadingBox.classList.add('show');
     appendUserMessage(query);
@@ -306,22 +452,293 @@ async function ask() {
         document.getElementById('loading-timer').textContent = `${elapsed}s elapsed`;
     }, 1000);
 
+    const wrap = createLiveAssistantShell();
+    const liveState = { blocked: false, errored: false, finalAnswer: '' };
+
     try {
-        const r = await fetch(`${AGENT_API}/agent-query`, {
+        const resp = await fetch(`${AGENT_API}/agent-query/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, top_k: 5, history: [] }),
+            body: JSON.stringify({ query, top_k: topK, history: chatHistory.slice(-6) }),
         });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        appendAssistantMessage(data);
+        if (!resp.ok || !resp.body) throw new Error(`HTTP ${resp.status}`);
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop();
+
+            for (const part of parts) {
+                const line = part.trim();
+                if (!line.startsWith('data:')) continue;
+                const jsonStr = line.slice(5).trim();
+                if (!jsonStr) continue;
+                handleStreamEvent(JSON.parse(jsonStr), wrap, liveState, query);
+            }
+        }
     } catch (e) {
         errorBox.textContent = `Request failed: ${e.message}. Is the agent API running on port 8001?`;
         errorBox.classList.add('show');
+        markStreamFailed(wrap, e.message);
     } finally {
         clearInterval(timerInterval);
         loadingBox.classList.remove('show');
         askBtn.disabled = false;
+        clearBtn.disabled = false;
+        micBtn.disabled = false;
+    }
+}
+
+function createLiveAssistantShell() {
+    const container = document.getElementById('chat-container');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-assistant';
+    wrap.innerHTML = `
+        <div class="agent-trace">
+            ${STEP_ORDER.map(label => stepHTML({ state: 'pending', label, detail: 'waiting…' })).join('')}
+        </div>
+        <div class="agent-log-holder"></div>
+        <div class="result-meta" style="display:none;"></div>
+        <div class="answer-box" style="display:none;"></div>
+        <div class="live-sources"></div>
+    `;
+    wrap.trace = wrap.querySelector('.agent-trace');
+    wrap.meta = wrap.querySelector('.result-meta');
+    wrap.answer = wrap.querySelector('.answer-box');
+    wrap.sourcesEl = wrap.querySelector('.live-sources');
+
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+    return wrap;
+}
+
+function setStep(wrap, index, step) {
+    const el = wrap.trace.children[index];
+    el.className = `agent-step ${step.state}`;
+    el.querySelector('.agent-dot').textContent =
+        step.state === 'blocked' ? '✕' :
+        step.state === 'failed' ? '✕' :
+        step.state === 'skipped' ? '·' :
+        step.state === 'retried' ? '↻' :
+        step.state === 'pending' ? '…' : '✓';
+    el.querySelector('.agent-detail').textContent = step.detail;
+}
+
+function skipRemaining(wrap, fromIndex) {
+    for (let i = fromIndex; i < STEP_ORDER.length; i++) setStep(wrap, i, { state: 'skipped', detail: '—' });
+}
+
+// any step still "pending" (never got an event) gets marked failed —
+// this is what makes a crash mid-stream visible instead of a frozen "…"
+function markStreamFailed(wrap, message) {
+    for (let i = 0; i < STEP_ORDER.length; i++) {
+        const el = wrap.trace.children[i];
+        if (el.className.includes('pending')) {
+            setStep(wrap, i, { state: 'failed', detail: 'failed' });
+        }
+    }
+    logAgentLine(wrap, `⚠ ${message}`, true);
+
+    wrap.meta.style.display = 'flex';
+    wrap.meta.innerHTML = `<span class="badge error">Error</span>`;
+    wrap.answer.style.display = 'block';
+    wrap.answer.className = 'answer-box error-text';
+    wrap.answer.innerHTML = `<p>${esc(message)}</p>`;
+}
+
+function handleStreamEvent(event, wrap, liveState, originalQuery) {
+    const { node } = event;
+
+    if (node === 'security_input') {
+        setStep(wrap, 0, { state: event.blocked ? 'blocked' : 'done', detail: event.blocked ? 'blocked' : 'cleared' });
+        logAgentLine(wrap, event.blocked ? 'Security agent blocked this query' : 'Security agent cleared the query');
+        if (event.blocked) skipRemaining(wrap, 1);
+
+    } else if (node === 'blocked_input' || node === 'blocked_output') {
+        liveState.blocked = true;
+        liveState.finalAnswer = event.final_answer || 'This request cannot be processed.';
+
+    } else if (node === 'retrieval') {
+        const scoreText = typeof event.top_score === 'number' ? event.top_score.toFixed(2) : 'n/a';
+        setStep(wrap, 1, { state: 'done', detail: `top score ${scoreText}` });
+        logAgentLine(wrap, `Retrieval agent found sources, top score ${scoreText}`);
+
+    } else if (node === 'research') {
+        if (event.research_expanded) {
+            const n = event.sub_queries_used ? event.sub_queries_used.length : 0;
+            setStep(wrap, 2, { state: 'done', detail: `expanded (${n} sub-q)` });
+            logAgentLine(wrap, `Research agent expanded the query into ${n} sub-question${n === 1 ? '' : 's'}`);
+        } else {
+            setStep(wrap, 2, { state: 'skipped', detail: 'not needed' });
+            logAgentLine(wrap, 'Research agent judged the retrieval confident enough — no expansion');
+        }
+
+    } else if (node === 'summarization') {
+        setStep(wrap, 3, { state: event.retried ? 'retried' : 'done', detail: event.retried ? 'retrying with feedback…' : 'drafted' });
+        logAgentLine(wrap, event.retried ? 'Summarization agent is redrafting with validator feedback' : 'Summarization agent drafted an answer');
+
+    } else if (node === 'validation') {
+        setStep(wrap, 4, event.validation_passed
+            ? { state: 'done', detail: 'passed' }
+            : { state: 'retried', detail: event.validation_issues || 'flagged' });
+        logAgentLine(wrap, event.validation_passed
+            ? 'Validation agent confirmed the answer is grounded'
+            : `Validation agent flagged an issue: ${event.validation_issues || 'unspecified'}`);
+
+    } else if (node === 'mark_retry') {
+        const detailEl = wrap.trace.children[4].querySelector('.agent-detail');
+        detailEl.textContent = detailEl.textContent + ' → retrying';
+        logAgentLine(wrap, 'Looping back to summarization for one retry');
+
+    } else if (node === 'error') {
+        liveState.errored = true;
+        document.getElementById('error-box').textContent = `Stream error: ${event.error}`;
+        document.getElementById('error-box').classList.add('show');
+        markStreamFailed(wrap, event.error);
+
+    } else if (node === 'done' && typeof event.elapsed_seconds === 'number') {
+        if (!liveState.errored) {
+            const latencyEl = document.createElement('span');
+            latencyEl.className = 'meta-stat';
+            latencyEl.textContent = `${event.elapsed_seconds.toFixed(1)}s total`;
+            wrap.meta.style.display = 'flex';
+            wrap.meta.appendChild(latencyEl);
+        }
+
+    } else if (node === 'finalize') {
+        console.log('[finalize event]', JSON.stringify(event, null, 2)); 
+        renderFinalAnswer(wrap, event, originalQuery);
+    }
+}
+
+function logAgentLine(wrap, text, isError) {
+    let logHolder = wrap.querySelector('.agent-log-holder');
+    if (!wrap.log) {
+        wrap.log = document.createElement('div');
+        wrap.log.className = 'agent-log';
+        logHolder.appendChild(wrap.log);
+    }
+    const line = document.createElement('div');
+    line.className = isError ? 'agent-log-line err' : 'agent-log-line';
+    line.textContent = text;
+    wrap.log.appendChild(line);
+}
+
+function renderFinalAnswer(wrap, event, originalQuery, persist = true) {
+    const msgId = wrap.msgId ?? (wrap.msgId = msgCounter++);
+    const sources = event.final_sources || {};
+    allSources[msgId] = sources;
+    allAnswers[msgId] = event.final_answer || '';
+
+    let answerHtml = renderMarkdownLite(esc(event.final_answer || ''));
+    answerHtml = `<p>${answerHtml}</p>`;
+    answerHtml = answerHtml.replace(/[\[【](\d+)[\]】]/g, (m, n) =>
+        sources[n] ? `<span class="cite-chip" onclick="toggleSource(${msgId}, '${n}')">[${n}]</span>` : m);
+
+    const badgeClass = event.final_confidence === 'high' ? 'high' : 'low';
+    const badgeText = event.final_confidence === 'high' ? 'High confidence' : 'Low confidence';
+
+   wrap.meta.style.display = 'flex';
+    wrap.meta.innerHTML = `<span class="badge ${badgeClass}">${badgeText}</span>` +
+    (typeof event.final_top_score === 'number' ? `<span class="meta-stat">top score: ${event.final_top_score.toFixed(3)}</span>` : '');
+
+    wrap.answer.style.display = 'block';
+    wrap.answer.className = 'answer-box';
+    wrap.answer.innerHTML = answerHtml;
+
+    // speak button
+    const speakBtn = document.createElement('button');
+    speakBtn.className = 'speak-btn';
+    speakBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+    </svg>`;
+    speakBtn.addEventListener('click', () => speakAnswer(allAnswers[msgId], speakBtn));
+    wrap.meta.appendChild(speakBtn);
+
+    const entries = Object.entries(sources);
+    wrap.sourcesEl.innerHTML = entries.length
+        ? `<div class="sources-hd">Sources</div>` + entries.map(([n, src]) => `
+            <div class="source-card" id="source-${msgId}-${n}">
+                <div class="source-hd" onclick="toggleSource(${msgId}, '${n}')">
+                    <span class="source-num">[${n}]</span>
+                    <span class="source-name">${esc(src.source_doc)}</span>
+                    <span class="source-score">rerank: ${src.rerank_score.toFixed(3)}</span>
+                    <span class="source-arrow">▶</span>
+                </div>
+                <div class="source-body" id="source-body-${msgId}-${n}"></div>
+            </div>`).join('')
+        : '';
+
+    // follow-up questions
+    const followups = event.final_followups || [];
+    if (followups.length) {
+        const followupDiv = document.createElement('div');
+        followupDiv.innerHTML = `<div class="sources-hd" style="margin-top:16px;">You might also ask</div>
+           <div class="example-chips">${followups.map(q =>
+               `<div class="chip" onclick="document.getElementById('query-input').value = this.textContent; ask();">${esc(q)}</div>`
+           ).join('')}</div>`;
+        wrap.sourcesEl.appendChild(followupDiv);
+    }
+
+    // persist to chat history — skip blocked/hedge turns
+    if (persist) {
+        const isRefusal = event.final_answer === 'This request cannot be processed.';
+        if (!isRefusal && !isHedgeAnswer(event.final_answer)) {
+            chatHistory.push({ role: 'user', content: originalQuery });
+            chatHistory.push({
+                role: 'assistant',
+                content: event.final_answer,
+                sources: sources,
+                confidence: event.final_confidence,
+                top_score: event.final_top_score,
+                followup_questions: followups,
+            });
+            if (chatHistory.length > 40) chatHistory = chatHistory.slice(-40);
+            localStorage.setItem('agent_chat_history', JSON.stringify(chatHistory));
+        }
+    }
+}
+
+// ── Expand a source: fetch real chunk text from week 1's API ───────────────
+async function toggleSource(msgId, n) {
+    const card = document.getElementById(`source-${msgId}-${n}`);
+    const body = document.getElementById(`source-body-${msgId}-${n}`);
+    if (!card) return;
+
+    const wasOpen = card.classList.contains('open');
+    card.classList.toggle('open');
+    if (wasOpen) return;
+    if (body.dataset.loaded) return;
+
+    body.innerHTML = '<div class="source-chunk-loading">Loading source chunk…</div>';
+    const src = allSources[msgId] ? allSources[msgId][n] : null;
+    if (!src) {
+        body.innerHTML = '<div class="source-chunk-loading">Source data not available.</div>';
+        return;
+    }
+
+    const stem = src.source_doc.replace(/\.[^.]+$/, '');
+    const chunkIndex = src.chunk_id && src.chunk_id.includes('__') ? src.chunk_id.split('__').pop() : null;
+
+    try {
+        const r = await fetch(`${INGESTION_API}/documents/${encodeURIComponent(stem)}`);
+        if (!r.ok) throw new Error('not found');
+        const doc = await r.json();
+        const chunks = doc.chunks?.chunks || [];
+        const match = chunkIndex !== null ? chunks.find(c => String(c.chunk_index) === chunkIndex) : null;
+        body.innerHTML = `<div class="source-chunk-text">${esc(match ? match.text : '(chunk text not found)')}</div>`;
+        body.dataset.loaded = '1';
+    } catch {
+        body.innerHTML = `<div class="source-chunk-loading">Could not load from Week 1 API (port 8000 running?)</div>`;
     }
 }
 
@@ -334,99 +751,169 @@ function appendUserMessage(text) {
     container.scrollTop = container.scrollHeight;
 }
 
-function renderMarkdownLite(text) {
-    return text
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
-}
-
-function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── build the 5-step agent trace based on what the response tells us ────
-function buildTraceHTML(data) {
-    const isBlocked = data.blocked;
-
-    // security: always ran
-    const security = { state: isBlocked ? 'blocked' : 'done', label: 'Security', detail: isBlocked ? 'blocked' : 'cleared' };
-
-    // if blocked at input, nothing past security ran
-    if (isBlocked) {
-        return `<div class="agent-trace">
-            ${stepHTML(security)}
-            ${stepHTML({ state: 'skipped', label: 'Retrieval', detail: '—' })}
-            ${stepHTML({ state: 'skipped', label: 'Research', detail: '—' })}
-            ${stepHTML({ state: 'skipped', label: 'Summarization', detail: '—' })}
-            ${stepHTML({ state: 'skipped', label: 'Validation', detail: '—' })}
-        </div>`;
-    }
-
-    const retrieval = { state: 'done', label: 'Retrieval', detail: `top score ${typeof data.top_score === 'number' ? data.top_score.toFixed(2) : 'n/a'}` };
-    const research = data.research_expanded
-        ? { state: 'done', label: 'Research', detail: `expanded${data.sub_queries_used ? ` (${data.sub_queries_used.length} sub-q)` : ''}` }
-        : { state: 'skipped', label: 'Research', detail: 'not needed' };
-    const summarization = { state: data.retried ? 'retried' : 'done', label: 'Summarization', detail: data.retried ? 'retried once' : 'drafted' };
-    const validation = { state: data.validated ? 'done' : 'retried', label: 'Validation', detail: data.validated ? 'passed' : (data.validation_issues || 'flagged') };
-
-    return `<div class="agent-trace">
-        ${stepHTML(security)}
-        ${stepHTML(retrieval)}
-        ${stepHTML(research)}
-        ${stepHTML(summarization)}
-        ${stepHTML(validation)}
-    </div>`;
-}
-
 function stepHTML(step) {
-    const icon = step.state === 'blocked' ? '✕' : (step.state === 'skipped' ? '·' : (step.state === 'retried' ? '↻' : '✓'));
-    return `<div class="agent-step ${step.state === 'done' ? 'done' : step.state}">
+    const icon = step.state === 'blocked' || step.state === 'failed' ? '✕' :
+                 step.state === 'skipped' ? '·' :
+                 step.state === 'retried' ? '↻' :
+                 step.state === 'pending' ? '…' : '✓';
+    return `<div class="agent-step ${step.state}">
         <div class="agent-dot">${icon}</div>
         <div class="agent-label">${step.label}</div>
         <div class="agent-detail">${esc(step.detail)}</div>
     </div>`;
 }
 
-function buildAssistantHTML(data) {
-    const isBlocked = data.blocked;
-    const sources = data.sources || {};
-    let answerHtml = renderMarkdownLite(esc(data.answer));
-    answerHtml = `<p>${answerHtml}</p>`;
-    answerHtml = answerHtml.replace(/[\[【](\d+)[\]】]/g, (m, n) => sources[n] ? `<span class="cite-chip">[${n}]</span>` : m);
+// ── Speech-to-text (mic input) — same as week 3, port 8001 ─────────────────
+let recognition = null;
+let isListening = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let interimBaseText = '';
 
-    const badgeClass = isBlocked ? 'blocked' : (data.confidence === 'high' ? 'high' : 'low');
-    const badgeText  = isBlocked ? 'Blocked' : (data.confidence === 'high' ? 'High confidence' : 'Low confidence');
-    const latency = typeof data.latency_seconds === 'number' ? `${data.latency_seconds.toFixed(1)}s` : '';
+async function toggleListening() {
+    const micBtn = document.getElementById('mic-btn');
+    const lang = document.getElementById('voice-lang-select').value;
+    const input = document.getElementById('query-input');
 
-    const entries = Object.entries(sources);
-    const sourcesHtml = entries.length
-        ? `<div class="sources-hd">Sources</div>` + entries.map(([n, src]) => `
-            <div class="source-card">
-                <span class="source-num">[${n}]</span>
-                <span>${esc(src.source_doc)}</span>
-            </div>`).join('')
-        : '';
+    if (lang === 'ur-PK') {
+        if (isListening) { mediaRecorder?.stop(); return; }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
+            mediaRecorder.onstop = async () => {
+                isListening = false;
+                micBtn.classList.remove('listening');
+                stream.getTracks().forEach(t => t.stop());
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+                try {
+                    const r = await fetch(`${AGENT_API}/stt/urdu`, { method: 'POST', body: formData });
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    const data = await r.json();
+                    const existing = input.value.trim();
+                    input.value = existing ? `${existing} ${data.text}` : data.text;
+                } catch (e) {
+                    console.error('Urdu STT failed:', e);
+                    alert('Failed to transcribe audio.');
+                }
+            };
+            mediaRecorder.start();
+        } catch (e) {
+            alert('Microphone access was denied.');
+        }
+        return;
+    }
 
-    return `
-        ${buildTraceHTML(data)}
-        <div class="result-meta">
-            <span class="badge ${badgeClass}">${badgeText}</span>
-            ${latency ? `<span class="meta-stat">${latency}</span>` : ''}
-        </div>
-        <div class="answer-box">${answerHtml}</div>
-        <div>${sourcesHtml}</div>
-    `;
+    if (isListening) { recognition?.stop(); return; }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert('Speech recognition is not supported in this browser. Try Chrome.'); return; }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = lang;
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    interimBaseText = input.value.trim();
+
+    recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
+    recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
+    recognition.onresult = (event) => {
+        let finalTranscript = '', interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) finalTranscript += transcript;
+            else interimTranscript += transcript;
+        }
+        const combined = (finalTranscript + interimTranscript).trim();
+        input.value = interimBaseText ? `${interimBaseText} ${combined}` : combined;
+        if (finalTranscript) interimBaseText = input.value.trim();
+    };
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') alert('Microphone access was denied. Please allow microphone permissions.');
+    };
+    recognition.start();
 }
 
-function appendAssistantMessage(data) {
-    const container = document.getElementById('chat-container');
-    const wrap = document.createElement('div');
-    wrap.className = 'msg-assistant';
-    wrap.innerHTML = buildAssistantHTML(data);
-    container.appendChild(wrap);
-    container.scrollTop = container.scrollHeight;
+// ── Text-to-speech — same as week 3, port 8001 ──────────────────────────────
+let currentUtterance = null;
+let currentAudio = null;
+
+async function speakAnswer(text, btn) {
+    const lang = document.getElementById('voice-lang-select').value;
+
+    if (lang === 'ur-PK') {
+        if (currentAudio && !currentAudio.paused) {
+            currentAudio.pause();
+            document.querySelectorAll('.speak-btn.speaking').forEach(b => b.classList.remove('speaking'));
+            currentAudio = null;
+            return;
+        }
+        btn.classList.add('speaking');
+        try {
+            const r = await fetch(`${AGENT_API}/tts/urdu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+            if (!r.ok) throw new Error('TTS request failed');
+            const audioBlob = await r.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            currentAudio = new Audio(audioUrl);
+            currentAudio.onended = () => { btn.classList.remove('speaking'); currentAudio = null; };
+            currentAudio.play();
+        } catch (e) {
+            console.error('Urdu TTS failed:', e);
+            btn.classList.remove('speaking');
+            alert('Failed to generate Urdu speech.');
+        }
+        return;
+    }
+
+    if (!('speechSynthesis' in window)) { alert('Text-to-speech is not supported in this browser.'); return; }
+
+    if (currentUtterance && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('.speak-btn.speaking').forEach(b => b.classList.remove('speaking'));
+        if (currentUtterance.wasThisButton === btn) { currentUtterance = null; return; }
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.wasThisButton = btn;
+    utterance.onstart = () => btn.classList.add('speaking');
+    utterance.onend = () => { btn.classList.remove('speaking'); currentUtterance = null; };
+    utterance.onerror = (e) => {
+        console.error('Speech synthesis error:', e.error);
+        btn.classList.remove('speaking');
+        currentUtterance = null;
+    };
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
 }
+
+// ── Replay stored history on page load ──────────────────────────────────
+function replayHistory() {
+    for (const msg of chatHistory.slice()) {  // .slice() = iterate a snapshot, not the live array
+        if (msg.role === 'user') {
+            appendUserMessage(msg.content);
+        } else if (msg.role === 'assistant') {
+            const wrap = createLiveAssistantShell();
+            for (let i = 0; i < STEP_ORDER.length; i++) setStep(wrap, i, { state: 'done', detail: '' });
+            renderFinalAnswer(wrap, {
+                final_answer: msg.content,
+                final_sources: msg.sources || {},
+                final_confidence: msg.confidence,
+                final_top_score: msg.top_score,
+                final_followups: msg.followup_questions,
+            }, '', false);
+        }
+    }
+}
+replayHistory();
 </script>
 </body>
 </html>
