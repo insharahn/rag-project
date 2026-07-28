@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Agent RAG — Week 5</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f3ef;
+    color: #2e2b27;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.topbar {
+    background: #fffef9;
+    border-bottom: 1.5px solid #e8e3db;
+    padding: 0 20px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+.topbar-title { font-size: 14px; font-weight: 600; color: #2e2b27; }
+.topbar-title span { color: #7aaa8f; }
+.nav-links { display: flex; gap: 6px; margin-left: 12px; }
+.nav-link {
+    padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500;
+    color: #7a7268; text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.nav-link:hover { background: #f0ede8; color: #2e2b27; }
+.nav-link.active { background: #e8f5ee; color: #3a8858; font-weight: 600; }
+.topbar-right { margin-left: auto; font-size: 12px; color: #a8a098; }
+.topbar-right.ok { color: #6a9a7a; }
+.topbar-right.err { color: #c07060; }
+
+.main { flex: 1; display: flex; justify-content: center; padding: 32px 20px 60px; }
+.container { width: 100%; max-width: 780px; }
+.container h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.container .subtitle { font-size: 14px; color: #a09888; margin-bottom: 24px; line-height: 1.6; }
+
+.chat-container { display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
+.msg-user {
+    align-self: flex-end;
+    background: #e8f5ee;
+    border-radius: 12px 12px 2px 12px;
+    padding: 10px 16px;
+    max-width: 80%;
+    font-size: 14px;
+    color: #2e5c40;
+}
+.msg-assistant { max-width: 100%; width: 100%; }
+
+/* ── agent trace strip ─────────────────────────────────────────── */
+.agent-trace {
+    display: flex;
+    align-items: stretch;
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    gap: 4px;
+    overflow-x: auto;
+}
+.agent-step {
+    flex: 1;
+    min-width: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 2px;
+    position: relative;
+}
+.agent-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -2px;
+    top: 15px;
+    width: calc(100% - 6px);
+    height: 1.5px;
+    background: #e8e3db;
+    z-index: 0;
+}
+.agent-step.done:not(:last-child)::after { background: #b8ddc8; }
+.agent-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #eeeae3;
+    border: 1.5px solid #ddd8cf;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    color: #a09888;
+    z-index: 1;
+    flex-shrink: 0;
+}
+.agent-step.done .agent-dot { background: #e6f5ec; border-color: #b8ddc8; color: #3a8858; }
+.agent-step.skipped .agent-dot { background: #f5f3ef; border-color: #e8e3db; color: #c8c0b4; }
+.agent-step.retried .agent-dot { background: #fef0d8; border-color: #f0d4a0; color: #a06820; }
+.agent-step.blocked .agent-dot { background: #fef0f0; border-color: #f0c8b8; color: #c05050; }
+.agent-label { font-size: 10.5px; font-weight: 600; color: #7a7268; text-align: center; }
+.agent-step.done .agent-label { color: #3a3630; }
+.agent-detail { font-size: 9.5px; color: #b8b0a4; text-align: center; line-height: 1.3; }
+
+.result-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.badge {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+}
+.badge.high { background: #e6f5ec; color: #3a8858; }
+.badge.low  { background: #fef0e0; color: #c08030; }
+.badge.blocked { background: #fef0f0; color: #c05050; }
+.meta-stat { font-size: 12px; color: #a09888; }
+
+.answer-box {
+    background: #fffef9;
+    border: 1.5px solid #e8e3db;
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 8px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: #3a3630;
+}
+.answer-box p { margin: 0 0 10px 0; }
+.answer-box p:last-child { margin-bottom: 0; }
+.cite-chip {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; color: #3a8858;
+    background: #e6f5ec; border: 1px solid #b8ddc8; border-radius: 4px;
+    padding: 0 5px; margin: 0 1px; vertical-align: super; line-height: 1.4;
+}
+
+.sources-hd {
+    font-size: 11px; font-weight: 700; color: #a09888; text-transform: uppercase;
+    letter-spacing: 0.6px; margin: 14px 0 10px;
+}
+.source-card {
+    background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 10px;
+    margin-bottom: 8px; padding: 10px 14px; font-size: 12.5px; color: #5a5248;
+    display: flex; align-items: center; gap: 10px;
+}
+.source-num {
+    font-size: 11px; font-weight: 700; color: #3a8858; background: #e6f5ec;
+    border-radius: 4px; padding: 1px 6px; flex-shrink: 0;
+}
+
+.loading-box {
+    display: none;
+    background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 12px;
+    padding: 24px; text-align: center; margin-bottom: 20px;
+}
+.loading-box.show { display: block; }
+.loading-agents { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
+.loading-agent-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #d8d2c8;
+    animation: agentPulse 1.4s ease-in-out infinite;
+}
+.loading-agent-dot:nth-child(1) { animation-delay: 0s; }
+.loading-agent-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-agent-dot:nth-child(3) { animation-delay: 0.4s; }
+.loading-agent-dot:nth-child(4) { animation-delay: 0.6s; }
+.loading-agent-dot:nth-child(5) { animation-delay: 0.8s; }
+@keyframes agentPulse { 0%, 100% { background: #d8d2c8; } 50% { background: #7aaa8f; } }
+.loading-text { font-size: 13px; color: #a09888; }
+.loading-timer { font-size: 12px; color: #c8c0b4; margin-top: 4px; }
+
+.error-box {
+    display: none;
+    background: #fef5f0; border: 1.5px solid #f0c8b8; border-radius: 12px;
+    padding: 16px; color: #b85030; font-size: 13px; margin-bottom: 20px;
+}
+.error-box.show { display: block; }
+
+.query-box {
+    background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 12px;
+    padding: 16px; margin-bottom: 8px;
+}
+.query-row { display: flex; gap: 10px; }
+.query-input {
+    flex: 1; border: 1.5px solid #ddd8cf; border-radius: 8px;
+    padding: 10px 14px; font-size: 14px; font-family: inherit;
+    resize: none; outline: none; background: #faf8f5;
+}
+.query-input:focus { border-color: #7aaa8f; }
+.ask-btn {
+    background: #7aaa8f; color: #fff; border: none; padding: 0 20px;
+    border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+}
+.ask-btn:hover:not(:disabled) { background: #6a9a7f; }
+.ask-btn:disabled { background: #c8ddd2; color: #8ab8a0; cursor: not-allowed; }
+.query-hint { font-size: 11px; color: #c8c0b4; margin-top: 8px; }
+.example-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+.chip {
+    font-size: 11.5px; padding: 5px 11px; border-radius: 14px;
+    background: #eeeae3; color: #7a7268; cursor: pointer;
+    border: 1px solid #ddd8cf; transition: all 0.15s;
+}
+.chip:hover { background: #e0ede6; color: #3a8858; border-color: #b8ddc8; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4cfc8; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-title">Advanced <span>RAG</span></div>
+    <div class="nav-links">
+        <a class="nav-link" href="/ui">Week 1 · Ingestion</a>
+        <a class="nav-link" href="/week2">Week 2 · Benchmark</a>
+        <a class="nav-link" href="/week3">Week 3 · Advanced RAG</a>
+        <a class="nav-link" href="/week4">Week 4 · Guardrails</a>
+        <a class="nav-link active" href="/week5">Week 5 · Multi-Agent RAG</a>
+    </div>
+    <span class="topbar-right" id="status">Checking API…</span>
+</div>
+
+<div class="main">
+    <div class="container">
+        <h1>Ask the corpus</h1>
+        <p class="subtitle">Every question is handled by five agents in sequence: security screens it, retrieval finds it, research digs deeper if needed, summarization drafts an answer, and validation fact-checks the draft before it's shown to you.</p>
+
+        <div class="chat-container" id="chat-container"></div>
+
+        <div class="loading-box" id="loading-box">
+            <div class="loading-agents">
+                <div class="loading-agent-dot"></div>
+                <div class="loading-agent-dot"></div>
+                <div class="loading-agent-dot"></div>
+                <div class="loading-agent-dot"></div>
+                <div class="loading-agent-dot"></div>
+            </div>
+            <div class="loading-text">Agents are working through this…</div>
+            <div class="loading-timer" id="loading-timer">0s elapsed</div>
+        </div>
+
+        <div class="error-box" id="error-box"></div>
+
+        <div class="query-box">
+            <div class="query-row">
+                <textarea class="query-input" id="query-input" rows="2" placeholder="e.g. What was Meursault's job?"></textarea>
+                <button class="ask-btn" id="ask-btn" onclick="ask()">Ask</button>
+            </div>
+            <div class="query-hint">Supported languages: English, Urdu, Korean. Multi-agent queries run slower than the single-pass system (usually more LLM calls per answer).</div>
+        </div>
+
+        <div class="example-chips">
+            <div class="chip" onclick="setQuery(this)">what is a lambda function in python</div>
+            <div class="chip" onclick="setQuery(this)">symbolism of the house for the family in a raisin in the sun</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const AGENT_API = 'http://127.0.0.1:8001';
+let timerInterval = null;
+
+async function checkHealth() {
+    const statusEl = document.getElementById('status');
+    try {
+        const r = await fetch(`${AGENT_API}/health`);
+        if (r.ok) { statusEl.textContent = 'Agent API connected'; statusEl.className = 'topbar-right ok'; }
+        else throw new Error();
+    } catch {
+        statusEl.textContent = 'Agent API unreachable (port 8001)';
+        statusEl.className = 'topbar-right err';
+    }
+}
+checkHealth();
+setInterval(checkHealth, 10000);
+
+function setQuery(el) { document.getElementById('query-input').value = el.textContent; }
+
+document.getElementById('query-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!document.getElementById('ask-btn').disabled) ask();
+    }
+});
+
+async function ask() {
+    const query = document.getElementById('query-input').value.trim();
+    if (!query) return;
+
+    const errorBox = document.getElementById('error-box');
+    const askBtn = document.getElementById('ask-btn');
+    const loadingBox = document.getElementById('loading-box');
+    if (askBtn.disabled) return;
+
+    askBtn.disabled = true;
+    errorBox.classList.remove('show');
+    loadingBox.classList.add('show');
+    appendUserMessage(query);
+    document.getElementById('query-input').value = '';
+
+    let elapsed = 0;
+    document.getElementById('loading-timer').textContent = '0s elapsed';
+    timerInterval = setInterval(() => {
+        elapsed++;
+        document.getElementById('loading-timer').textContent = `${elapsed}s elapsed`;
+    }, 1000);
+
+    try {
+        const r = await fetch(`${AGENT_API}/agent-query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, top_k: 5, history: [] }),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        appendAssistantMessage(data);
+    } catch (e) {
+        errorBox.textContent = `Request failed: ${e.message}. Is the agent API running on port 8001?`;
+        errorBox.classList.add('show');
+    } finally {
+        clearInterval(timerInterval);
+        loadingBox.classList.remove('show');
+        askBtn.disabled = false;
+    }
+}
+
+function appendUserMessage(text) {
+    const container = document.getElementById('chat-container');
+    const div = document.createElement('div');
+    div.className = 'msg-user';
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function renderMarkdownLite(text) {
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+}
+
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── build the 5-step agent trace based on what the response tells us ────
+function buildTraceHTML(data) {
+    const isBlocked = data.blocked;
+
+    // security: always ran
+    const security = { state: isBlocked ? 'blocked' : 'done', label: 'Security', detail: isBlocked ? 'blocked' : 'cleared' };
+
+    // if blocked at input, nothing past security ran
+    if (isBlocked) {
+        return `<div class="agent-trace">
+            ${stepHTML(security)}
+            ${stepHTML({ state: 'skipped', label: 'Retrieval', detail: '—' })}
+            ${stepHTML({ state: 'skipped', label: 'Research', detail: '—' })}
+            ${stepHTML({ state: 'skipped', label: 'Summarization', detail: '—' })}
+            ${stepHTML({ state: 'skipped', label: 'Validation', detail: '—' })}
+        </div>`;
+    }
+
+    const retrieval = { state: 'done', label: 'Retrieval', detail: `top score ${typeof data.top_score === 'number' ? data.top_score.toFixed(2) : 'n/a'}` };
+    const research = data.research_expanded
+        ? { state: 'done', label: 'Research', detail: `expanded${data.sub_queries_used ? ` (${data.sub_queries_used.length} sub-q)` : ''}` }
+        : { state: 'skipped', label: 'Research', detail: 'not needed' };
+    const summarization = { state: data.retried ? 'retried' : 'done', label: 'Summarization', detail: data.retried ? 'retried once' : 'drafted' };
+    const validation = { state: data.validated ? 'done' : 'retried', label: 'Validation', detail: data.validated ? 'passed' : (data.validation_issues || 'flagged') };
+
+    return `<div class="agent-trace">
+        ${stepHTML(security)}
+        ${stepHTML(retrieval)}
+        ${stepHTML(research)}
+        ${stepHTML(summarization)}
+        ${stepHTML(validation)}
+    </div>`;
+}
+
+function stepHTML(step) {
+    const icon = step.state === 'blocked' ? '✕' : (step.state === 'skipped' ? '·' : (step.state === 'retried' ? '↻' : '✓'));
+    return `<div class="agent-step ${step.state === 'done' ? 'done' : step.state}">
+        <div class="agent-dot">${icon}</div>
+        <div class="agent-label">${step.label}</div>
+        <div class="agent-detail">${esc(step.detail)}</div>
+    </div>`;
+}
+
+function buildAssistantHTML(data) {
+    const isBlocked = data.blocked;
+    const sources = data.sources || {};
+    let answerHtml = renderMarkdownLite(esc(data.answer));
+    answerHtml = `<p>${answerHtml}</p>`;
+    answerHtml = answerHtml.replace(/[\[【](\d+)[\]】]/g, (m, n) => sources[n] ? `<span class="cite-chip">[${n}]</span>` : m);
+
+    const badgeClass = isBlocked ? 'blocked' : (data.confidence === 'high' ? 'high' : 'low');
+    const badgeText  = isBlocked ? 'Blocked' : (data.confidence === 'high' ? 'High confidence' : 'Low confidence');
+    const latency = typeof data.latency_seconds === 'number' ? `${data.latency_seconds.toFixed(1)}s` : '';
+
+    const entries = Object.entries(sources);
+    const sourcesHtml = entries.length
+        ? `<div class="sources-hd">Sources</div>` + entries.map(([n, src]) => `
+            <div class="source-card">
+                <span class="source-num">[${n}]</span>
+                <span>${esc(src.source_doc)}</span>
+            </div>`).join('')
+        : '';
+
+    return `
+        ${buildTraceHTML(data)}
+        <div class="result-meta">
+            <span class="badge ${badgeClass}">${badgeText}</span>
+            ${latency ? `<span class="meta-stat">${latency}</span>` : ''}
+        </div>
+        <div class="answer-box">${answerHtml}</div>
+        <div>${sourcesHtml}</div>
+    `;
+}
+
+function appendAssistantMessage(data) {
+    const container = document.getElementById('chat-container');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-assistant';
+    wrap.innerHTML = buildAssistantHTML(data);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+}
+</script>
+</body>
+</html>

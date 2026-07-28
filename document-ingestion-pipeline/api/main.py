@@ -79,6 +79,9 @@ def get_week4_metrics():
 
     return {"metrics": metrics, "per_prompt": per_prompt}
 
+#week 5
+app.mount("/week5", StaticFiles(directory="ui_week5", html=True), name="week5")
+
 @app.get("/")
 def root():
     return {
