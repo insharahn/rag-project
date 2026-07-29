@@ -1,5 +1,6 @@
 # config.py
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,6 +9,12 @@ def _float(key, default):
 
 def _int(key, default):
     return int(os.environ.get(key, default))
+
+def _load_prompt(env_key, default_path):
+    path = Path(os.environ.get(env_key, default_path))
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent / path
+    return path.read_text(encoding="utf-8").strip()
 
 # thresholds
 RESEARCH_LOW_CONFIDENCE_THRESHOLD = _float("RESEARCH_LOW_CONFIDENCE_THRESHOLD", 0.5)
@@ -49,3 +56,11 @@ AGENT_QUERY_TIMEOUT = _int("AGENT_QUERY_TIMEOUT", 180)
 
 #guardrail injection threshold
 INJECTION_THRESHOLD = _float("INJECTION_THRESHOLD", 0.5)
+
+#system prompts
+VALIDATION_SYSTEM_PROMPT = _load_prompt("VALIDATION_PROMPT_PATH", "prompts/validation_system.txt")
+DECOMPOSE_SYSTEM_PROMPT = _load_prompt("DECOMPOSE_PROMPT_PATH", "prompts/decompose_system.txt")
+CITATION_SYSTEM_PROMPT = _load_prompt("CITATION_PROMPT_PATH", "prompts/citation_system.txt")
+JUDGE_SYSTEM_PROMPT= _load_prompt("JUDGE_PROMPT_PATH", "prompts/llm_judge_system.txt")
+REWRITE_SYSTEM_PROMPT= _load_prompt("QUERY_REWRITE_PROMPT_PATH", "prompts/query_rewrite_system.txt")
+MULTI_QUERY_SYSTEM_PROMPT = _load_prompt("MULTI_QUERY_PROMPT_PATH", "prompts/multi_query_system.txt")

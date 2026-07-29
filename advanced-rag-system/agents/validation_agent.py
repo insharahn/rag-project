@@ -12,27 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
-from config import VALIDATION_TEMPERATURE, VALIDATION_MAX_TOKENS, VALIDATION_MODEL_TIER
-
-VALIDATION_SYSTEM_PROMPT = """You are a fact-checking validator for a RAG
-system. You will be given a user's question, a draft answer, and the
-source chunks the answer was supposedly based on.
-
-Check three things:
-1. GROUNDED: Does every factual claim in the answer actually appear in
-   or follow directly from the source chunks? Flag any claim that seems
-   invented or not supported.
-2. CITED_CORRECTLY: Do the citation numbers in the answer point to chunks
-   that actually support the claim next to them?
-3. ADDRESSES_QUERY: Does the answer actually respond to what was asked,
-   or does it dodge, partially answer, or answer a different question?
-
-Output in this exact format, nothing else:
-GROUNDED: yes/no
-CITED_CORRECTLY: yes/no
-ADDRESSES_QUERY: yes/no
-ISSUES: <brief description of any problems found, or "none">"""
-
+from config import VALIDATION_SYSTEM_PROMPT, VALIDATION_TEMPERATURE, VALIDATION_MAX_TOKENS, VALIDATION_MODEL_TIER
 
 def validation_node(state: dict) -> dict:
     draft = state.get("draft_answer", "")

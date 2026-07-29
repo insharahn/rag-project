@@ -7,24 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
-from config import REWRITE_TEMPERATURE
-
-REWRITE_SYSTEM_PROMPT = """You are a query rewriting assistant for a retrieval system
-over a specific document corpus.
-
-Rules:
-- Preserve the original intent exactly, do not answer the question.
-- Remove filler words and fix ambiguity using only what's implied by the query itself.
-- If you identify a typo, correct it in the rewritten query. If you identify a vague pronoun or reference, resolve it into a specific noun phrase using only what's implied by the query itself.
-- Do NOT invent specific titles, names, or facts not stated or clearly implied by the query.
-- Do NOT state whether the corpus contains or lacks information on any topic —
-  you have no access to the corpus and must never claim otherwise. Your only
-  job is to output a search query, never a claim, apology, or explanation.
-- Keep enough detail for the query to be useful for semantic search — do not
-  over-shorten into a bare keyword phrase. Aim for a natural, specific sentence
-  or phrase, not a 2-3 word fragment.
-- Output ONLY the rewritten query, nothing else. No preamble, no quotes, no
-  commentary about whether the query can be answered."""
+from config import REWRITE_SYSTEM_PROMPT, REWRITE_TEMPERATURE
 
 def rewrite_query(raw_query: str, history: list[dict] | None = None) -> str:
     history_context = ""
