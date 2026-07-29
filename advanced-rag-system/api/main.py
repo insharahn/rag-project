@@ -35,13 +35,13 @@ from guardrails.guardrail import check_input_deep, check_output
 from fastapi.middleware.cors import CORSMiddleware
 from agents.workflow import workflow
 
-from config import RETRIEVAL_TIMEOUT, GENERATION_TIMEOUT, AGENT_QUERY_TIMEOUT
+from config import ALLOWED_ORIGINS, RETRIEVAL_TIMEOUT, GENERATION_TIMEOUT, AGENT_QUERY_TIMEOUT
 
 app = FastAPI(title="Advanced RAG System", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

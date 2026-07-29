@@ -64,3 +64,8 @@ CITATION_SYSTEM_PROMPT = _load_prompt("CITATION_PROMPT_PATH", "prompts/citation_
 JUDGE_SYSTEM_PROMPT= _load_prompt("JUDGE_PROMPT_PATH", "prompts/llm_judge_system.txt")
 REWRITE_SYSTEM_PROMPT= _load_prompt("QUERY_REWRITE_PROMPT_PATH", "prompts/query_rewrite_system.txt")
 MULTI_QUERY_SYSTEM_PROMPT = _load_prompt("MULTI_QUERY_PROMPT_PATH", "prompts/multi_query_system.txt")
+
+#origin strings
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS", "http://127.0.0.1:8000,http://localhost:8000"
+).split(",")
