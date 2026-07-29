@@ -8,8 +8,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
+from config import CITATION_CONFIDENCE_THRESHOLD, CITATION_TEMPERATURE
 
-CONFIDENCE_THRESHOLD = 0.5  # chance to hallucinate below this
+CONFIDENCE_THRESHOLD = CITATION_CONFIDENCE_THRESHOLD  # chance to hallucinate below this
 
 CITATION_SYSTEM_PROMPT = """You are a question-answering assistant that MUST
 ground every claim in the provided context chunks.
@@ -112,7 +113,7 @@ def generate_answer(raw_query: str, retrieved_chunks: list[tuple[str, dict, floa
         {"role": "user", "content": user_content},
     ]
 
-    answer_raw = call_llm(messages, temperature=0.2)
+    answer_raw = call_llm(messages, temperature=CITATION_TEMPERATURE)
     answer, followups = _split_answer_and_followups(answer_raw)
 
     full_sources = _build_source_map(retrieved_chunks)

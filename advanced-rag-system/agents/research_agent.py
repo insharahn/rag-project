@@ -14,7 +14,9 @@ from agents.retrieval_agent import retrieval_node
 from retrieval.hybrid_search import hybrid_search
 from retrieval.bootstrap import get_index
 
-LOW_CONFIDENCE_THRESHOLD = 0.8 #0.5 is the threshold in the prev system
+from config import RESEARCH_LOW_CONFIDENCE_THRESHOLD
+
+LOW_CONFIDENCE_THRESHOLD = RESEARCH_LOW_CONFIDENCE_THRESHOLD
 
 def needs_deeper_research(state: dict) -> bool:
     """Decide whether retrieval was sufficient or more digging is needed."""

@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
+from config import REWRITE_TEMPERATURE
 
 REWRITE_SYSTEM_PROMPT = """You are a query rewriting assistant for a retrieval system
 over a specific document corpus.
@@ -25,15 +26,6 @@ Rules:
 - Output ONLY the rewritten query, nothing else. No preamble, no quotes, no
   commentary about whether the query can be answered."""
 
-"""
-def rewrite_query(raw_query: str) -> str:
-    messages = [
-        {"role": "system", "content": REWRITE_SYSTEM_PROMPT},
-        {"role": "user", "content": raw_query},
-    ]
-    rewritten = call_llm(messages)
-    return rewritten
-"""
 def rewrite_query(raw_query: str, history: list[dict] | None = None) -> str:
     history_context = ""
     if history:
@@ -54,7 +46,7 @@ def rewrite_query(raw_query: str, history: list[dict] | None = None) -> str:
         )},
         {"role": "user", "content": f"{history_context}Query: {raw_query}"},
     ]
-    rewritten = call_llm(messages, temperature=0.1)
+    rewritten = call_llm(messages, temperature=REWRITE_TEMPERATURE)
 
     # Guard against the rewriter answering/hedging instead of rewriting.
     # A real search query should not contain first-person refusal language

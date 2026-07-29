@@ -6,11 +6,7 @@ import os
 import time
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError, APITimeoutError
-
-load_dotenv()
-
-# switch providers with LLM_PROVIDER=groq or LLM_PROVIDER=openrouter in .env
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "groq").lower()
+from config import LLM_PROVIDER, MAX_RETRIES, DEFAULT_TEMPERATURE, DEFAULT_TIMEOUT
 
 _PROVIDER_CONFIG = {
     "groq": {
@@ -18,7 +14,7 @@ _PROVIDER_CONFIG = {
         "api_key_env": "GROQ_API_KEY",
         "models": {
             "large": "openai/gpt-oss-120b", #"large": "llama-3.3-70b-versatile", "large": "openai/gpt-oss-120b", "large": "qwen/qwen3.6-27b"
-            "small": "llama-3.1-8b-instant",
+            "small": "llama-3.1-8b-instant", #llama-3.1-8b-instant
         },
     },
     "openrouter": {
@@ -63,7 +59,7 @@ def _looks_valid(response_text: str) -> bool:
     return True
 
 
-def call_llm(messages, model=None, max_retries=3, temperature=0.3, timeout=20, max_tokens=None):
+def call_llm(messages, model=None, max_retries=MAX_RETRIES, temperature=DEFAULT_TEMPERATURE, timeout=DEFAULT_TIMEOUT, max_tokens=None):
     resolved_model = _resolve_model(model)
     last_error = None
     for attempt in range(max_retries):

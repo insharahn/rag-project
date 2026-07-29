@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
+from config import VALIDATION_TEMPERATURE, VALIDATION_MAX_TOKENS, VALIDATION_MODEL_TIER
 
 VALIDATION_SYSTEM_PROMPT = """You are a fact-checking validator for a RAG
 system. You will be given a user's question, a draft answer, and the
@@ -66,7 +67,7 @@ def validation_node(state: dict) -> dict:
         {"role": "system", "content": VALIDATION_SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
-    response = call_llm(messages, temperature=0.0, max_tokens=80, model="small")
+    response = call_llm(messages, temperature=VALIDATION_TEMPERATURE, max_tokens=VALIDATION_MAX_TOKENS, model=VALIDATION_MODEL_TIER)
 
     def _field_is_yes(field: str) -> bool | None:
         match = re.search(rf'{field}\s*:\s*(\w+)', response, re.IGNORECASE)

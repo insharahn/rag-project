@@ -20,7 +20,7 @@ from guardrails.exfiltration_detector import detect_exfiltration
 from guardrails.pii_detector import detect_pii
 from guardrails.toxicity_detector import detect_toxicity
 from guardrails.jailbreak_detector import detect_jailbreak_roleplay
-
+from config import INJECTION_THRESHOLD
 _injection_classifier = hf_pipeline(
     "text-classification", model="meta-llama/Llama-Prompt-Guard-2-86M"
 )
@@ -35,7 +35,7 @@ threshold-sensitive. 0.5 gives the best recall at
 essentially no precision cost (0.963 vs 0.958 at 0.9).
 """
 
-INJECTION_THRESHOLD = 0.5 
+INJECTION_THRESHOLD = INJECTION_THRESHOLD 
 
 @dataclass
 class GuardrailResult:

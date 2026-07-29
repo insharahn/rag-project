@@ -35,6 +35,8 @@ from guardrails.guardrail import check_input_deep, check_output
 from fastapi.middleware.cors import CORSMiddleware
 from agents.workflow import workflow
 
+from config import RETRIEVAL_TIMEOUT, GENERATION_TIMEOUT, AGENT_QUERY_TIMEOUT
+
 app = FastAPI(title="Advanced RAG System", version="1.0")
 
 app.add_middleware(
@@ -281,11 +283,11 @@ async def query(req: QueryRequest):
     try:
         chunks = await asyncio.wait_for(
             asyncio.to_thread(retrieve, req.query, req.top_k, 10, req.history),
-            timeout=120,
+            timeout=RETRIEVAL_TIMEOUT,
         )
         result = await asyncio.wait_for(
             asyncio.to_thread(generate_answer, req.query, chunks),
-            timeout=60,
+            timeout=GENERATION_TIMEOUT,
         )
     except asyncio.TimeoutError:
         return QueryResponse(
@@ -476,7 +478,7 @@ async def agent_query(req: AgentQueryRequest):
         # run can hit 6-7 LLM calls, some with large context
         final_state = await asyncio.wait_for(
             asyncio.to_thread(workflow.invoke, initial_state),
-            timeout=180,
+            timeout=AGENT_QUERY_TIMEOUT,
         )
     except asyncio.TimeoutError:
         return AgentQueryResponse(

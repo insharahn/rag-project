@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from llm.client import call_llm
+from config import DECOMPOSE_TEMPERATURE, DECOMPOSE_MAX_TOKENS, DECOMPOSE_MODEL_TIER
 
 DECOMPOSE_SYSTEM_PROMPT = """You determine whether a search query asks about
 ONE fact or MULTIPLE distinct facts about the same or related subjects.
@@ -41,7 +42,7 @@ def decompose_query(query: str) -> list[str]:
         {"role": "system", "content": DECOMPOSE_SYSTEM_PROMPT},
         {"role": "user", "content": query},
     ]
-    response = call_llm(messages, temperature=0.1, max_tokens=120, model="small")
+    response = call_llm(messages, temperature=DECOMPOSE_TEMPERATURE, max_tokens=DECOMPOSE_MAX_TOKENS, model=DECOMPOSE_MODEL_TIER)
 
     if response.strip().upper() == "SINGLE":
         return [query]
