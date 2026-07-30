@@ -225,3 +225,4 @@ eval/results_with_graph_search/
 graphs.ipynb
 graphs/graph.pkl
 index_data/
+notebooks/finetuning/
