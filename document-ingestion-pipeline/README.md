@@ -4,6 +4,8 @@ A production-ready document processing pipeline for ingesting, extracting, and s
 
 It supports OCR for scanned PDFs, language-aware processing, duplicate detection, and multiple chunking strategies exposed through a FastAPI backend and a lightweight web UI.
 
+The same FastAPI gateway also mounts the Week 2 through Week 5 platform UIs for the broader multi-phase demo.
+
 ---
 
 ## Features
@@ -82,6 +84,10 @@ Metadata → Deduplication → Chunking → Persistence
 - `GET /documents` — List processed documents (metadata)
 - `GET /documents/{filename}` — Retrieve full processed output
 - `GET /ui` — Simple web interface for testing/demo
+- `GET /week2` — Retrieval benchmark dashboard UI
+- `GET /week3` — Phase 3 RAG chat UI
+- `GET /week4` — Phase 4 guardrails metrics dashboard
+- `GET /week5` — Phase 5 multi-agent RAG chat UI
 
 ---
 
@@ -108,6 +114,8 @@ Default local URL: `http://127.0.0.1:8000`
 - Open API docs: `http://127.0.0.1:8000/docs`
 - Or open the web UI (if mounted): `http://127.0.0.1:8000/ui`
 - Upload a document via `POST /upload`
+
+The same gateway also exposes the other platform UIs at `http://127.0.0.1:8000/week2`, `http://127.0.0.1:8000/week3`, `http://127.0.0.1:8000/week4`, and `http://127.0.0.1:8000/week5`.
 
 ---
 
