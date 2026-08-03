@@ -93,6 +93,18 @@ def root():
         },
     }
 
+#week 6
+app.mount("/week6", StaticFiles(directory="ui_week6", html=True), name="week6")
+
+WEEK6_RESULTS = Path("../advanced-rag-system/notebooks/finetuning")
+
+@app.get("/week6-data")
+def get_week6_metrics():
+    """Serve project 6's fine-tuning comparison results."""
+    path = WEEK6_RESULTS / "final_comparison_summary.json"
+    if not path.exists():
+        raise HTTPException(404, "No fine-tuning comparison results found. Run the evaluation notebook first.")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 @app.post("/upload")
 async def upload_document(files: List[UploadFile] = File(...)):
