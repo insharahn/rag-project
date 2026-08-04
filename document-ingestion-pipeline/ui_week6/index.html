@@ -114,10 +114,21 @@ body {
 .metric-card.blue { border-color: #b3cde8; background: #f0f6fc; }
 .metric-card.blue .label { color: #3a6186; }
 .metric-card.blue .value { color: #2c5282; }
+.metric-card.green { border-color: #b8ddc8; background: #f0faf4; }
+.metric-card.green .label { color: #4a7c59; }
+.metric-card.green .value { color: #2d6a4f; }
 
 .chart-box { background: #fffef9; border: 1.5px solid #e8e3db; border-radius: 10px; padding: 8px 6px 4px 6px; margin: 6px 0 12px 0; }
 .chart-box .chart-title { font-size: 13px; font-weight: 500; color: #4a4238; padding: 0 10px 4px 10px; }
 .chart-container { width: 100%; min-height: 320px; }
+
+.model-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+}
+.model-tag.llama { background: #f3e8fb; color: #8452b0; }
+.model-tag.qwen { background: #d4f0e8; color: #2d8a6e; }
 
 .example-pair {
     display: grid;
@@ -132,10 +143,6 @@ body {
     padding: 14px 16px;
 }
 .example-card.finetuned { border-color: #ddc6f0; background: #fdfbfe; }
-.example-query {
-    font-size: 12.5px; font-weight: 600; color: #3a3630;
-    margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eeeae3;
-}
 .example-label {
     display: inline-block; font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.4px;
@@ -180,7 +187,9 @@ body {
         <div class="sidebar-hd">Sections</div>
         <div class="sidebar-nav" id="sidebar-nav">
             <div class="sidebar-item active" data-section="overview">Overview</div>
+            <div class="sidebar-item" data-section="compare">Compare Models</div>
             <div class="sidebar-item" data-section="highlights">Highlights</div>
+            <div class="sidebar-item" data-section="training">Training</div>
         </div>
     </div>
 
@@ -190,23 +199,27 @@ body {
 </div>
 
 <script>
-const PASTEL = { blue: '#B1E6F3', pink: '#FFC2D1', purple: '#D4C4EC', green: '#D0F0C0' };
-
-let data = null;
-let queryKeys = [];
+let llamaData = null, qwenData = null;
 
 function citationCount(text) {
     const matches = text.match(/\[(\d+)\]/g);
     return matches ? new Set(matches).size : 0;
 }
 
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 async function loadAll() {
     const statusEl = document.getElementById('status');
     try {
-        const r = await fetch('/week6-data');
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        data = await r.json();
-        queryKeys = Object.keys(data.base_results).filter(q => q in data.finetuned_results);
+        const [r1, r2] = await Promise.all([
+            fetch('/week6-data'),
+            fetch('/week6-qwen-data'),
+        ]);
+        if (!r1.ok) throw new Error(`HTTP ${r1.status}`);
+        llamaData = await r1.json();
+        if (r2.ok) qwenData = await r2.json();
         statusEl.textContent = 'Ready';
         statusEl.className = 'topbar-status ok';
         renderSection('overview');
@@ -221,117 +234,190 @@ async function loadAll() {
     }
 }
 
-function computeStats() {
-    const j = data.judge_results_gptoss;
-    let baseCited = 0, ftCited = 0, baseGrounded = 0, ftGrounded = 0;
-    let baseAddresses = 0, ftAddresses = 0, baseLatency = 0, ftLatency = 0;
-    let baseCitationsTotal = 0, ftCitationsTotal = 0;
+function getKeys(d) {
+    return Object.keys(d.base_results).filter(q => q in d.finetuned_results);
+}
 
-    for (const q of queryKeys) {
-        const bAns = data.base_results[q].answer;
-        const fAns = data.finetuned_results[q].answer;
-        const bCites = citationCount(bAns);
-        const fCites = citationCount(fAns);
+function computeStats(d) {
+    const keys = getKeys(d);
+    const j = d.judge_results_gptoss;
+    let baseCited = 0, ftCited = 0, baseAddresses = 0, ftAddresses = 0;
+    let baseCitationsTotal = 0, ftCitationsTotal = 0, baseLatency = 0, ftLatency = 0;
+
+    for (const q of keys) {
+        const bAns = d.base_results[q].answer, fAns = d.finetuned_results[q].answer;
+        const bCites = citationCount(bAns), fCites = citationCount(fAns);
         if (bCites > 0) baseCited++;
         if (fCites > 0) ftCited++;
         baseCitationsTotal += bCites;
         ftCitationsTotal += fCites;
-        if (j[`base::${q}`]?.grounded) baseGrounded++;
-        if (j[`finetuned::${q}`]?.grounded) ftGrounded++;
         if (j[`base::${q}`]?.addresses_query) baseAddresses++;
         if (j[`finetuned::${q}`]?.addresses_query) ftAddresses++;
-        baseLatency += data.base_results[q].latency_seconds;
-        ftLatency += data.finetuned_results[q].latency_seconds;
+        baseLatency += d.base_results[q].latency_seconds;
+        ftLatency += d.finetuned_results[q].latency_seconds;
     }
 
-    const n = queryKeys.length;
+    const n = keys.length;
+    const ps = d.precomputed_summary || {};
     return {
         n,
         citationRate: { base: baseCited / n, ft: ftCited / n },
         addressesRate: { base: baseAddresses / n, ft: ftAddresses / n },
-        groundedRate: { base: baseGrounded / n, ft: ftGrounded / n },
         avgCitations: { base: baseCitationsTotal / n, ft: ftCitationsTotal / n },
         avgLatency: { base: baseLatency / n, ft: ftLatency / n },
+        citationAccuracy: {
+            base: ps.base?.citation_accuracy_given_correct_retrieval ?? null,
+            ft: ps.finetuned?.citation_accuracy_given_correct_retrieval ?? null,
+        },
+        repetitionCount: {
+            base: (d.repetition_flags?.base || []).length,
+            ft: (d.repetition_flags?.finetuned || []).length,
+        },
     };
 }
 
-function pickHighlights() {
-    const j = data.judge_results_gptoss;
-    const ftRepeats = new Set(data.repetition_flags?.finetuned || []);
+function pickHighlights(d, modelName, modelClass) {
+    const keys = getKeys(d);
+    const j = d.judge_results_gptoss;
+    const ftRepeats = new Set(d.repetition_flags?.finetuned || []);
     const candidates = [];
 
-    for (const q of queryKeys) {
+    for (const q of keys) {
         const fGrounded = j[`finetuned::${q}`]?.grounded;
         const fAddresses = j[`finetuned::${q}`]?.addresses_query;
-        if (!fGrounded || !fAddresses || ftRepeats.has(q)) continue; // only genuinely clean fine-tuned answers
+        if (!fGrounded || !fAddresses || ftRepeats.has(q)) continue;
 
-        const bAns = data.base_results[q].answer;
-        const fAns = data.finetuned_results[q].answer;
-        const bCites = citationCount(bAns);
-        const fCites = citationCount(fAns);
+        const bAns = d.base_results[q].answer, fAns = d.finetuned_results[q].answer;
+        const bCites = citationCount(bAns), fCites = citationCount(fAns);
         const bGrounded = j[`base::${q}`]?.grounded;
         const bAddresses = j[`base::${q}`]?.addresses_query;
 
-        // a "win" = more citations, or base failed a judge check the fine-tuned answer passed
         const improvement = (fCites - bCites) + (bGrounded ? 0 : 2) + (bAddresses ? 0 : 2);
         if (improvement > 0) {
-            candidates.push({ query: q, bAns, fAns, bCites, fCites, improvement });
+            candidates.push({ query: q, bAns, fAns, bCites, fCites, improvement, modelName, modelClass });
         }
     }
 
     candidates.sort((a, b) => b.improvement - a.improvement);
-    return candidates.slice(0, 3);
+    return candidates.slice(0, 2);
 }
 
 function renderSection(section) {
     document.querySelectorAll('.sidebar-item').forEach(el =>
         el.classList.toggle('active', el.dataset.section === section));
-    if (!data) return;
+    if (!llamaData) return;
     if (section === 'overview') renderOverview();
+    else if (section === 'compare') renderCompare();
     else if (section === 'highlights') renderHighlights();
+    else if (section === 'training') renderTraining();
 }
 
 function renderOverview() {
-    const s = computeStats();
+    const ls = computeStats(llamaData);
+    const qs = qwenData ? computeStats(qwenData) : null;
+
     const html = [];
     html.push(`<h1>Fine-Tuning Comparison</h1>`);
-    html.push(`<p class="subtitle">QLoRA fine-tuned Llama-3.1-8B-Instruct vs. the base model, on a ${s.n}-query held-out multilingual evaluation set.</p>`);
+    html.push(`<p class="subtitle">Two open-weight models — Llama-3.1-8B and Qwen2.5-7B — fine-tuned with QLoRA on the same RAG-specific dataset, evaluated on a ${ls.n}-query multilingual held-out set.</p>`);
+
+    const bestCiteAcc = qs && qs.citationAccuracy.ft > ls.citationAccuracy.ft ? { v: qs.citationAccuracy.ft, m: 'Qwen' } : { v: ls.citationAccuracy.ft, m: 'Llama' };
+    const bestRepetition = qs && qs.repetitionCount.ft <= ls.repetitionCount.ft ? { v: qs.repetitionCount.ft, m: 'Qwen' } : { v: ls.repetitionCount.ft, m: 'Llama' };
 
     html.push(`<div class="metric-grid">`);
-    html.push(`<div class="metric-card purple"><div class="label">Citation Rate</div><div class="value">${(s.citationRate.ft*100).toFixed(0)}%</div><div class="sub">vs ${(s.citationRate.base*100).toFixed(0)}% base</div></div>`);
-    html.push(`<div class="metric-card pink"><div class="label">Addresses Query</div><div class="value">${(s.addressesRate.ft*100).toFixed(0)}%</div><div class="sub">vs ${(s.addressesRate.base*100).toFixed(0)}% base</div></div>`);
-    html.push(`<div class="metric-card blue"><div class="label">Avg Citations / Answer</div><div class="value">${s.avgCitations.ft.toFixed(1)}</div><div class="sub">vs ${s.avgCitations.base.toFixed(1)} base</div></div>`);
-    html.push(`<div class="metric-card purple"><div class="label">Eval Set Size</div><div class="value">${s.n}</div><div class="sub">EN · UR · KO queries</div></div>`);
+    html.push(`<div class="metric-card purple"><div class="label">Best Citation Targeting</div><div class="value">${(bestCiteAcc.v*100).toFixed(0)}%</div><div class="sub">${bestCiteAcc.m}, when retrieval found the source</div></div>`);
+    html.push(`<div class="metric-card pink"><div class="label">Lowest Repeated Answers</div><div class="value">${bestRepetition.v}</div><div class="sub">${bestRepetition.m}, out of ${ls.n} queries</div></div>`);
+    html.push(`<div class="metric-card blue"><div class="label">Citation Rate</div><div class="value">${(ls.citationRate.ft*100).toFixed(0)}%</div><div class="sub">both models cite every answer</div></div>`);
+    html.push(`<div class="metric-card green"><div class="label">Models Fine-Tuned</div><div class="value">2</div><div class="sub">same dataset, same pipeline</div></div>`);
     html.push(`</div>`);
 
-    html.push(`<div class="note good"><strong>Fine-tuning improved citation consistency and query relevance.</strong> The fine-tuned model cited a source in every answer and more often produced answers judged to directly address the question asked, compared to the base model.</div>`);
+    html.push(`<div class="note good"><strong>Fine-tuning improved citation targeting and consistency on both models.</strong> Each model learned to cite a source in every answer, and citation accuracy — picking the correct source chunk when one was available — improved or held steady across the board.</div>`);
 
-    html.push(`<h2>Base vs. fine-tuned</h2>`);
-    const compData = [
-        { metric: 'Citation rate', base: s.citationRate.base, finetuned: s.citationRate.ft },
-        { metric: 'Addresses query', base: s.addressesRate.base, finetuned: s.addressesRate.ft },
-        { metric: 'Judge grounded', base: s.groundedRate.base, finetuned: s.groundedRate.ft },
+    html.push(`<h2>Llama-3.1-8B — base vs. fine-tuned</h2>`);
+    const llamaCompData = [
+        { metric: 'Citation rate', base: ls.citationRate.base, finetuned: ls.citationRate.ft },
+        { metric: 'Addresses query', base: ls.addressesRate.base, finetuned: ls.addressesRate.ft },
     ];
-    html.push(makeChartDiv('comparison', 'Rate Comparison', compData, 'metric', ['base', 'finetuned']));
+    html.push(makeChartDiv('overview-comparison', 'Rate Comparison', llamaCompData, 'metric', ['base', 'finetuned']));
 
-    html.push(`<p style="margin-top:20px; color:#a09888; font-size:12px;">See the full evaluation report for the complete comparison, including trade-offs around citation precision and latency.</p>`);
+    html.push(`<p style="margin-top:20px; color:#a09888; font-size:12px;">See Compare Models for a full side-by-side view across both models, or the full evaluation report for detailed methodology.</p>`);
 
     document.getElementById('page-content').innerHTML = html.join('');
     renderAllCharts();
 }
 
+function renderCompare() {
+    const ls = computeStats(llamaData);
+    const qs = qwenData ? computeStats(qwenData) : null;
+
+    const html = [];
+    html.push(`<h1>Compare Models</h1>`);
+    html.push(`<p class="subtitle">Base model vs. its fine-tuned version, for each of the two models.</p>`);
+
+    html.push(`<h2>Citation targeting accuracy</h2>`);
+    html.push(`<p style="font-size:12.5px;">When retrieval found the correct source, how often the model cited it.</p>`);
+    const citeAccData = [
+        { model: 'Llama', base: ls.citationAccuracy.base, finetuned: ls.citationAccuracy.ft },
+    ];
+    if (qs) citeAccData.push({ model: 'Qwen', base: qs.citationAccuracy.base, finetuned: qs.citationAccuracy.ft });
+    html.push(makeChartDiv('citeacc', 'Citation Targeting Accuracy', citeAccData, 'model', ['base', 'finetuned']));
+
+    html.push(`<h2>Query relevance</h2>`);
+    html.push(`<p style="font-size:12.5px;">How often the judge scored the answer as directly addressing the question asked.</p>`);
+    const addressesData = [
+        { model: 'Llama', base: ls.addressesRate.base, finetuned: ls.addressesRate.ft },
+    ];
+    if (qs) addressesData.push({ model: 'Qwen', base: qs.addressesRate.base, finetuned: qs.addressesRate.ft });
+    html.push(makeChartDiv('addresses', 'Addresses-Query Rate', addressesData, 'model', ['base', 'finetuned']));
+
+    html.push(`<h2>Answer thoroughness</h2>`);
+    html.push(`<p style="font-size:12.5px;">Average number of distinct citations per answer.</p>`);
+    const citesData = [
+        { model: 'Llama', base: ls.avgCitations.base, finetuned: ls.avgCitations.ft },
+    ];
+    if (qs) citesData.push({ model: 'Qwen', base: qs.avgCitations.base, finetuned: qs.avgCitations.ft });
+    html.push(makeChartDivRaw('avgcites', 'Average Citations per Answer', citesData, 'model', ['base', 'finetuned']));
+
+    html.push(`<h2>Repeated-text answers</h2>`);
+    html.push(`<p style="font-size:12.5px;">Out of ${ls.n} evaluation queries.</p>`);
+    html.push(`<div class="metric-grid">`);
+    html.push(`<div class="metric-card purple"><div class="label">Llama Base → Fine-tuned</div><div class="value">${ls.repetitionCount.base} → ${ls.repetitionCount.ft}</div></div>`);
+    if (qs) html.push(`<div class="metric-card green"><div class="label">Qwen Base → Fine-tuned</div><div class="value">${qs.repetitionCount.base} → ${qs.repetitionCount.ft}</div></div>`);
+    html.push(`</div>`);
+
+    html.push(`<h2>Average latency</h2>`);
+    html.push(`<div class="metric-grid">`);
+    html.push(`<div class="metric-card blue"><div class="label">Llama Fine-tuned</div><div class="value">${ls.avgLatency.ft.toFixed(1)}s</div><div class="sub">vs ${ls.avgLatency.base.toFixed(1)}s base</div></div>`);
+    if (qs) html.push(`<div class="metric-card blue"><div class="label">Qwen Fine-tuned</div><div class="value">${qs.avgLatency.ft.toFixed(1)}s</div><div class="sub">vs ${qs.avgLatency.base.toFixed(1)}s base</div></div>`);
+    html.push(`</div>`);
+
+    document.getElementById('page-content').innerHTML = html.join('');
+    renderAllCharts();
+}
+
+function makeChartDivRaw(id, title, data, xKey, yKeys) {
+    return `<div class="chart-box" id="chart-${id}">
+        <div class="chart-title">${title}</div>
+        <div class="chart-container" id="container-${id}"></div>
+        <div style="display:none;" data-chart-raw="${id}" data-x="${xKey}"
+             data-y='${JSON.stringify(yKeys)}'>${JSON.stringify(data)}</div>
+    </div>`;
+}
+
 function renderHighlights() {
-    const highlights = pickHighlights();
+    const llamaHighlights = pickHighlights(llamaData, 'Llama', 'llama');
+    const qwenHighlights = qwenData ? pickHighlights(qwenData, 'Qwen', 'qwen') : [];
+    const highlights = [...llamaHighlights, ...qwenHighlights];
+
     const html = [];
     html.push(`<h1>Highlights</h1>`);
-    html.push(`<p class="subtitle">Queries where the fine-tuned model's answer was more thorough, better cited, or more directly responsive than the base model's.</p>`);
+    html.push(`<p class="subtitle">Queries where a fine-tuned model's answer was more thorough, better cited, or more directly responsive than its base model's.</p>`);
 
     if (!highlights.length) {
         html.push(`<div class="note">No standout examples found in this eval set.</div>`);
     }
 
     for (const h of highlights) {
-        html.push(`<h2 style="font-size:14px; border:none; margin-bottom:8px;">${esc(h.query)}</h2>`);
+        html.push(`<h2 style="font-size:14px; border:none; margin-bottom:8px;">${esc(h.query)}<span class="model-tag ${h.modelClass}">${h.modelName}</span></h2>`);
         html.push(`<div class="example-pair">
             <div class="example-card">
                 <span class="example-label base">Base model</span>
@@ -349,8 +435,86 @@ function renderHighlights() {
     document.getElementById('page-content').innerHTML = html.join('');
 }
 
-function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const LLAMA_TRAINING_LOG = [
+    { epoch: 1,  train: 1.937827, val: 2.150660 },
+    { epoch: 2,  train: 1.719889, val: 2.022336 },
+    { epoch: 3,  train: 1.657630, val: 1.929799 },
+    { epoch: 4,  train: 1.810253, val: 1.858326 },
+    { epoch: 5,  train: 1.574052, val: 1.825427 },
+    { epoch: 6,  train: 1.645463, val: 1.819014 },
+    { epoch: 7,  train: 1.722376, val: 1.805523 },
+    { epoch: 8,  train: 1.487603, val: 1.796676 },
+    { epoch: 9,  train: 1.296128, val: 1.794383 },
+    { epoch: 10, train: 1.389044, val: 1.793015 },
+    { epoch: 11, train: 1.394706, val: 1.795018 },
+];
+const LLAMA_SELECTED_EPOCH = 10;
+
+const QWEN_TRAINING_LOG = [
+    { epoch: 1,  train: 1.947336, val: 1.985927 },
+    { epoch: 2,  train: 1.812886, val: 1.858829 },
+    { epoch: 3,  train: 1.650037, val: 1.741357 },
+    { epoch: 4,  train: 1.842781, val: 1.710085 },
+    { epoch: 5,  train: 1.574062, val: 1.695928 },
+    { epoch: 6,  train: 1.676800, val: 1.685361 },
+    { epoch: 7,  train: 1.678279, val: 1.678947 },
+    { epoch: 8,  train: 1.562716, val: 1.674613 },
+    { epoch: 9,  train: 1.393857, val: 1.673138 },
+    { epoch: 10, train: 1.434793, val: 1.672488 },
+    { epoch: 11, train: 1.493831, val: 1.672356 },
+    { epoch: 12, train: 1.485365, val: 1.671808 },
+];
+const QWEN_SELECTED_EPOCH = 12;
+
+function renderTraining() {
+    const html = [];
+    html.push(`<h1>Training</h1>`);
+    html.push(`<p class="subtitle">QLoRA fine-tuning progress on Colab (T4 GPU), 30 training examples, both models.</p>`);
+
+    html.push(`<div class="metric-grid">`);
+    html.push(`<div class="metric-card purple"><div class="label">Llama Selected Epoch</div><div class="value">${LLAMA_SELECTED_EPOCH}</div><div class="sub">of 11 completed</div></div>`);
+    html.push(`<div class="metric-card green"><div class="label">Qwen Selected Epoch</div><div class="value">${QWEN_SELECTED_EPOCH}</div><div class="sub">of 12 completed</div></div>`);
+    html.push(`<div class="metric-card blue"><div class="label">Llama Final Val Loss</div><div class="value">${LLAMA_TRAINING_LOG[LLAMA_SELECTED_EPOCH-1].val.toFixed(3)}</div><div class="sub">Final training loss: 1.389</div></div>`);
+    html.push(`<div class="metric-card blue"><div class="label">Qwen Final Val Loss</div><div class="value">${QWEN_TRAINING_LOG[QWEN_SELECTED_EPOCH-1].val.toFixed(3)}</div><div class="sub">Final training loss: 1.485</div></div>`);
+    html.push(`</div>`);
+
+    html.push(`<h2>Llama-3.1-8B loss curve</h2>`);
+    html.push(`<div class="chart-box"><div class="chart-title">Validation Loss by Epoch</div><div class="chart-container" id="llama-chart"></div></div>`);
+
+    html.push(`<h2>Qwen2.5-7B loss curve</h2>`);
+    html.push(`<div class="chart-box"><div class="chart-title">Validation Loss by Epoch</div><div class="chart-container" id="qwen-chart"></div></div>`);
+
+    html.push(`<div class="note good">Each model's checkpoint was selected at the epoch with the lowest validation loss — the point where the model had learned the most from training without starting to memorize the small training set.</div>`);
+
+    document.getElementById('page-content').innerHTML = html.join('');
+
+    requestAnimationFrame(() => {
+        drawLossChart('llama-chart', LLAMA_TRAINING_LOG, LLAMA_SELECTED_EPOCH, '#D4C4EC', '#B1E6F3');
+        drawLossChart('qwen-chart', QWEN_TRAINING_LOG, QWEN_SELECTED_EPOCH, '#B8ECD8', '#FFC2D1');
+    });
+}
+
+function drawLossChart(containerId, log, selectedEpoch, valColor, trainColor) {
+    const container = document.getElementById(containerId);
+    const traces = [
+        { x: log.map(d => d.epoch), y: log.map(d => d.train), mode: 'lines+markers',
+          line: { color: trainColor, width: 2 }, marker: { size: 6 }, name: 'Training loss' },
+        { x: log.map(d => d.epoch), y: log.map(d => d.val), mode: 'lines+markers',
+          line: { color: valColor, width: 2 }, marker: { size: 6 }, name: 'Validation loss' },
+    ];
+    const layout = {
+        plot_bgcolor: '#faf8f5', paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 20, b: 50, l: 50, r: 20 },
+        xaxis: { title: 'Epoch', gridcolor: '#f1f3f5', linecolor: '#dee2e6', dtick: 1 },
+        yaxis: { title: 'Loss', gridcolor: '#f1f3f5', linecolor: '#dee2e6' },
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0, orientation: 'h', y: 1.15 },
+        shapes: [{ type: 'line', x0: selectedEpoch, x1: selectedEpoch, y0: 0, y1: 1, yref: 'paper',
+                   line: { color: '#8452b0', width: 1.5, dash: 'dot' } }],
+        annotations: [{ x: selectedEpoch, y: 1, yref: 'paper', showarrow: false,
+                         text: 'Selected', font: { size: 11, color: '#8452b0' }, yanchor: 'bottom' }],
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
 }
 
 function makeChartDiv(id, title, data, xKey, yKeys) {
@@ -369,11 +533,43 @@ function renderAllCharts() {
             const container = document.getElementById(`container-${id}`);
             if (!container) return;
             const chartData = JSON.parse(el.textContent);
-            const xKey = el.dataset.x;
-            const yKeys = JSON.parse(el.dataset.y);
-            renderBar(container, chartData, xKey, yKeys);
+            renderBar(container, chartData, el.dataset.x, JSON.parse(el.dataset.y));
+        });
+        document.querySelectorAll('[data-chart-raw]').forEach(el => {
+            const id = el.dataset.chartRaw;
+            const container = document.getElementById(`container-${id}`);
+            if (!container) return;
+            const chartData = JSON.parse(el.textContent);
+            renderBarRaw(container, chartData, el.dataset.x, JSON.parse(el.dataset.y));
         });
     });
+}
+
+function renderBarRaw(container, chartData, xKey, yKeys) {
+    const colors = { base: '#B1E6F3', finetuned: '#D4C4EC' };
+    const xVals = chartData.map(d => String(d[xKey]));
+
+    const traces = yKeys.map(yk => ({
+        x: xVals,
+        y: chartData.map(d => d[yk] ?? 0),
+        name: yk === 'finetuned' ? 'Fine-tuned' : 'Base',
+        type: 'bar',
+        text: chartData.map(d => (d[yk] ?? 0).toFixed(1)),
+        textposition: 'outside',
+        marker: { color: colors[yk] },
+    }));
+
+    const layout = {
+        plot_bgcolor: '#faf8f5', paper_bgcolor: '#faf8f5',
+        font: { family: '-apple-system, sans-serif', size: 12 },
+        margin: { t: 30, b: 50, l: 50, r: 30 },
+        barmode: 'group',
+        showlegend: true,
+        legend: { bgcolor: 'rgba(0,0,0,0)', borderwidth: 0, orientation: 'h', y: 1.15 },
+        xaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1 },
+        yaxis: { gridcolor: '#f1f3f5', linecolor: '#dee2e6', linewidth: 1 },
+    };
+    Plotly.newPlot(container, traces, layout, { responsive: true, displayModeBar: false });
 }
 
 function renderBar(container, chartData, xKey, yKeys) {

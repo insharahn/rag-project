@@ -98,13 +98,24 @@ app.mount("/week6", StaticFiles(directory="ui_week6", html=True), name="week6")
 
 WEEK6_RESULTS = Path("../advanced-rag-system/notebooks/finetuning")
 
+def _load_week6_model(detailed_filename, summary_filename):
+    detailed_path = WEEK6_RESULTS / detailed_filename
+    summary_path = WEEK6_RESULTS / summary_filename
+    if not detailed_path.exists():
+        raise HTTPException(404, f"No results found at {detailed_filename}. Run the evaluation notebook first.")
+    detailed = json.loads(detailed_path.read_text(encoding="utf-8"))
+    summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
+    return {**detailed, "precomputed_summary": summary.get("summary", {})}
+
 @app.get("/week6-data")
 def get_week6_metrics():
-    """Serve project 6's fine-tuning comparison results."""
-    path = WEEK6_RESULTS / "final_comparison_summary.json"
-    if not path.exists():
-        raise HTTPException(404, "No fine-tuning comparison results found. Run the evaluation notebook first.")
-    return json.loads(path.read_text(encoding="utf-8"))
+    """Serve project 6's Llama fine-tuning comparison results."""
+    return _load_week6_model("final_comparison_summary.json", "comparison_summary.json")
+
+@app.get("/week6-qwen-data")
+def get_week6_qwen_metrics():
+    """Serve project 6's Qwen fine-tuning comparison results."""
+    return _load_week6_model("final_comparison_summary_qwen.json", "qwen_comparison_summary.json")
 
 @app.post("/upload")
 async def upload_document(files: List[UploadFile] = File(...)):
