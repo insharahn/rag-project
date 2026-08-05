@@ -1,0 +1,497 @@
+[
+  {
+    "query": "What is the definition of a sentence according to the grammar text?",
+    "language": "en",
+    "ground_truth_chunk_id": "basic-english-grammar__83",
+    "context_chunks": [
+      {
+        "chunk_id": "basic-english-grammar__91",
+        "text": "surprise, pain, or pleasure. Notice that an exclamation point (!) is often\nused after interjections. Oh dear! Ouch! Look out! Happy\nBirthday! Cheers! Ssh! Wow! Goodness! Oh! Good! Oh no! Hooray! Thanks! Help! Good luck! Well done! Gosh! Hey! Merry Christmas! Happy New Year! 12\nD\ni\nd\ny\no\nu\nk\nn\no\nw\n? 139\nSentences\nWhat is a Sentence? A sentence is a group of words that expresses a\ncomplete thought. A sentence must have a subject\nand a verb, but it may or may not have an object. A sentence that makes\na statement begins\nwith a capital letter and\nends with a period. Subject\nVerb\nObject\n\nSally\nis making\na doll.",
+        "source_doc": "basic-english-grammar.pdf"
+      },
+      {
+        "chunk_id": "basic-english-grammar__93",
+        "text": "letter\nperiod\nSentence\nsubject\nverb\n13\nD\ni\nd\ny\no\nu\nk\nn\no\nw\n? 140\nKinds of Sentences\n There are four kinds of sentences. Richard is feeding\nthe hens. The children are swimming. The telephone rang. Everyone sat down. 4 A declarative sentence makes a statement. 4 An interrogative sentence asks a question. Where are the twins? Are you going shopping today? What is your name? What is Richard\ndoing? 4 An exclamatory sentence expresses strong emotion. The silly girl! How stupid I am! What lovely weather! 4 An imperative sentence gives an order. Please sit down. Tell me the truth. Speak up! Come back!",
+        "source_doc": "basic-english-grammar.pdf"
+      },
+      {
+        "chunk_id": "basic-english-grammar__2",
+        "text": "65\n6\nDeterminers\n71\nThe Articles\n71\nDemonstrative Determiners\n73\nInterrogative Determiners\n74\nPossessive Determiners\n75\n13 Sentences\n139\nWhat is a Sentence? 139\nKinds of Sentences\n140\nThe Imperative\n141\nThe Subject and the Object\n143\nDirect and Indirect Objects\n144\nPositive and Negative Sentences 146\nQuestions\n147\n8\nSubject-Verb Agreement\n123\n9\nAdverbs\n127\n10 Prepositions\n132\n11 Conjunctions\n135\n12 Interjections\n138\n14 Punctuation\n150\nPeriod\n150\nComma\n151\nExclamation Point\n152\nQuestion Mark\n152\nApostrophe\n153\n7\nVerbs and Tenses\n79\nThe Simple Present Tense\n80\nAm, Is and Are\n83\nThe Present Progressive Tense\n89\nHave and Has\n93\nThe Present Perfect Tense\n96\nThe Simple Past Tense\n98\nRegular and Irregular Verbs\n99\nWas and Were\n104\nThe Past Progressive Tense\n106\nThe Future Tense\n108\nCan and Could\n112\nMay and Might\n113\nDo, Does and Did\n115\nWould and Should\n120\n\n5\nHere’s an old children’s rhyme about the eight parts of\nspeech of English grammar. It gives you an idea of what\ngrammar is about. Read and remember it.",
+        "source_doc": "basic-english-grammar.pdf"
+      },
+      {
+        "chunk_id": "basic-english-grammar__96",
+        "text": "! Please\nWould\n\n142\nExercise\nLook at the groups of words below. Do you know\nwhich are sentences and which are not? Put a checkmark in the space next to sentences, and\nan X next to other word groups. 1\nMrs. Chen is a good teacher. 2 not well today\n 3 Do the work yourself. 4 How are you? 5 basic rules of grammar\n 6 bread and butter\n 7 Welcome to the National Zoo. 8 brush his teeth\n 9 toys in the box\n10 more than one\n11 What is the time now? 12 Sit down! 13 Please come here. 14 Mark is sleeping. 15 Open the door. 143\nThe Subject and the Object\nThe subject of a sentence sometimes does something\nto someone or something else. The person or thing that receives the action is called\nthe object. Subject\nVerb\nObject\n\nSusan\nhas bought\na painting. Hannah\nis reading\nher book. The twins\nclimbed\nthe hill.",
+        "source_doc": "basic-english-grammar.pdf"
+      },
+      {
+        "chunk_id": "basic-english-grammar__20",
+        "text": "prince was eight and the\n\n\n\n_____________ was five. 5 Ladies and ______________ , welcome to our party this\n\n\n evening. 43\nExercise 3\nLook at the words in the box. Write each word under\nits correct heading. children\nsun\nwitch\nking\n\nboy\nson\nfather\ngirl\n\nmother\nqueen\nfile\nteacher\n\nlamp\ndoctor\ndancer\nwizard\n\nram\nrooster\nelf\nfish\n\nMasculine\nFeminine\nCommon Gender\nNeuter\n\n44\nA pronoun is a word that takes the place of a common\nnoun or a proper noun. There are different kinds of pronouns. The words I, you, he, she, it, we and they are called\npersonal pronouns. They take the place of nouns and\nare used as the subject of the verb in a sentence. G\nr\na\nm\nm\na\nr\nH\ne\nl\np\nThe subject of a sentence is the person, animal,\nplace or thing that does the action shown by the\nverb. Personal Pronouns\nMy name is David. I am the youngest in the family. This is my father. He is a teacher. This is my mother. She is a lawyer. I have a brother and two sisters. They are Peter, Sharon and Jenny.",
+        "source_doc": "basic-english-grammar.pdf"
+      }
+    ],
+    "ground_truth_retrieved": false
+  },
+  {
+    "query": "Who formed the Afrikander Ministry in October 1897?",
+    "language": "en",
+    "ground_truth_chunk_id": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold__142",
+    "context_chunks": [
+      {
+        "chunk_id": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold__394",
+        "text": "of the subject have been treated.\"[203]\nEven more significant—as evidence of the dangerous feeling of exaltation which possessed the Dutch at this time—was the New Year's exhortation of Ons Land, the journalistic mouthpiece of Mr. Hofmeyr. And Mr. Hofmeyr, it must be remembered, was not only the head of the Commissie van Toezicht, or Executive of three which controlled the Afrikander Bond, but the real master of the majority in the Cape Parliament, upon which the Schreiner Cabinet depended for its existence. After setting out the \"mighty deeds\" achieved by the Afrikander arms during the last three months, this bitter and relentless opponent of British supremacy in South Africa (p. 350) proceeded to declare that \"still mightier deeds\" were to be seen in the coming year (1900), and that the Afrikander nation, so far from being extinguished by the conflict with Great Britain, would be welded into one compact mass, and flourish more and more. Nor was this all. In the closing days of the year (1899) information reached the British military authorities that a plot was on foot to seize Capetown. The Dutch from the country districts were to assemble in the capital in the guise of excursionists who had come to town to enjoy the Christmas and New Year holidays. On New Year's Eve, the night reported to have been fixed for the attempt, all the military stations in Capetown were kept in frequent communication by telephone; the streets were paraded by pickets; and, in the drill-shed the Capetown Highlanders slept under arms. Whether any attempt of the sort was seriously contemplated or not, there is no question as to the fact that the utmost necessity for precaution was recognised by the military authorities at Capetown during this period, in spite of the security afforded by the reinforcements which the Home Government was pouring into the Colony. It was an old boast of the militant Dutch in the Cape Colony that they would find a way to prevent British troops from using the colonial railways to attack the Boers.[204] And (p. 351) when at length, a month after Lord Roberts had arrived, the transport system had been reorganised, the troops concentrated at De Aar and Modder River, and everything was ready for the forward movement, the most complete secrecy was observed as to the departure of the Commander-in-Chief and Lord Kitchener.",
+        "source_doc": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold.html"
+      },
+      {
+        "chunk_id": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold__443",
+        "text": "of argument, Lord Milner had won Mr. Schreiner, not indeed to the side of England, but at least to the side of that Empire-State of which England was the head. With the Prime Minister went Sir Richard Solomon, Mr. Herholdt, and one or two of the Afrikander rank and file. Thus reinforced, the Progressives commanded a working majority in the Legislative Assembly, and the ascendancy of the Afrikander party was at an end. Apart from the secession of Mr. Schreiner and his immediate followers, the Parliamentary strength of the Afrikander party was lessened by another circumstance, to which Sir Henry Campbell-Bannerman referred in the debate on the South African Settlement in the House of Commons on July 25th. Certain members of the Cape Parliament, said the leader of the Liberal Opposition, had been arrested for high treason, with the result that the Afrikander party was deprived of their votes, and the balance of power between that party and the Progressive party was upset. And he protested against this manner of turning an Afrikander majority into a minority. The reply which these remarks on the part of this friend of the Afrikander party in England drew from the Government is instructive:\n\"May I remind the right honourable gentleman,\" said Mr. Balfour, \"that the balance of parties was (p. 394) disturbed by another and different cause on which he has made no protest? Some members of that Parliament, not sharing the views of those who are imprisoned, are now fighting at the front and risking their lives in the defence of the Empire. Their party is deprived of their services in the Cape Parliament, and I should have thought that this would have affected the right honourable gentleman much more than the absence of men who, under any circumstances, must be supposed to be under the darkest suspicion as to their view and policy respecting the country to which they owe allegiance.\"\nThe Cape Parliament met under the new Ministry in July, and the chief business of the session, which lasted until the middle of October, was the passing of the Treason Bill. On July 9th Lord Milner was able to inform Mr. Chamberlain (by telegram) that the Bill had been prepared, and to indicate the nature of its main provisions.",
+        "source_doc": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold.html"
+      },
+      {
+        "chunk_id": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold__143",
+        "text": "iman and Sauer, who were now in close association with the Bond; and Mr. (now Sir) Richard Solomon. The latter, who had been defeated in the general election, was provided with a seat upon his accepting office as Attorney-General. The Progressives (p. 125) continued to be led in opposition by Sir Gordon Sprigg. Mr. (now Sir) James Rose Innes was returned as an \"independent,\" since he had found himself unable to work in association with a party in which Mr. Rhodes had a dominant influence. The new Ministry was not strong enough to resist the continued demand of the Progressives for a measure of electoral reform; but the Redistribution Bill, as now passed, took the form of a compromise so disastrous to the British population that the Bond majority was increased to eight by the new elections held in April, 1899.[46]\nMr. Chamberlain's policy, as we have seen, was based upon the belief that it was possible to win over the Dutch in the Cape Colony and the Free State to the side of the Imperial Government. But here, in October, 1898, was an Afrikander ministry in power in the Cape Colony pledged to prevent the intervention of the Imperial Government in the affairs of the Transvaal. From that moment the issue became more and more one not of right, but of might.",
+        "source_doc": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold.html"
+      },
+      {
+        "chunk_id": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold__144",
+        "text": "8, was an Afrikander ministry in power in the Cape Colony pledged to prevent the intervention of the Imperial Government in the affairs of the Transvaal. From that moment the issue became more and more one not of right, but of might. In the Free State, as we have seen, what was virtually an offensive and defensive alliance with the northern Republic had been ratified by the Volksraad. In the Transvaal the work of armament was proceeding apace, and Dr. Leyds had been despatched to Europe, as Envoy Extraordinary of the Republic, with authority and funds calculated to enable (p. 126) him to enlist the active sympathy of the Continental powers on behalf of the Pretoria Executive. His place as State Secretary had been filled, in July, by Mr. Reitz, the former President of the Free State, and one of the actual founders of the Afrikander Bond; and Mr. Smuts, a younger and even more enthusiastic believer in the nationalist creed, was appointed to the office of State Attorney.[47] With the exception of Rhodesia and Natal and the native territories immediately under the control of the Imperial Government, the Afrikander nationalists dominated the whole of South Africa. Nor is it surprising that, in these circumstances, the tone of the communications passing between the Transvaal Government and the paramount Power should have become increasingly unsatisfactory.[48]\nIn the (English) winter of 1898-9 Lord Milner paid a visit to England. Sir William Greene, who had left Pretoria on a holiday on June 29th, was also at home during the same period. Lord Milner's visit was due in part to the necessity for medical treatment;[49] but, in any case, it had become desirable that he should be able to communicate fully to Mr. Chamberlain the grave views which he had formed on the South African situation. He left for England on November 2nd, landed on the 19th, sailed on January 28th, and reached Capetown again on February 14th. During the whole of the two months that he was in England he was engaged in an endeavour to impress upon Mr. Chamberlain, and everybody else with whom he could converse, that the existing state of affairs was one which, if allowed to remain unchanged, would end in the loss of South Africa. During nineteen months of close observation and earnest, patient study, Lord Milner had grasped the situation in its completeness.",
+        "source_doc": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold.html"
+      },
+      {
+        "chunk_id": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold__522",
+        "text": "to the Afrikander Ministry. On the vital question of the necessity of establishing British authority upon terms that would make any repetition of the war impossible, Sir Gordon Sprigg and his ministers were absolutely at one with Lord Milner and the Home Government. Whatever differences of opinion arose subsequently between the Cape ministers and the (p. 474) Imperial authorities were differences not of principle but of detail. For the most part they were such as would have manifested themselves in any circumstances in a country where the civil government was compelled, by the exigencies of war, to surrender some of its powers to the military authority. By supporting the Treason Bill, Mr. Schreiner and Sir Richard Solomon had dissociated themselves from the Afrikander nationalists; and henceforward their influence was used unreservedly on the side of British supremacy.[274] On the other hand, Mr. Merriman and Mr.",
+        "source_doc": "The Project Gutenberg e-Book of Lord Milner's Work in South Africa; Author_ W. Basil Worsfold.html"
+      }
+    ],
+    "ground_truth_retrieved": false
+  },
+  {
+    "query": "How did Mr. Cruncher recruit his finances?",
+    "language": "en",
+    "ground_truth_chunk_id": "A Tale of Two Cities _ Project Gutenberg__281",
+    "context_chunks": [
+      {
+        "chunk_id": "A Tale of Two Cities _ Project Gutenberg__281",
+        "text": "of the tides to the opposite shore. Brief as such companionship was in every separate instance, Mr. Cruncher never failed to become so interested in the lady as to express a strong desire to have the honour of drinking her very good health. And it was from the gifts bestowed upon him towards the execution of this benevolent purpose, that he recruited his finances, as just now observed. Time was, when a poet sat upon a stool in a public place, and mused in the sight of men. Mr. Cruncher, sitting on a stool in a public place, but not being a poet, mused as little as possible, and looked about him. It fell out that he was thus engaged in a season when crowds were few, and belated women few, and when his affairs in general were so unprosperous as to awaken a strong suspicion in his breast that Mrs. Cruncher must have been “flopping” in some pointed manner, when an unusual concourse pouring down Fleet-street westward, attracted his attention.",
+        "source_doc": "A Tale of Two Cities _ Project Gutenberg.html"
+      },
+      {
+        "chunk_id": "A Tale of Two Cities _ Project Gutenberg__91",
+        "text": ", if she ain’t at it agin!”\nA woman of orderly and industrious appearance rose from her knees in a corner, with sufficient haste and trepidation to show that she was the person referred to. “What!” said Mr. Cruncher, looking out of bed for a boot. “You’re at it agin, are you?”\nAfter hailing the morn with this second salutation, he threw a boot at the woman as a third. It was a very muddy boot, and may introduce the odd circumstance connected with Mr. Cruncher’s domestic economy, that, whereas he often came home after banking hours with clean boots, he often got up next morning to find the same boots covered with clay.",
+        "source_doc": "A Tale of Two Cities _ Project Gutenberg.html"
+      },
+      {
+        "chunk_id": "A Tale of Two Cities _ Project Gutenberg__523",
+        "text": "been so hard with you that you ask me such a cruel question?”\n“Then hold your meddlesome tongue,” said Solomon, “and come out, if you want to speak to me. Pay for your wine, and come out. Who’s this man?”\nMiss Pross, shaking her loving and dejected head at her by no means affectionate brother, said through her tears, “Mr. Cruncher.”\n“Let him come out too,” said Solomon. “Does he think me a ghost?”\nApparently, Mr. Cruncher did, to judge from his looks. He said not a word, however, and Miss Pross, exploring the depths of her reticule through her tears with great difficulty paid for her wine. As she did so, Solomon turned to the followers of the Good Republican Brutus of Antiquity, and offered a few words of explanation in the French language, which caused them all to relapse into their former places and pursuits. “Now,” said Solomon, stopping at the dark street corner, “what do you want?”\n“How dreadfully unkind in a brother nothing has ever turned my love away from!” cried Miss Pross, “to give me such a greeting, and show me no affection.”\n“There. Confound it!",
+        "source_doc": "A Tale of Two Cities _ Project Gutenberg.html"
+      },
+      {
+        "chunk_id": "A Tale of Two Cities _ Project Gutenberg__94",
+        "text": "only child.”\nMaster Cruncher (who was in his shirt) took this very ill, and, turning to his mother, strongly deprecated any praying away of his personal board. “And what do you suppose, you conceited female,” said Mr. Cruncher, with unconscious inconsistency, “that the worth of your prayers may be? Name the price that you put your prayers at!”\n“They only come from the heart, Jerry. They are worth no more than that.”\n“Worth no more than that,” repeated Mr. Cruncher. “They ain’t worth much, then. Whether or no, I won’t be prayed agin, I tell you.",
+        "source_doc": "A Tale of Two Cities _ Project Gutenberg.html"
+      },
+      {
+        "chunk_id": "A Tale of Two Cities _ Project Gutenberg__92",
+        "text": "a very muddy boot, and may introduce the odd circumstance connected with Mr. Cruncher’s domestic economy, that, whereas he often came home after banking hours with clean boots, he often got up next morning to find the same boots covered with clay. “What,” said Mr. Cruncher, varying his apostrophe after missing his mark—“what are you up to, Aggerawayter?”\n“I was only saying my prayers.”\n“Saying your prayers! You’re a nice woman! What do you mean by flopping yourself down and praying agin me?”\n“I was not praying against you; I was praying for you.”\n“You weren’t. And if you were, I won’t be took the liberty with.",
+        "source_doc": "A Tale of Two Cities _ Project Gutenberg.html"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "How did GPUs change parallel computing according to the text?",
+    "language": "en",
+    "ground_truth_chunk_id": "parallel_processors__27",
+    "context_chunks": [
+      {
+        "chunk_id": "parallel_processors__62",
+        "text": "no side effects. This property has motivated the design of the programmable pipeline stages into massively parallel processors. p0140 Figure 2.4 shows an example of a programmable pipeline that employs a vertex processor and a fragment (pixel) processor. The programmable vertex processor executes the programs designated to the vertex shader stage, and the programmable fragment processor executes the programs designated to the (pixel) shader stage. Between these programmable graphics pipeline stages are dozens of fixed-function stages that perform well-defined tasks far more efficiently than a programmable processor could and which would benefit far less from programmability. For example, between the geometry processing stage and the pixel processing stage is a rasterizer, a complex state machine that determines exactly which pixels (and portions thereof) lie within each geometric primitive’s boundaries. Together, the mix of programmable and fixed-function stages is engineered to balance extreme performance with user control over the rendering algorithms. p0145 Common rendering algorithms perform a single pass over input primi-tives and access other memory resources in a highly coherent manner. That is, these algorithms tend to simultaneously access contiguous memory loca-tions, such as all triangles or all pixels in a neighborhood. As a result, these algorithms exhibit excellent efficiency in memory bandwidth utilization\n\nMATERIAL\n\nf0025 FIGURE 2.4\n\nExample of a separate vertex processor and fragment processor in a programmable graphics pipeline. Evolution of Graphics Pipelines 29\n\nand are largely insensitive to memory latency. Combined with a pixel shader workload that is usually compute limited, these characteristics have guided GPUs along a different evolutionary path than CPUs. In particular, whereas the CPU die area is dominated by cache memories, GPUs are dominated by floating-point datapath and fixed-function logic. GPU mem-ory interfaces emphasize bandwidth over latency (as latency can be readily hidden by massively parallel execution); indeed, bandwidth is typically many times higher than that for a CPU, exceeding 100 GB/s in more recent designs. s0030 2.1.3 Unified Graphics and Computing Processors\n\np0150 Introduced in 2006, the GeForce 8800 GPU mapped the separate program-DO NOmTablDe grIapShicTs sRtageIsBto Uan aTrraEy of-unCifieOd prPoceYssoRrs; tIhGe logHicaTl grEaphDics pipeline is physically a recirculating path that visits these processors three\n\ntimes, with much fixed-function graphics logic between visits.",
+        "source_doc": "parallel_processors.docx"
+      },
+      {
+        "chunk_id": "parallel_processors__27",
+        "text": "computing systems that have neg-ligible market presence compared to general-purpose microprocessors. Only a few elite applications funded by government and large corporations have been successfully developed on these traditional parallel computing systems. This has changed with the advent of many-core GPUs. Due to\n\nDO NOT DtIhSeir TpopRulaIriBty iUn thTe PEC m-arCket,OhunPdreYds Rof mIiGllionHs oTf GEPUDs havMe beAen TERIAL\n\nsold. Virtually all PCs have GPUs in them. The G80 processors and their\n\nsuccessors have shipped more than 200 million units to date. This is the first time that massively parallel computing has been feasible with a mass-market product. Such a large market presence has made these GPUs economically attractive for application developers. p0105 Other important decision factors are practical form factors and easy accessibility.",
+        "source_doc": "parallel_processors.docx"
+      },
+      {
+        "chunk_id": "excerpt_parallel_processors__23",
+        "text": "-381472-2\n\nDO NOT DISTRIBUTE- COPYRIGHTED MATERIAL\nUncorrected proofs - for course adoption review only\nCHAPTER\nc0005 Introduction\n1\nCHAPTER CONTENTS\n1.1 GPUs as Parallel Computers ................................................................................. 2\n1.2 Architecture of a Modern GPU .............................................................................. 8\n1.3 Why More Speed or Parallelism?........................................................................ 10\n1.4 Parallel Programming Languages and Models...................................................... 13\n1.5 Overarching Goals.............................................................................................. 15\n1.6 Organization of the Book .................................................................................... 16\nReferences and Further Reading ............................................................................. 18\ns0010\nINTRODUCTION\np0045\nMicroprocessors based on a single central processing unit (CPU), such as\nthose in the Intel Pentium family and the AMD Opteron family,\ndrove rapid performance increases and cost reductions in computer applications for more than two decades. These microprocessors brought giga (billion) floating-point operations per second (GFLOPS) to the desktop and\nhundreds of GFLOPS to cluster servers. This relentless drive of performance improvement has allowed application software to provide more\nfunctionality, have better user interfaces, and generate more useful results. The users, in turn, demand even more improvements once they become\naccustomed to these improvements, creating a positive cycle for the\ncomputer industry. p0050\nDuring the drive, most software developers have relied on the advances\nin hardware to increase the speed of their applications under the hood; the\nsame software simply runs faster as each new generation of processors\nis introduced. This drive, however, has slowed since 2003 due to energyconsumption and heat-dissipation issues that have limited the increase of\nthe clock frequency and the level of productive activities that can be\nperformed in each clock period within a single CPU. Virtually all microprocessor vendors have switched to models where multiple processing\nunits, referred to as processor cores, are used in each chip to increase the\nProgramming Massively Parallel Processors: A Hands-on Approach.",
+        "source_doc": "excerpt_parallel_processors.pdf"
+      },
+      {
+        "chunk_id": "excerpt_parallel_processors__31",
+        "text": "they will not perform well on some tasks on which CPUs\nare designed to perform well; therefore, one should expect that most applications will use both CPUs and GPUs, executing the sequential parts on the\nCPU and numerically intensive parts on the GPUs. This is why the\nCUDA (Compute Unified Device Architecture) programming model,\nintroduced by NVIDIA in 2007, is designed to support joint CPU/GPU execution of an application.1\nfn0010\n1See Chapter 2 for more background on the evolution of GPU computing and the creation\nof CUDA. 5\n1.1 GPUs as Parallel Computers\nB978-0-12-381472-2.00001-5, 00001\nKirk-Hwu, 978-0-12-381472-2\n\nDO NOT DISTRIBUTE- COPYRIGHTED MATERIAL\nUncorrected proofs - for course adoption review only\np0100\nIt is also important to note that performance is not the only decision\nfactor when application developers choose the processors for running their\napplications.",
+        "source_doc": "excerpt_parallel_processors.pdf"
+      },
+      {
+        "chunk_id": "excerpt_parallel_processors__74",
+        "text": "only\noperations to dispatch and manage highly parallel computing work. NVIDIA\nalso developed the CUDA C/Cþþ compiler, libraries, and runtime software\nto enable programmers to readily access the new data-parallel computation\nmodel and develop applications. Programmers no longer need to use the\ngraphics API to access the GPU parallel computing capabilities. The G80\nchip was based on the Tesla architecture and was used in the GeForce\n8800 GTX, which was followed later by G92 and GT200. s0045\n2.2.1 Scalable GPUs\np0185\nScalability has been an attractive feature of graphics systems from the\nbeginning. In the early days, workstation graphics systems gave customers\na choice in pixel horsepower by varying the number of pixel processor circuit boards installed. Prior to the mid-1990s, PC graphics scaling was\nalmost nonexistent. There was one option: the VGA controller.",
+        "source_doc": "excerpt_parallel_processors.pdf"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "What strange fancy grew in the narrator's mind about the house?",
+    "language": "en",
+    "ground_truth_chunk_id": "the_fall_of_the_house_of_usher__5",
+    "context_chunks": [
+      {
+        "chunk_id": "the_fall_of_the_house_of_usher__5",
+        "text": "to deepen the first singular impression. There can be no\ndoubt that the consciousness of the rapid increase of my\nsuperstition—for why should I not so term it?—served\nmainly to accelerate the increase itself. Such, I have long\nknown, is the paradoxical law of all sentiments having terror\nas a basis. And it might have been for this reason only, that,\nwhen I again uplifted my eyes to the house itself, from its\nimage in the pool, there grew in my mind a strange fancy—a\n\nTHE FALL OF THE HOUSE OF USHER\n6\nfancy so ridiculous, indeed, that I but mention it to show the\nvivid force of the sensations which oppressed me. I had so\nworked upon my imagination as really to believe that about\nthe whole mansion and domain there hung an atmosphere\npeculiar to themselves and their immediate vicinity—an\natmosphere which had no affinity with the air of heaven, but\nwhich had reeked up from the decayed trees, and the gray\nwall, and the silent tarn—a pestilent and mystic vapor, dull,\nsluggish, faintly discernible, and leaden-hued. Shaking off from my spirit what must have been a\ndream, I scanned more narrowly the real aspect of the\nbuilding.",
+        "source_doc": "the_fall_of_the_house_of_usher.pdf"
+      },
+      {
+        "chunk_id": "edgar_allan_poe_storyteller__12",
+        "text": "E\nd\ng\na\nr\n\nA\nl\nl\na\nn\n\nP\no\ne\nBut the house! — what a\ndelightful old building it was\n— to me truly a palace! There\nwas really no end to it. I was\nnot always able to say certainly\nwhich of its two floors I happened to be on. From each\nroom to every other there were\nalways three or four steps either\nup or down. Then the rooms\nbranched into each other, and\nthese branches were too many\nto count, and often turned and\ncame back upon themselves! Our ideas about the whole great\nhouse were not very far different\n\n\nfrom the thoughts we had about\ntime without end. During the\nfive years I was there, I could\nnever have told anyone how to\nfind the little room where I and some eighteen or twenty other boys\nslept. The schoolroom was the largest room in the house — and I\ncouldn’t help thinking it was the largest in the world. It was long and\nlow, with pointed windows and heavy wood overhead. In a far corner\nwas the office of our head-teacher, Mr. Bransby.",
+        "source_doc": "edgar_allan_poe_storyteller.pdf"
+      },
+      {
+        "chunk_id": "edgar_allan_poe_storyteller__45",
+        "text": "sickness of the mind — and of a desire to see me —\nhis best and indeed his only friend. It was the manner in which all this\nwas said — it was the heart in it — which did not allow me to say no. Although as boys we had been together, I really knew little about\nmy friend. I knew, however, that his family, a very old one, had long\nbeen famous for its understanding of all the arts and for many quiet\nacts of kindness to the poor. I had learned too that the family had\nnever been a large one, with many branches. The name had passed\nalways from father to son, and when people spoke of the “House of\nUsher,” they included both the family and the family home. I again looked up from the picture of the house reflected in the\nlake to the house itself. A strange idea grew in my mind — an idea so\nstrange that I tell it only to show the force of the feelings which laid\ntheir weight on me. I really believed that around the whole house,\nand the ground around it, the air itself was different. It was not the air\nof heaven. It rose from the dead, decaying trees, from the gray walls,\nand the quiet lake. It was a sickly, unhealthy air that I could see,\nslow-moving, heavy, and gray. Shaking off from my spirit what must have been a dream, I looked\nmore carefully at the building itself.",
+        "source_doc": "edgar_allan_poe_storyteller.pdf"
+      },
+      {
+        "chunk_id": "the_fall_of_the_house_of_usher__11",
+        "text": ". I dread the events of the future, not in themselves, but in\ntheir results. I shudder at the thought of any, even the most\ntrivial, incident, which may operate upon this intolerable\nagitation of soul. I have, indeed, no abhorrence of danger,\nexcept in its absolute effect—in terror. In this unnerved, in\n\nTHE FALL OF THE HOUSE OF USHER\n10\nthis pitiable, condition I feel that the period will sooner or\nlater arrive when I must abandon life and reason together, in\nsome struggle with the grim phantasm, Fear.”\nI learned, moreover, at intervals, and through broken\nand equivocal hints, another singular feature of his mental\ncondition. He was enchained by certain superstitious\nimpressions in regard to the dwelling which he tenanted, and\nwhence, for many years, he had never ventured forth—in\nregard to an influence whose supposititious force was\nconveyed in terms too shadowy here to be re-stated—an\ninfluence which some peculiarities in the mere form and\nsubstance of his family mansion had, by dint of long\nsufferance, he said, obtained over his spirit—an effect which\nthe physique of the gray walls and turrets, and of the dim tarn\ninto which they all looked down, had, at length, brought\nabout upon the morale of his existence. He admitted, however, although with hesitation, that\nmuch of the peculiar gloom which thus afflicted him could\nbe traced to a more natural and far more palpable origin—to\nthe severe and long-continued illness—indeed to the\nevidently approaching dissolution—of a tenderly beloved\nsister, his sole companion for long years, his last and only\nrelative on earth. “Her decease,” he said, with a bitterness\nwhich I can never forget, “would leave him (him the\nhopeless and the frail) the last of the ancient race of the\nUshers.” While he spoke, the lady Madeline (for so was she\ncalled) passed through a remote portion of the apartment,\nand, without having noticed my presence, disappeared. I\nregarded her with an utter astonishment not unmingled with\ndread; and yet I found it impossible to account for such\nfeelings. A sensation of stupor oppressed me as my eyes\nfollowed her retreating steps.",
+        "source_doc": "the_fall_of_the_house_of_usher.pdf"
+      },
+      {
+        "chunk_id": "the_fall_of_the_house_of_usher__12",
+        "text": "regarded her with an utter astonishment not unmingled with\ndread; and yet I found it impossible to account for such\nfeelings. A sensation of stupor oppressed me as my eyes\nfollowed her retreating steps. When a door, at length, closed\nupon her, my glance sought instinctively and eagerly the\ncountenance of the brother; but he had buried his face in his\n\nEDGAR ALLAN POE\n11\nhands, and I could only perceive that a far more than\nordinary wanness had overspread the emaciated fingers\nthrough which trickled many passionate tears. The disease of the lady Madeline had long baffled the\nskill of her physicians. A settled apathy, a gradual wasting\naway of the person, and frequent although transient\naffections of a partially cataleptical character were the\nunusual diagnosis. Hitherto she had steadily borne up against\nthe pressure of her malady, and had not betaken herself\nfinally to bed; but on the closing in of the evening of my\narrival at the house, she succumbed (as her brother told me at\nnight with inexpressible agitation) to the prostrating power\nof the destroyer; and I learned that the glimpse I had\nobtained of her person would thus probably be the last I\nshould obtain—that the lady, at least while living, would be\nseen by me no more. For several days ensuing, her name was unmentioned\nby either Usher or myself; and during this period I was\nbusied in earnest endeavors to alleviate the melancholy of\nmy friend. We painted and read together, or I listened, as if\nin a dream, to the wild improvisations of his speaking guitar. And thus, as a closer and still closer intimacy admitted me\nmore unreservedly into the recesses of his spirit, the more\nbitterly did I perceive the futility of all attempt at cheering a\nmind from which darkness, as if an inherent positive quality,\npoured forth upon all objects of the moral and physical\nuniverse in one unceasing radiation of gloom. I shall ever bear about me a memory of the many\nsolemn hours I thus spent alone with the master of the House\nof Usher.",
+        "source_doc": "the_fall_of_the_house_of_usher.pdf"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "Why is C still popular despite newer programming languages?",
+    "language": "en",
+    "ground_truth_chunk_id": "programming_in_c__4",
+    "context_chunks": [
+      {
+        "chunk_id": "programming_in_c__4",
+        "text": "as well as the C compiler is written in C. Major parts of popular operating systems like Windows, UNIX, Linux is still\nwritten in C. This is because even today when it comes to performance (speed of\nexecution) nothing beats C. Moreover, if one is to extend the operating system to\nwork with new devices one needs to write device driver programs. These\nprograms are exclusively written in C. C seems so popular is because it is reliable,\nsimple and easy to use. often heard today is – “C has been already superceded\nby languages like C++, C# and Java. Program\n 5 *Under revision\n\nThere is a close analogy between learning English language and learning C\nlanguage. The classical method of learning English is to first learn the alphabets\nused in the language, then learn to combine these alphabets to form words, which\nin turn are combined to form sentences and sentences are combined to form\nparagraphs.",
+        "source_doc": "programming_in_c.pdf"
+      },
+      {
+        "chunk_id": "Python Programming__50",
+        "text": "guess you will need to learn more than one Programming Language to survive in today’s software market. Python is easy to\nlearn, so it it a good starting point for new programmers. Python is an interpreted, high-level, general-purpose programming language. Created by Guido van Rossum and first released in 1991 [2]. 12\n\nFigure 1.1: Web Site - Python\nPython is a fairly old Programming Language (1991) compared to many other\nProgramming Languages like C# (2000), Swift (2014), Java (1995), PHP (1995). Python has during the last 10 years become more and more popular. Today,\nPython has become one of the most popular Programming Languages. There are many different rankings regarding which programming language which\nis most popular. In most of these ranking, Python is in top 10. One of these rankings is the IEEE Spectrum’s ranking of the top programming\nlanguages [3]. From this ranking we see that Python is the most popular Programming Language in 2018. See Figure 1.2\nAs we see in Figure 1.2 they categorize the different Programming Languages\ninto the following categories:\n• Web\n13\n\nFigure 1.2: The Most Popular Programming Languages\n• Mobile\n• Enterprise\n• Embedded\nAccording to Figure 1.2 we see that Python can be used to program Web Applications, Enterprise Applications and Embedded Applications. So far Python is not used or not optimized for creating Mobile Applications. We\nhave today 2 major Mobile platforms; iOS Applications are mainly programmed\nwith the Swift Programming language, while Android Applications are mainly\nprogrammed with either Java or Kotlin.",
+        "source_doc": "Python Programming.pdf"
+      },
+      {
+        "chunk_id": "programming_in_c__3",
+        "text": "4 *Under revision\n\nLecture Note: 1\n\n Introduction to C\n C is a programming language developed at AT & T’s Bell Laboratories of USA\nin 1972. It was designed and written by a man named Dennis Ritchie. In the late\nseventies C began to replace the more familiar languages of that time like PL/I,\nALGOL, etc\n ANSI C standard emerged in the early 1980s, this book was split into two\ntitles: The original was still called Programming in C, and the title that covered\nANSI C was called Programming in ANSI C. This was done because it took\nseveral years for the compiler vendors to release their ANSI C compilers and for\nthem to become ubiquitous. It was initially designed for programming UNIX\noperating system. Now the software tool as well as the C compiler is written in C. Major parts of popular operating systems like Windows, UNIX, Linux is still\nwritten in C. This is because even today when it comes to performance (speed of\nexecution) nothing beats C.",
+        "source_doc": "programming_in_c.pdf"
+      },
+      {
+        "chunk_id": "Python Programming__49",
+        "text": "1\nThe New Age of Programming\nThe way we create software today has changed dramatically the last 30 years,\nfrom the childhood of personal computers in the early 80s to today’s powerful\ndevices such as Smartphones, Tablets and PCs. The Internet has also changed the way we use devices and software. We still\nhave traditional desktop applications, but Web Sites, Web Applications and socalled Apps for Smartphones, etc. are dominating the software market today. We need to find and learn Programming Languages that are suitable for the\nNew Age of Programming. We have today several thousand different Programming Languages, so why\nshould we learn Python? I guess you will need to learn more than one Programming Language to survive in today’s software market. Python is easy to\nlearn, so it it a good starting point for new programmers. Python is an interpreted, high-level, general-purpose programming language.",
+        "source_doc": "Python Programming.pdf"
+      },
+      {
+        "chunk_id": "Python Programming__5",
+        "text": "/IndustrialITandAutomation\nProgramming\nThe way we create software today has changed dramatically the last 30 years,\nfrom the childhood of personal computers in the early 80s to today’s powerful\ndevices such as Smartphones, Tablets and PCs. The Internet has also changed the way we use devices and software. We still\nhave traditional desktop applications, but Web Sites, Web Applications and socalled Apps for Smartphones, etc. are dominating the software market today. We need to find and learn Programming Languages that are suitable for the\nNew Age of Programming. We have today several thousand different Programming Languages today. I\nguess you will need to learn more than one Programming Language to survive\n4\n\nin today’s software market.",
+        "source_doc": "Python Programming.pdf"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "How does the StringTokenizer work in the Java code example?",
+    "language": "en",
+    "ground_truth_chunk_id": "java_beginners__29",
+    "context_chunks": [
+      {
+        "chunk_id": "java_beginners__29",
+        "text": "token = current_token;\n current_token = null;\n }\n return token;\n }\n // Gets the next token from the input, which may come from\n // the current input line or a subsequent one. The\n // parameter determines if subsequent lines are used. private static String getNextInputToken (boolean skip) {\n final String delimiters = \" \\t\\n\\r\\f\";\n String token = null;\n try {\n if (reader == null)\n reader = new StringTokenizer\n (in.readLine(), delimiters, true);\n while (token == null ||\n ((delimiters.indexOf (token) >= 0) && skip)){\n while (!reader.hasMoreTokens())\n reader = new StringTokenizer\n (in.readLine(), delimiters,true);\n token = reader.nextToken();\n }\n }\n catch (Exception exception) {\n token = null;\n }\n\nJAVA for Beginners\n\nRiccardo Flask 27 | P a g e\n\n return token;\n }\n // Returns true if there are no more tokens to read on the\n // current input line. public static boolean endOfLine() {\n return !reader.hasMoreTokens();\n }\n//************* Reading Section\n // Returns a string read from standard input. public static String readString() {\n String str;\n try {\n str = getNextToken(false);\n while (! endOfLine()) {\n str = str + getNextToken(false);\n }\n }\n catch (Exception exception){\n error (\"Error reading String data, null value\nreturned.\");\n str = null;\n }\n return str;\n }\n // Returns a space-delimited substring (a word) read from\n // standard input. public static String readWord() {\n String token;\n\nJAVA for Beginners\n\nRiccardo Flask 28 | P a g e\n\n try {\n token = getNextToken();\n }\n catch (Exception exception) {\n error (\"Error reading String data, null value\nreturned.\");\n token = null;\n }\n return token;\n }\n // Returns a boolean read from standard input. public static boolean readBoolean() {\n String token = getNextToken();\n boolean bool;\n try {\n if (token.toLowerCase().equals(\"true\"))\n bool = true;\n else if (token.toLowerCase().equals(\"false\"))\n bool = false;\n else {\n error (\"Error reading boolean data, false value\nreturned.\");\n bool = false;\n }\n }\n catch (Exception exception) {\n error (\"Error reading boolean data, false value\nreturned.\");\n\nJAVA for Beginners\n\nRiccardo Flask 29 | P a g e\n\n bool = false;\n }\n return bool;\n }\n // Returns a character read from standard input.",
+        "source_doc": "java_beginners.pdf"
+      },
+      {
+        "chunk_id": "programming_in_c__9",
+        "text": "function from\nwhere actually program is started and it is encloses within the pair of curly braces. The main( ) function can be anywhere in the program but in general practice it is\nplaced in the first position. Syntax :\n main()\n{\n........ ........ ........ }\nThe main( ) function return value when it declared by data type as\n int main( )\n{\nreturn 0\n 10 *Under revision\n\n}\nThe main function does not return any value when void (means null/empty) as\nvoid main(void ) or void main()\n{\n printf (“C language”);\n}\nOutput: C language\nThe program execution start with opening braces and end with closing brace. And in between the two braces declaration part as well as executable part is\nmentioned. And at the end of each line, the semi-colon is given which indicates\nstatement termination. /*First c program with return statement*/\n#include <stdio.h>\nint main (void)\n{\nprintf (\"welcome to c Programming language.\\n\");\nreturn 0;\n}\nOutput: welcome to c programming language. Steps for Compiling and executing the Programs\nA compiler is a software program that analyzes a program developed in a particular\ncomputer language and then translates it into a form that is suitable for execution\n 11 *Under revision\n\non a particular computer system. Figure below shows the steps that are involved in\nentering, compiling, and executing a\ncomputer program developed in the C programming language and the typical Unix\ncommands that would be entered from the command line. Step 1: The program that is to be compiled is first typed into a file on the\ncomputer system. There are various conventions that are used for naming files,\ntypically be any name provided the last two characters are “.c” or file with\nextension .c. So, the file name prog1.c might be a valid filename for a C program. A text editor is usually used to enter the C program into a file. For example, vi is a\npopular text editor used on Unix systems. The program that is entered into the file\nis known as the source program because it represents the original form of the\nprogram expressed in the C language. Step 2: After the source program has been entered into a file, then proceed to have\nit compiled. The compilation process is initiated by typing a special command on\nthe system. When this command is entered, the name of the file that contains the\nsource program must also be specified.",
+        "source_doc": "programming_in_c.pdf"
+      },
+      {
+        "chunk_id": "java_beginners__117",
+        "text": "x = kb.nextInt();\n\n\nSystem.out.println(\"Number: \" + x);\n\n}\n}\nUsing the scanner to capture text (string variable) from keyboard:\n\nimport java.util.*;\n\npublic class Alphabetize {\n\n public static void main(String[] args) {\n //... Declare variables. Scanner in = new Scanner(System.in);\n ArrayList<String> words = new ArrayList<String>();\n\n //... Read input one word at a time. System.out.println(\"Enter words. End with EOF (CTRL-Z\nthen Enter)\");\n //... Read input one word at a time, adding it to an\narray list, hasNext to read more than one word\n\nJAVA for Beginners\n\nRiccardo Flask 133 |\nP a g e\n\n\nwhile (in.hasNext()) {\n words.add(in.next());\n }\n\n //... Sort the words. Collections.sort(words);\n\n //... Print the sorted list.",
+        "source_doc": "java_beginners.pdf"
+      },
+      {
+        "chunk_id": "java_beginners__108",
+        "text": "]);\n}\n}\n\nIf we execute this program in a DOS shell3 (not via IDE), we use the following syntax:\nC:\\ java CLDemo one two three (press enter)\n\n\n3 Put your file (*.class, after compilation) in root drive. Then Start > Run > cmd\n\nJAVA for Beginners\n\nRiccardo Flask 120 |\nP a g e\n\n\n\nThe following output will be generated:\nThere are 3 command-line arguments. They are:\narg[0]: one\narg[1]: two\narg[2]: three\nExample 2:\n\n// A simple automated telephone directory. class Phone {\npublic static void main(String args[]) {\nString numbers[][] = {\n{ \"Tom\", \"555-3322\" },\n{ \"Mary\", \"555-8976\" },\n{ \"Jon\", \"555-1037\" },\n{ \"Rachel\", \"555-1400\" }\n};\nint i;\nif(args.length != 1)\n\nJAVA for Beginners\n\nRiccardo Flask 121 |\nP a g e\n\nSystem.out.println(\"Usage: java Phone <name>\");\nelse {\nfor(i=0; i<numbers.length; i++) {\nif(numbers[i][0].equals(args[0])) {\nSystem.out.println(numbers[i][0] + \": \" +\nnumbers[i][1]);\nbreak;\n}\n}\nif(i == numbers.length)\nSystem.out.println(\"Name not found.\");\n}\n}\n}\nExecute the code as follows (after compilation):\nC>java Phone Mary\nMary: 555-8976\n\nJAVA for Beginners\n\nRiccardo Flask 122 |\nP a g e\n\nVector and ArrayList\nA vector can be defined simply as an Array which can ‘grow’. Nowadays it has been replaced by\nArrayList. The following code snippets are examples of implementing Vectors:\n// beware Vector's List-compatible set method with the\nparameters reversed:\nvector.set( i, object );\n// yet in the old form:\nvector.setElementAt( object, i );\n// get has two forms, the new List-compatible:\nObject o = vector.get( i );\n// or the old form:\nObject o = vector.elementAt( i );\n// there is no such thing as:\nObject o = vector.getElementAt( i );\n// similarly add has two forms: the new list-compatible:\nvector.add ( o );\n// or the old form:\nvector.addElement( o );\n[Further details can be obtained by referring to text book]\nAs already stated in the previous page ArrayList have replaced Vector in versions of Java following\n1.1.",
+        "source_doc": "java_beginners.pdf"
+      },
+      {
+        "chunk_id": "java_beginners__107",
+        "text": ".println(\"Modified array: \");\nfor(String s : strs)\nSystem.out.print(s + \" \");\n}\n}\n\nJAVA for Beginners\n\nRiccardo Flask 118 |\nP a g e\n\n\n\nPredicted Output:\nOriginal array:\nThis is a test. Modified array:\nThis was a test, too! Strings are said to be ‘immutable’, i.e. they cannot be changed once they are created. However we\ncan use the method substring() to capture part of a string. The method is declared as follows:\nString substring(int startIndex, int endIndex)\nExample:\n// Use substring(). class SubStr {\npublic static void main(String args[]) {\nString orig = \"Java makes the Web move.\";\n// construct a substring\nString subst = orig.substring(5, 18);\nSystem.out.println(\"Original String: \" + orig);\nSystem.out.println(\"Sub String: \" + subst);\n}\n}\nNote:\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\nJ\na\nv\na\n\nm a\nk\ne s\n\nt\nh\ne\n\nW e\nb\n\nm\no\nv\ne\n. Predicted Output:\nOriginal String: Java makes the Web move. Sub String: makes the Web\n\nJAVA for Beginners\n\nRiccardo Flask 119 |\nP a g e\n\n\n Understanding the “public static void main(String args[])” line of code – FYI only\nThis line really represents a method call, main, having ‘args’ (a string array) as parameter. This array\nstores command-line arguments (CLI arguments), which is any information which follows the\nprogram name. Consider the following examples:\nExample 1:\n// Display all command-line information. class CLDemo {\npublic static void main(String args[]) {\nSystem.out.println(\"There are \" + args.length +\n\" command-line arguments.\");\nSystem.out.println(\"They are: \");\nfor(int i=0; i<args.length; i++)\nSystem.out.println(\"arg[\" + i + \"]: \" + args[i]);\n}\n}\n\nIf we execute this program in a DOS shell3 (not via IDE), we use the following syntax:\nC:\\ java CLDemo one two three (press enter)\n\n\n3 Put your file (*.class, after compilation) in root drive.",
+        "source_doc": "java_beginners.pdf"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "عمران نے رات کو کیا کرنے کا مشورہ دیا؟",
+    "language": "ur",
+    "ground_truth_chunk_id": "urdu-doc__36",
+    "context_chunks": [
+      {
+        "chunk_id": "urdu-doc__53",
+        "text": "سی وقت ہلدا پر نظر رکهے جب تک شاہد اسکے ساته ديکها جائے۔ يہ چيز عمران کے لئے غير متوقع بهی نہيں تهی، اس نے پچهلی شام ہی اندازہ کر ليا تها کہ خود لڑکی کے آدمی بهی اسکی نگرانی کرتے ہيں اور يہی ديکهنے کے لئے وہ اس وقت يہاں آيا تها، مگر يہ چيز اسکے وہم و\n\nگمان ميں نہيں تهی کہ اس وقت بهی اسی آدمی سے مڈ بهيڑ ہو گی جس نے سگريٹ کا پيکٹ پهينکا تها۔",
+        "source_doc": "urdu-doc.pdf"
+      },
+      {
+        "chunk_id": "urdu-doc__93",
+        "text": "ی بات تهی کہ وہ کسی دوسرے کے لئے ہی کام کر رہی تهی۔۔۔ اور ايسے لوگ جو دوسروں کے لئے کوئی غير قانونی حرکت کرتے ہيں اگر پوليس کی نظروں ميں آ جائيں تو ان کی زبان کهلنے کے خوف سے کام لينے والا ان کی زندگيوں کے خواہاں ہو جاتا ہے۔ عمران نے کار کی رفتار تيز کر دی۔",
+        "source_doc": "urdu-doc.pdf"
+      },
+      {
+        "chunk_id": "urdu-doc__63",
+        "text": "لاع دو گی۔\" \"بہت بہتر جناب۔\"\n\nعمران نے سلسلہ منقطع کر ديا۔ اس نے کپڑے اتارے اور صرف انڈر ويئر اور بنيان ہی ميں رہا، حالانکہ سرديوں کے دن تهے اور يہاں کمرے ميں ٹهنڈک بهی تهی ليکن موج ہی تو ہے، آرام کرسی پر نيم دراز ہو کر اس نے سليمان کو آواز دی اور وہ پہلے ہی سے چائے کی ٹرے سنبهالے ہوئے ادهر ہی آ رہا تها۔ \"ابے تو بولتا کيوں نہيں؟\"\n\nجب آ ہی رہا تها تو بولنے کی کيا ضرورت تهی۔\" سليمان نے کہا۔\"\n\n\"اچها جی، اگر آتے وقت کوئی تمهاری گردن اڑا ديتا تب بهی تم خاموش ہی رہتے۔\"\n\n\"نہيں صاحب، لپٹ پڑتا اس سے، خون پی ليتا۔\"\n\n\"لپٹ پڑتے۔\" عمران دہاڑا۔",
+        "source_doc": "urdu-doc.pdf"
+      },
+      {
+        "chunk_id": "urdu-doc__236",
+        "text": "ہے کہ ميں نے تمہيں اپنا تعاقب کرتے ديکها تها۔۔۔ مگر ميں تو سمجها تها کہ شايد تمہيں \" !\"وہ لڑکی پسند آ گئی ہے\n\nعمران صاحب مجهے بيوقوف نہ بنايا کيجئے! اف فوہ! کل رات کی اچهل کود! ميرا تو سر چکرا گيا تها! آپ \" !\"کے پير زمين پر لگتے معلوم ہی نہيں ہوتے تهے۔ !\"اسی لئے بزرگوں نے کہا ہے کہ بهنگ ايک بہت واہيات نشہ ہے\"\n\n!\"کيا مطلب\"\n\n!\"پچهلی رات کسی نے مجهے بهنگ پلائی تهی\"\"\n\nصفدر ہنسنے لگا ! اور عمران نے ايسی شکل بنا لی جيسے اسے پچهلی رات بهنگ پی لينے پر بے حد !\"شرمندگی ہو! پهر اس نے ٹهنڈی سانس لے کر کہا۔",
+        "source_doc": "urdu-doc.pdf"
+      },
+      {
+        "chunk_id": "urdu-doc__86",
+        "text": "ہاں۔۔۔ اب آپ کو اطلاع دے رہا ہوں۔ اچها، اچها۔ ميں آ رہا ہوں۔\" عمران نے کہا اور سلسلہ منقطع کر ديا۔\"\n\nسليمان نے اس وقت بڑی ذہانت سے کام ليا تها۔ پرائيوٹ فون کی گهنٹی بجی تهی۔ اس نے ريسيور اٹها کر سلسلہ منقطع کر ديا تها اور پهر عمران کے ذاتی فون کے نمبر ڈائيل کئے تهے۔ اس طرح دونوں کمروں کے درميان رابطہ قائم ہو گيا تها۔ پرائيويٹ فون پر جوليا کے علاوہ اور کس کی کال ہوتی۔ کيا تمہيں باہر جانا ہے۔\" فياض نے پوچها۔\"\n\n\"نہيں تو۔\"\n\n\"مگر تم نے ابهی کسی سے وعدہ کيا ہے۔\"\n\nآہا۔۔۔\"! عمران نے جهينپتے ہوئے انداز ميں قہقہہ لگايا اور پهر بولا۔",
+        "source_doc": "urdu-doc.pdf"
+      }
+    ],
+    "ground_truth_retrieved": false
+  },
+  {
+    "query": "پاکستان میں پرندوں کی کتنی اقسام پائی جاتی ہیں؟",
+    "language": "ur",
+    "ground_truth_chunk_id": "pakistan_urdu__54",
+    "context_chunks": [
+      {
+        "chunk_id": "pakistan_urdu__58",
+        "text": "ے اور 5,700 سے زائد قسم کے پودے ریکارڈ کیے گئے ہیں۔ پاکستان کو جنگلات کی کٹائی، شکار اور آلودگی کا سامنا ہے اور 2019 میں فارسٹ لینڈ اسکیپ انٹیگریٹی انڈیکس میں اس کا اوسط اسکور 7.42/10 تھا، جس نے 172 ممالک میں سے عالمی سطح پر 41ویں درجہ دیا۔ حکومت اور سياست\nپاکستان ایک جمہوری پارلیمانی وفاقی جمہوریہ کے طور پر کام کرتا ہے، جس میں اسلام کو ریاست کا مذہب قرار دیا گیا ہے۔ پاکستان نے 1956 میں اپنا پہلا آئین اختیار کیا، جسے ایوب خان نے 1958 میں معطل کر دیا اور اس کے بعد 1962 میں دوسرا آئین نافذ کیا گیا۔",
+        "source_doc": "pakistan_urdu.html"
+      },
+      {
+        "chunk_id": "pakistan_urdu__57",
+        "text": "کے کچھ حصوں میں چند نیل گائے بھی پائی جاتی ہیں۔ نایاب جانوروں میں برفانی چیتا اور اندھی دریائے سندھ کی ڈولفن شامل ہیں، جن کی تعداد تقریباً 1,816 سمجھی جاتی ہے اور یہ سندھ میں دریائے سندھ ڈولفن ریزرو میں محفوظ ہیں۔ مجموعی طور پر پاکستان میں 174 قسم کے ممالیہ جانور، 177 قسم کے رینگنے والے جانور، 22 قسم کے ایمفیبین، 198 قسم کی تازہ پانی کی مچھلیاں، 668 قسم کے پرندے، 5,000 سے زائد قسم کے کیڑے اور 5,700 سے زائد قسم کے پودے ریکارڈ کیے گئے ہیں۔",
+        "source_doc": "pakistan_urdu.html"
+      },
+      {
+        "chunk_id": "pakistan_urdu__54",
+        "text": "لاقوں میں کھجور کے درخت اور افیڈرا کے پودے زیادہ ہیں۔ پنجاب اور سندھ کے دریائے سندھ کے میدانوں میں استوائی اور نیم استوائی خشک اور مرطوب چوڑے پتوں والے جنگلات کے ساتھ ساتھ استوائی اور خشک جھاڑی دار علاقے بھی موجود ہیں۔ پاکستان کا تقریباً 4.8% یا 36,845.6 مربع کلومیٹر (3,684,560 ہیکٹر) رقبہ 2021 میں جنگلات پر مشتمل تھا۔ پاکستان کا جنگلی حیات اس کی متنوع آب و ہوا کا عکس ہے۔ ملک میں تقریباً 668 پرندوں کی اقسام پائی جاتی ہیں جن میں کوا، چڑیا، مینا، باز، شاہین اور عقاب شامل ہیں۔",
+        "source_doc": "pakistan_urdu.html"
+      },
+      {
+        "chunk_id": "pakistan_urdu__85",
+        "text": "(یاسمین) ہے۔ دیگر 45 پھولوں کے نام بھی جان سکتے ہیں۔ - قومی پھل - پاکستان کا قومی پھل آم ہے۔ دیگر 45 پھلوں کے نام بھی جان سکتے ہیں۔ - قومی لباس - شلوار قمیض، جناح کیپ، شیروانی (سردیوں میں)\n- جانور – مارخور قومی جانور ہے۔ اس کے علاوہ ملک میں پائے جانے والے منفرد جانور نیل گائے، چنکارہ، کالا ہرن، ہرن، چیتا، لومڑی، مارکوپولو بھیڑ، سبز کچھوا، نابینا ڈولفن، مگرمچھ ہیں۔ - قومی پرندہ - پاکستان کا قومی پرندہ چکور ہے۔ - قومی مشروب – گنے کا رس\n- قومی کھانا - غیر سرکاری طور پر نہاری۔ - قومی نعرہ - پاکستان کا مطلب کیا؟",
+        "source_doc": "pakistan_urdu.html"
+      },
+      {
+        "chunk_id": "pakistan_urdu__56",
+        "text": "یدڑ، دھاری دار لگڑبگڑ، جنگلی بلیاں اور تیندوا موجود ہیں۔ شمال کے پہاڑی علاقے مختلف قسم کے جانوروں کا مسکن ہیں جن میں مارکو پولو بھیڑ، اورئیل، مارخور، آئبیکس، ایشیائی کالا ریچھ اور ہمالیائی بھورا ریچھ شامل ہیں۔ پاکستان میں پودوں کی کمی، شدید موسم اور صحراوں میں چرنے کے اثرات نے جنگلی جانوروں کو خطرے میں ڈال دیا ہے۔ چولستان میں چنکارا وہ واحد جانور ہے جو بڑی تعداد میں پایا جاتا ہے، جبکہ پاکستان-بھارت سرحد کے ساتھ اور چولستان کے کچھ حصوں میں چند نیل گائے بھی پائی جاتی ہیں۔",
+        "source_doc": "pakistan_urdu.html"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "تقسیم ہند کے بعد پاکستان کی قومی زبان کیا بنی؟",
+    "language": "ur",
+    "ground_truth_chunk_id": "lang_urdu__31",
+    "context_chunks": [
+      {
+        "chunk_id": "lang_urdu__49",
+        "text": "اکستان کی نئی ریاست کے لیے اتحاد کے طور پر منتخب کیا گیا تھا۔ یہ پاکستان کے تمام صوبوں/علاقوں میں لکھی، بولی اور استعمال کی جاتی ہے۔[125] انگریزی اور اردو دونوں میڈیم اسکولوں میں ہائر سیکنڈری اسکول تک اردو کو لازمی مضمون کے طور پر پڑھایا جاتا ہے، جس نے لاکھوں دوسری زبان کے بولنے والوں کو اردو سکھائی۔[126] جبکہ کچھ اردو الفاظ کو پاکستان کی علاقائی زبانوں نے بھی ضم کر لیا ہے۔[127][128] 8 ستمبر 2015ء بروز منگل کو پاکستان کی سپریم کورٹ نے متعلقہ حکام کو فوری طور پر سرکاری دفاتر میں اردو بطور سرکاری زبان کے نفاذ کے لیے حکم دے رکھا ہے۔[129]\nبھارت\nبھارت میں، اردو ان جگہوں پر بولی جاتی ہے جہاں بڑی مسلم اقلیتیں یا شہر ہیں جو ماضی میں مسلم سلطنتوں کے علاقے تھے�",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__146",
+        "text": "0. - ↑ Christopher Rolland King (1999). One Language, Two Scripts: The Hindi Movement in Nineteenth Century North India (بزبان انگریزی). Oxford University Press. p. 78. ISBN:978-0-19-565112-6. برطانوی زبان کی پالیسی دونوں بڑے سیاسی عملوں کے نتیجے میں اور اس میں حصہ ڈالی جس کے نتیجے میں برطانوی ہندوستان کو ہندوستان اور پاکستان میں تقسیم کیا گیا، جس کا نتیجہ ہندی-اردو تسلسل کی لسانی تقسیم کے بالکل متوازی طور پر انتہائی سنسکرت زدہ ہندی اور اعلیٰ فارسی اردو میں ہوا۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__4",
+        "text": "لف ہند-اسلامی سلطنتوں کی درباری زبان کے طور پر کام کرتی تھی۔ [10] یورپی نوآبادیاتی دور میں مذہبی، سماجی اور سیاسی عوامل پیدا ہوئے جنھوں نے اردو اور ہندی کے درمیان فرق کیا، جس کی وجہ سے ہندی-اردو تنازعہ شروع ہوا۔ اٹھارویں صدی میں اردو ایک ادبی زبان بن گئی اور اس کی دو معیاری شکلیں دہلی اور لکھنؤ میں وجود میں آئیں۔ 1947ء میں تقسیم ہند کے بعد سے پاکستانی شہر کراچی میں ایک تیسرا معیار پیدا ہوا ہے۔ [11][12] دکنی، ایک پرانی اردو کی شکل ہے جو دکن میں استعمال ہوتی تھی، سولہویں صدی تک دکن سلاطین کی درباری زبان بن گئی۔[13][12]\nاُردو کا بعض اوقات ہندی کے ساتھ موازنہ کیا جاتا ہے۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__48",
+        "text": "بھی خطہ اردو کو اپنی مادری زبان کے طور پر استعمال نہیں کرتا۔ پاکستان کی پنجابی اشرافیہ نے اردو کو مادری زبان کے طور پر اپنایا ہے اور وہ اردو بولنے والے کے ساتھ ساتھ پنجابی شناخت دونوں سے پہچانے جاتے ہیں۔[123][124] اردو کو 1947ء میں پاکستان کی نئی ریاست کے لیے اتحاد کے طور پر منتخب کیا گیا تھا۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "pakistan_urdu__94",
+        "text": "ق پاکستان میں تقریباً 65 سے زیادہ زبانیں بولی جاتی ہیں۔ انگریزی پاکستان کی سرکاری زبان ہے، تمام معاہدے اور سرکاری کام انگریزی زبان میں ہی طے کیے جاتے ہیں، جبکہ اردو پاکستان کی قومی زبان ہے۔",
+        "source_doc": "pakistan_urdu.html"
+      }
+    ],
+    "ground_truth_retrieved": false
+  },
+  {
+    "query": "نوآبادیاتی ہندوستانی اسلامی اسکولوں میں مسلمانوں کو کونسی زبانیں پڑھائی جاتی تھیں؟",
+    "language": "ur",
+    "ground_truth_chunk_id": "lang_urdu__28",
+    "context_chunks": [
+      {
+        "chunk_id": "lang_urdu__28",
+        "text": "یوناگری رسم الخط کو استعمال کرتے رہے۔ اور مذہبی سیاق و سباق۔ [78][80] انیسویں صدی کے آخر تک، لوگ اردو اور ہندی کو دو الگ الگ زبانوں کے طور پر نہیں دیکھتے تھے، حالانکہ شہری علاقوں میں، معیاری ہندستانی زبان کو تیزی سے اردو کہا جاتا تھا اور فارسی عربی رسم الخط میں لکھا جاتا تھا۔ اردو اور انگریزی نے 1837ء میں ہندوستان کے شمالی حصوں میں فارسی کو سرکاری زبانوں کے طور پر بدل دیا [81] نوآبادیاتی ہندوستانی اسلامی اسکولوں میں، مسلمانوں کو ہند اسلامی تہذیب کی زبانوں کے طور پر فارسی اور عربی پڑھائی جاتی تھی۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__4",
+        "text": "لف ہند-اسلامی سلطنتوں کی درباری زبان کے طور پر کام کرتی تھی۔ [10] یورپی نوآبادیاتی دور میں مذہبی، سماجی اور سیاسی عوامل پیدا ہوئے جنھوں نے اردو اور ہندی کے درمیان فرق کیا، جس کی وجہ سے ہندی-اردو تنازعہ شروع ہوا۔ اٹھارویں صدی میں اردو ایک ادبی زبان بن گئی اور اس کی دو معیاری شکلیں دہلی اور لکھنؤ میں وجود میں آئیں۔ 1947ء میں تقسیم ہند کے بعد سے پاکستانی شہر کراچی میں ایک تیسرا معیار پیدا ہوا ہے۔ [11][12] دکنی، ایک پرانی اردو کی شکل ہے جو دکن میں استعمال ہوتی تھی، سولہویں صدی تک دکن سلاطین کی درباری زبان بن گئی۔[13][12]\nاُردو کا بعض اوقات ہندی کے ساتھ موازنہ کیا جاتا ہے۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__136",
+        "text": "� ISBN:978-0-87586-437-2\n- ↑ David Prochaska, Edmund Burke III (جولائی 2008)۔ Genealogies of Orientalism: History, Theory, Politics۔ Nebraska Paperback\n- 1 2 3 John Hutchinson; Anthony D. Smith (2000). Nationalism: Critical Concepts in Political Science (بزبان انگریزی). Taylor & Francis. ISBN:978-0-415-20112-4. شمالی ہندوستان میں انیسویں صدی میں، سرکاری اسکولوں کے برطانوی نظام کی توسیع سے پہلے، اردو کو اپنی تحریری شکل میں روایتی اسلامی اسکولوں میں ذریعہ تعلیم کے طور پر استعمال نہیں کیا جاتا تھا، جہاں مسلمان بچوں کو فارسی اور عربی پڑھائی جاتی تھی، جو کہ کی روایتی زبانیں ہیں۔ اسلام اور مسلم ثقافت۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__41",
+        "text": "ل آبادی کا 56 فیصد بولی جاتی ہے، زیادہ تر مشرقی پاکستان میں۔ آزادی کے حامی دونوں اشرافیہ جنھوں نے پاکستان میں مسلم لیگ اور ہندوستان میں ہندو اکثریتی کانگریس پارٹی کی قیادت کی تھی، برطانوی نوآبادیاتی دور میں انگریزی میں تعلیم حاصل کی گئی تھی اور انگریزی میں کام کرتے رہے اور اپنے بچوں کو انگریزی میڈیم اسکولوں میں بھیجتے رہے۔ [110] اگرچہ پاکستان میں اشرافیہ نے مختلف درجات کے ساتھ تعلیم کی اردوائزیشن کی کوششیں کی ہیں، لیکن سیاست، قانونی نظام، فوج اور معیشت کو اردو میں کرنے کے لیے کوئی بھی کامیاب کوشش نہیں کی گئی۔",
+        "source_doc": "lang_urdu.html"
+      },
+      {
+        "chunk_id": "lang_urdu__27",
+        "text": "کو فروغ دیا گیا تاکہ فارسی پر سابقہ زور کا مقابلہ کیا جا سکے۔ نوآبادیاتی ہندوستان میں، \"انیسویں صدی میں متحدہ صوبوں میں عام مسلمان اور ہندو یکساں طور پر ایک ہی زبان بولتے تھے، یعنی ہندوستانی، خواہ اس نام سے پکارا جائے یا ہندی، اردو یا برج یا اودھی جیسی علاقائی بولیوں میں سے ایک۔\" [78] مسلم برادریوں کے اشراف کے ساتھ ساتھ ہندو اشراف کی ایک اقلیت، جیسا کہ ہندو نسل کے منشی،[79] نے عدالتوں اور سرکاری دفاتر میں فارسی عربی رسم الخط میں زبان لکھی، حالانکہ ہندو بعض ادبیات میں دیوناگری رسم الخط کو استعمال کرتے رہے۔ اور مذہبی سیاق و سباق۔",
+        "source_doc": "lang_urdu.html"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "대한민국의 초·중·고등학교는 2012학년도부터 주5일제를 전면 실시하였다",
+    "language": "ko",
+    "ground_truth_chunk_id": "saturday_korean__2",
+    "context_chunks": [
+      {
+        "chunk_id": "saturday_korean__1",
+        "text": "�르누스는 토성을 상징하는 신이므로, 대한민국과 일본에서는 '토요일'로 불린다. 나머지 대부분의 경우 북게르만어 즉 노르만어 위주로는 lördag이라고 한다. 그러나 게르만어의 중심인 독일어는 Samstag[zámsta:k]라고 다르게 부른다. 잠(Sam)이라는 위인/신이 있는가 혹은 아래 라틴어파 sabato 특히 불어를 접해 들어온 것이 아닐까 하는 의견이 있다. 남부 유럽 언어 및 동남아 언어에서 '토요일'이란 낱말은 안식일(샤밭)을 어원으로 하고 있다. 그 예로는 그리스어 Σάββατο, 이탈리아어 sabato, 인도네시아어 sabtu 등이 있다. 중국\n[편집]- 중국에서는 토요일을 한 주의 여섯째 날이라는 의미로 '星期六'이라고 한다. 페르시아\n[편집]행사와 문화\n[편집]- 대한민국의 초·중·고등학교는 2012학년도부터 주5일제를 전면 실시하여 토요일에 등교를 하지 않게 되었다. - 대한민국의 기업체에서는 2005년 1월 1일부터 주5일제를 적용하면서 토요일에는 근무하지 않게 되었다.",
+        "source_doc": "saturday_korean.html"
+      },
+      {
+        "chunk_id": "sk_korean__102",
+        "text": "이 1995년 고교평준화와 학력고사 등의 폐지 이후 대졸 내지는 초대졸로 변화하였다. 그에 따라 청년층이 \"3D 업종\" 또는 \"4D 업종\"으로 분류하는 직업을 기피하는 현상이 나타났다.[95]\n또한 3D 업종과 4D 업종으로 분류하는 직종 외에도 중소기업과 일부 공장 등에 대한 기피현상이 두드러지게 나타난다. 그로 인해, 각지에서 많은 이주노동자들이 대한민국에 들어와 일한다. 이들은 합법적으로 취업 비자를 받고 입국한 산업연수생과 불법적으로 들어온 불법 체류자로 나누며, 일반적으로 이주노동자라 하면 이들 둘을 통틀어 가리킨다. 2010년 기준으로 대한민국 이주노동자 수는 55만 명으로, 전체 경제활동인구의 2.2%를 차지한다. 난민\n대한민국 내 난민 대부분은 북한이탈주민으로, 정부에서 이들을 대한민국 헌법에 정한 상징적인 영토 규정에 의하여 대한민국 영토를 불법점거하는 반국가단체의 집단을 탈출하여 대한민국의 영역으로 들어온 대한민국 국민이라고 본다.",
+        "source_doc": "sk_korean.html"
+      },
+      {
+        "chunk_id": "sk_korean__104",
+        "text": "특목고)로 분리했다. 고등교육은 4~6년제 대학교와 2~3년제 전문대학이 있다. 2005년 인구주택총조사에서 교육을 받는 정규학교 재학자는 1089만 명(24.7%), 졸업자는 2987만(67.8%), 중퇴자는 96만 명(2.2%)이고, 졸업자는 초등학교 및 중학교 졸업자는 750만 명(24.5%), 고등학교 졸업자는 1263만 명 (41.2%), 대학 졸업 이상은 1050만 명(34.3%)을 나타내는데, 이는 교육 수준이 상당히 높은 것으로 볼 수 있다. 하지만 이러한 높은 교육수준은 대한민국의 교육정책으로 기인한 현상으로 보며, 현재에는 오히려 학력인플레이션으로 청년실업 증가하여 심각한 사회 문제가 되었다. 대한민국 대학교 진학률이 다른 국가에 비해 상당히 높은 편이다. 일반적으로 대학교에 진학하려는 사람들은 대학수학능력시험(수능)을 치른다. 대학수학능력시험은 고등학교 졸업 예정자 혹은 고등학교 졸업에 상응하는 학력을 가진 사람이면 누구나 치른다.",
+        "source_doc": "sk_korean.html"
+      },
+      {
+        "chunk_id": "sk_korean__103",
+        "text": "�가단체의 집단을 탈출하여 대한민국의 영역으로 들어온 대한민국 국민이라고 본다. 이들에게 국적 부여, 생활 지원 등 다양한 혜택을 부여힌다. 또한 1990년대 이후 정치적 난민을 인정하기 시작하여 아프리카나 아랍권 일부 국가에서 정치적 혹은 종교적 박해를 피해 입국한 이들을 인도적으로 받아들이나 그 수는 일반적인 선진국에 비해 많지 않다. 2017년에는 양성애자 여성이 난민 인정을 신청하여 성 정체성을 이유로 박해를 받을 우려가 있어 대법원에서 난민을 인정한 사례가 있었다.[96] 한편, 2018년 500명이 넘는 예멘인들이 제주도로 입국해 [[난민 인정 신청을 하면서 대한민국에서 난민 수용 여부에 대한 찬반 논란이 본격적으로 일어났다. 교육\n초등학교 6년과 중학교 3년이 의무교육이다. 고등학교는 3년 과정이며, 일반계·특성화고등학교·특수 목적 고등학교(특목고)로 분리했다. 고등교육은 4~6년제 대학교와 2~3년제 전문대학이 있다.",
+        "source_doc": "sk_korean.html"
+      },
+      {
+        "chunk_id": "saturday_korean__2",
+        "text": "기업체에서는 2005년 1월 1일부터 주5일제를 적용하면서 토요일에는 근무하지 않게 되었다. 공식적으로는 토요일에 휴무지만 일부 중소기업 등에서는 토요일에도 사실상 근무한다. - 일본에서는 1월 14일 이후 첫 토요일에 센터시험의 지리역사•공민, 국어, 외국어 시험을 본다. - 2009-10시즌부터 UEFA 챔피언스리그와 UEFA 유로파리그의 결승전이 토요일에 열린다. - 프리미어리그 등 프로 축구 리그는 대체로 토요일에 경기를 한다. - 중화인민공화국이나 헝가리는 공휴일이 화요일이나 목요일이면 연휴를 만들고 직전 토요일을 평일로 한다. 같이 보기\n[편집]| 이 글은 시간에 관한 토막글입니다. 여러분의 지식으로 알차게 문서를 완성해 갑시다.",
+        "source_doc": "saturday_korean.html"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "미국 보수 기독교계에서는 기독교 근본주의를 주장하였다",
+    "language": "ko",
+    "ground_truth_chunk_id": "murica_korean__62",
+    "context_chunks": [
+      {
+        "chunk_id": "murica_korean__62",
+        "text": "사회의 오점 중 하나다. 근대 미국과 유럽교회에서는 자유주의 신학이 영향을 주었다. 자유주의 신학은 기독교 신학의 근대적 해석으로 기독교와 시대의 연관성을 추구했다.[59] 특히 미국교회의 자유주의 신학은 하나님 나라 즉, 하나님의 다스림의 윤리성을 강조한 사회복음주의가 등장하는 등 기독교인의 사회참여를 강조하는 성향을 보였고, 미국 성공회, 감리교, 교회들이 자유주의 신학을 따르고 있었을 정도로 큰 영향력을 갖고 있었다.(장로교는 뉴욕 유니온을 중심으로 한 축을 형성하였을 뿐 여전히 정통 칼뱅주의가 주류였다.)[60] 이에 대한 반동으로 미국 보수 기독교계에서는 기독교 근본주의(The Fundamentalism)를 주장하였다.",
+        "source_doc": "murica_korean.html"
+      },
+      {
+        "chunk_id": "murica_korean__63",
+        "text": "[60] 이에 대한 반동으로 미국 보수 기독교계에서는 기독교 근본주의(The Fundamentalism)를 주장하였다. 근본주의 신학은 소수 보수파 칼뱅주의 감리교회와 소수의 장로교회(예:칼 매킨타이어)와 절대다수의 침례교회에서 영향력을 보였는데, 1915년 출판된 《근본》이라는 소책자에서 그 이름이 유래한다.[61] 예수의 동정녀 탄생, 예수의 신성, 예수의 대속적 죽음, 예수의 재림, 축자영감설에 근거한 성경무오설이 근본주의의 교리적인 특징이며, 예수를 믿지 않는 다른 종교인들은 심판으로 멸망한다는 구원관, 음주나 흡연에 반대하는 종교적인 금욕주의,[62] 신학 교육과 자연과학에 대한 거부도 근본주의의 특징이다.[63][64] 이들 근본주의자들은 조선에서의 개신교 선교를 했기 때문에, 한국 개신교회는 근본주의의 영향을 많이 받았다.[65]\n현재 미국에서 가장 압도적인 종교는 기독교이며, 70.6%가 기독교인이다.",
+        "source_doc": "murica_korean.html"
+      },
+      {
+        "chunk_id": "murica_korean__57",
+        "text": "있고 절대수도 많지는 않은데 신이민으로서 흑인과 함께 사회의 최하층을 형성하는 수가 많다. 그리고 빈곤으로 인해 그들의 생활상태는 차츰 사회문제화되어 가고 있다. 종교\n메이플라워호를 타고 신앙의 자유를 찾아 영국에서 이민 온 개신교 신자들 즉, 청교도들은 초기에는 아메리카 토착민들의 전통종교를 배격했으며, 같은 기독교 종파들인 성공회와 천주교회도 성공회 기도서 사용 금지, 성공회 신자 추방, 천주교회 신자 이민거부로 배척했다. 하지만 건국 후에는 헌법으로 종교의 자유를 인정했고, 다수의 인종·민족으로 구성된 나라라는 미국의 특징상 거의 모든 종류의 종교를 볼 수 있지만, 유럽에서 온 이민이 주체를 이루고 있기 때문에 기독교인이 압도적 다수를 차지한다. 그러나 주 1회 교회에 가는 사람은 점차 적어지고 있다. 개신교 신자가 다수며 그외 가톨릭교회 및 기타 다양한 종교가 있다. 또한 유대교도도 많아서 이스라엘의 인구보다도 더 많은 유대교도가 미국에 거주하고 있다.",
+        "source_doc": "murica_korean.html"
+      },
+      {
+        "chunk_id": "murica_korean__58",
+        "text": "�한 유대교도도 많아서 이스라엘의 인구보다도 더 많은 유대교도가 미국에 거주하고 있다. 신앙심도 미국인들은 매우 높아 신 또는 영혼의 존재를 믿는 비율이 94%에 달할만큼 기독교적인 국가라고 할 수 있다. 종교적인 이유로 천주교회와 유대인을 공격했던 시기도 있었고, 존 F. 케네디외에는 천주교 신자가 대통령으로 선출되지 않았던 것도 이와같은 배경 때문이다. 따라서 미국의 이스라엘 지원과 같이 종교나 민족이 미국의 외교 정책에 큰 영향을 끼치는 일도 적지 않다. 영국 종교개혁으로 성공회가 천주교회에서 분리된 이후, 일부 칼뱅주의자들은 철저한 개혁을 요구했다. 이들은 성경에 언급되지 않은 전통들을 배척한 성경주의자들로서, 성공회를 개혁하고자 했다. 일부 청교도들은 네덜란드와 미국으로 이주했는데, 네덜란드에 이주한 ‘암스테르담 제2 영국교회 분리주의자 형제’들을 후에 침례교 또는 침례교인이라고 불렀다.",
+        "source_doc": "murica_korean.html"
+      },
+      {
+        "chunk_id": "murica_korean__53",
+        "text": "��통질서뿐만 아니라, 범법적 준법정신이 투철하고, 범죄자에 대한 자비는 없다. 감옥체계가 발달되었다. - 가족 중심의 사회 그리고 높은 이혼율과 가족관계의 경제적 선택: 가족이 모든 개인의 중심에 있고 서로 의지하나, 경제적인 관점에서는 독립되어있고, 이에 따라 이혼이 쉽게 인정된다. - 기독교 문화 속 휴일과 감사하는 태도: 추수감사절과 성탄절은 국가 최대 휴일이고 광범위한 일에 걸쳐 기독교 정신이 자리 잡고있다. - 남녀평등과 개방적인 성문화: 남녀의 성적 역할은 최대한 효율적으로 이용하나, 성적 차이는 차별받지 않으며, 성문화가 개방적이다. - 물질적 번영과 미국제일주의: 높은 국민 소득과 생활 수준이 미국 것이 제일이라는 안이한 태도를 만들기도 한다. - 소비 생활과 사치성 문화, 대중 문화\n미국의 이민 정책\n미국은 이민의 국가이기 때문에 이민 정책은 국가의 기초를 설계하는 가장 중요한 정책 가운데 하나다.",
+        "source_doc": "murica_korean.html"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "괴테는 괴로움에 대해 '괴로움이 남기고 간 것을 맛보아라'고 말했다",
+    "language": "ko",
+    "ground_truth_chunk_id": "soul_korean__144",
+    "context_chunks": [
+      {
+        "chunk_id": "soul_korean__144",
+        "text": "머릿속이 온통\n그 사람으로 가득 차죠. 124\n\n헤어짐을 알리고 차차 정리하는 것. 모두 내가 감당해야 할 몫이지만\n씁쓸함을 거둘 수가 없습니다. 내 일상에 아직도 그가 중요하게 자리하고\n있는 것 같아 사람들을 만나는 것도 꺼려집니다. 이렇듯 나는 과거 속에\n머물러 있습니다. 우리는 이미 완벽한 타인이 되어 버렸는데 왜.... 차라\n리 그를 모르던 때로 돌아가고 싶을 뿐이에요. 이제 그만 아파하고 싶은\n마음뿐입니다. 하지만 독일의 작가 괴테는 이런 말을 남겼습니다. “괴로움이 남기고 간 것을 맛보아라. 고통도 지나고 나면 달콤한 것이\n다.”\n오늘은 이렇게 후회와 아픔으로 몸부림치고 있지만 내일은 조금 나아\n질까요? 이 어두운 방에 언제쯤 빛이 스며들까요? 정확히 알 수는 없습니다. 하지만 분명한 것은 지금의 괴로움은 언젠가\n다 지나가리라는 사실이죠. 그러니 부디 현명하고 의연하게 이겨 내길 바\n랍니다.",
+        "source_doc": "soul_korean.pdf"
+      },
+      {
+        "chunk_id": "soul_korean__36",
+        "text": "침내 서로의 마음을 어떻게 확인했는\n34\n\n지 그리고 지금 우리가 서로를 얼마나 아끼고 있는지. 설명하자면 끝이\n없을 것 같습니다. 스스로도 놀랄 만큼 말수가 많아져요. 넘치는 감정은 이처럼 미소 어린 눈가로, 또 이야기를 풀어놓는 입가로\n쉼 없이 흘러나옵니다. 모든 건 사랑이라는 열쇠가 내 마음의 문을 열면\n서 생긴 변화일 거예요. 내면이 긍정과 행복으로 가득해지니 타인을 향한\n시선도 너그러워집니다. 배려와 이해가 그리 어렵지 않고, 친절을 베풀며\n내 마음의 풍요를 나누려 하죠. 그리고 이것은 일상의 하루하루를, 나아\n가 삶 전체를 환하게 물들입니다. 그림 속 여인도 그럴 테지요. 독일의 작가 괴테의 말이 와닿습니다. “사랑하는 것이 인생이다. 기쁨이 있는 곳에 사람과 사람 사이의 결합\n이 이루어진다.",
+        "source_doc": "soul_korean.pdf"
+      },
+      {
+        "chunk_id": "soul_korean__190",
+        "text": "씻는 것 같기도 하고 얼굴을 닦아 내는 것 같기도 합\n니다. 이곳에 햇살이 들지 않아서일까요? 여자의 모습이 왠지 무척이나\n쓸쓸해 보입니다. 어쩌면 그녀는 방금까지 사람들과 시끌벅적하게 어울리고 있었는지도\n몰라요. 맛있는 음식과 유쾌한 친구들. 부족함 하나 없는 시간을 보내며\n웃고 떠들었을 겁니다. 하지만 그곳을 홀로 빠져나오자 기다렸다는 듯 슬\n픔과 괴로움이라는 감정이 들이닥칩니다. ‘왜 이런 날일수록 얼마 전 헤어진 그가 더 생각나는지....’\n그녀는 한숨을 크게 몰아쉽니다. 이 마음을, 그에 대한 기억을 흐르는\n물에 깨끗이 씻어 낼 수 있다면 좋을 텐데요. 혹은 조금 전까지 그녀는 다른 어떤 일에 한창 몰입하고 있었는지도 모\n릅니다. 바느질이든 청소든, 복잡한 머릿속을 비우고 집중할 수 있는 뭔\n166\n\n가를 몇 시간째 계속하던 중일지도요. 이윽고 찌뿌둥해진 몸을 일으켜 머\n리를 식히기 위해 자리를 떴습니다.",
+        "source_doc": "soul_korean.pdf"
+      },
+      {
+        "chunk_id": "soul_korean__89",
+        "text": "상의 봄꽃은 활짝 피어나는데, 사랑\n이라는 나의 꽃은 서서히 시들고 있으니까요. 상실의 아픔이 몰려오고 있\n79\n\n음을 부정하기 어렵습니다. 영원할 것만 같던 사랑이 어쩌다 봄눈처럼 순\n식간에 녹아 사라지려는 걸까요? 그리움에 사무쳐 힘겨운 하루하루를 보내며 여자는 이렇게 생각할지도\n모릅니다. ‘나를 더 이상 사랑하지 않거든 그렇다고 이야기라도 해 주면 마음이\n편할 텐데.’\n그러나 한편으로 결코 그 말만큼은 듣고 싶지 않은 것이 솔직한 심정일\n거예요. 그래서 오늘도 그녀는 그 사람을 가슴에서 떠나보내지 못한 채\n일말의 희망을 가져 봅니다. 그럴수록 괴로움과 고통은 더해 가지만 말이\n에요. 단지 집 안에 몸을 가둔 것만이 아니라 어두운 자신의 마음속에 스스로\n를 가두고 있습니다. 아름답지만 안타까운 봄날이 이렇게 유유히 흘러갑니다.",
+        "source_doc": "soul_korean.pdf"
+      },
+      {
+        "chunk_id": "soul_korean__185",
+        "text": "겨우 잠들고, 아침이 밝아 오면 내 앞에\n161\n\n놓인 차가운 현실을 외면하고만 싶어집니다. 이루 다 표현할 수 없는 괴\n로움 속에서 하루하루를 버티죠. 사랑은, 그 기쁨은 아주 잠시고 슬픔이\n훨씬 더 긴 것처럼 느껴집니다. 그림 속 여자 또한 어떻게든 참고 참다가 너무 힘들어진 나머지 취기를\n빌려 그에게 메시지를 남기거나 전화를 걸었을지도 모르겠습니다. 하지\n만 두 사람의 관계는 이미 끝났고 상황을 바꿀 수는 없는 일. 지쳐서 잠이\n든 그녀에게 돌아오는 것이라곤 깨질 듯한 두통과 후회, 상실의 아픔뿐입\n니다. \\ 상실로부터 나를 지키는 것\n이 같은 이별 후유증은 극도의 슬픔과 괴로움을 넘어 자책으\n로 이어지기도 해요. 이별이라는 결말에 도달하기 전에 나 자신이 무엇을\n했어야 했던가를 강박적으로 거듭 생각하기 시작합니다.",
+        "source_doc": "soul_korean.pdf"
+      }
+    ],
+    "ground_truth_retrieved": true
+  },
+  {
+    "query": "5월은 그레고리력에서 한 해의 다섯 번째 달이며 31일까지 있는 7개의 달 중 하나이다",
+    "language": "ko",
+    "ground_truth_chunk_id": "may_korean__0",
+    "context_chunks": [
+      {
+        "chunk_id": "may_korean__0",
+        "text": "5월\n외관\n\n\n 카렐 히네크 마하의 서정시에 대해서는 5월 (시) 문서를 참고하십시오. 5월(五月, May)은 그레고리력에서 한 해의 다섯 번째 달이며, 31일까지 있는 7개의 달 중 하나이다. 대한민국에서는 5월이 가정의 달이다. 이 달과 다음 해의 1월은 항상 같은 요일로 시작하고 같은 요일로 끝난다. 400년 동안 이 달은 화요일, 금요일, 일요일에 58번, 수요일과 목요일에 57번, 월요일과 토요일에는 56번 시작한다. 단, 첫 주 평일은 2일(노동절 당일 이후 포함), 3일, 6일(노동절·어린이날 징검다리 연휴 포함)이며, 마지막 주 평일은 29일, 30일, 31일이다. 음력 3월과 음력 4월이 이 달에 있으며 5월에는 음력 3월 15~16일, 4월 15~16일의 보름달을 관측할 수 있다. 이 달에 윤달이 끼는 경우는 윤3월 혹은 윤4월인데 소만 이전은 윤3월, 소만 이후는 윤4월이다.",
+        "source_doc": "may_korean.html"
+      },
+      {
+        "chunk_id": "The Project Gutenberg eBook of Encyclopædia Britannica, Volume XII Slice VI - Groups, Theory of to Gwyniad.__486",
+        "text": "for the day, month and year shows little variation, being respectively 77.54°-88.38° F., 76.1°-78.62° F. and 70.52°-90.14° F. The north-east trade winds prevail throughout the year, but the rainfall varies considerably; for December and January the mean is respectively 8.58 and 9.57 in., for May and June 11.26 and 10.31 in., but for February and March 7.2 and 6.81 in., and for September 2.48 and 2.0 in. The seasons comprise a long and a short dry season, and a period of heavy and of slight rainfall.",
+        "source_doc": "The Project Gutenberg eBook of Encyclopædia Britannica, Volume XII Slice VI - Groups, Theory of to Gwyniad..html"
+      },
+      {
+        "chunk_id": "sk_korean__41",
+        "text": "��렷이 나타나며 대체로 북부 지역은 여름과 겨울이 길고 남부 지역은 봄과 가을이 길다. 3월 초에서 5월 초에 걸쳐 포근한 봄 날씨, 5월경에서 9월 초에는 무더운 여름이, 9월 중순에서 10월 말까지는 화창하고 건조한 가을 날씨가 이어지고, 11월에 기온과 습도가 점차 낮아지기 시작하여 12월에서 2월까지는 춥고 건조한 겨울 날씨를 보인다. 중부 산간 지방을 제외하고 대체로 연 평균 기온은 10~16°C이며, 가장 무더운 달인 8월은 23~36°C, 5월은 16~19°C, 10월은 11~19°C, 가장 추운 달인 1월은 -6~3°C이다.[31]\n비는 주로 여름에 많이 내리는데 연 강수량의 50~60%가 이때 집중된다. 이를 장마라고 하며 특히 6월 말에서 7월 중순까지를 장마철이라 한다.",
+        "source_doc": "sk_korean.html"
+      },
+      {
+        "chunk_id": "may_korean__1",
+        "text": "이 끼는 경우는 윤3월 혹은 윤4월인데 소만 이전은 윤3월, 소만 이후는 윤4월이다. | 4월 - 5월 - 6월 | ||||||\n| 일 | 월 | 화 | 수 | 목 | 금 | 토 |\n| 1 | 2 | |||||\n| 3 | 4 | 5 | 6 | 7 | 8 | 9 |\n| 10 | 11 | 12 | 13 | 14 | 15 | 16 |\n| 17 | 18 | 19 | 20 | 21 | 22 | 23 |\n| 24 | 25 | 26 | 27 | 28 | 29 | 30 |\n| 31 | ||||||\n| 2026년 기준 모두 보기 | ||||||\n행사\n[편집]5월과 스포츠\n[편집]메이저 리그 베이스볼 등의 리그는 5월이 시즌 초에 해당한다.",
+        "source_doc": "may_korean.html"
+      },
+      {
+        "chunk_id": "may_korean__5",
+        "text": "��일) - 토요일이나 다른 공휴일[10]과 겹칠 경우 5월 6~7일에 대체공휴일 적용. - 5월 8일 : 어버이날 -공휴일로 지정하자는 주장이 있음\n- 5월 10일 : 유권자의 날(5.10총선거 기념일), 한부모가족의 날\n- 5월 11일 : 입양의 날, 동학 농민 혁명 기념일\n- 5월 15일 : 스승의 날, 세종대왕 나신 날\n- 5월 셋째 월요일 : 성년의 날 - 매년 만 19세가 되는 젊은이를 대상으로 각종 행사를 개최한다. - 5월 18일 : 5.18 광주 민주화 운동 기념일\n- 5월 19일 - 발명의 날\n- 5월 20일 : 세계인의 날\n- 5월 21일 : 부부의 날\n- 5월 25일 : 방재의 날\n- 5월 31일 : 바다의 날\n각주\n[편집]- ↑ 간혹 4월에 드는 해도 있다.",
+        "source_doc": "may_korean.html"
+      }
+    ],
+    "ground_truth_retrieved": true
+  }
+]
