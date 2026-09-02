@@ -1,0 +1,30 @@
+groq
+python-dotenv
+openai
+faiss-cpu
+numpy
+kiwipiepy
+rank_bm25
+sentence-transformers
+fastapi
+uvicorn
+langdetect
+
+#proj 4
+transformers
+torch
+presidio-analyzer
+presidio-anonymizer
+spacy
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+accelerate
+datasets
+#tts/stt
+gTTS
+openai-whisper
+python-multipart
+#also needs ffmpeg
+
+#agents
+langgraph
+langchain-core

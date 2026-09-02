@@ -1,0 +1,29 @@
+[
+  {
+    "query": "What attributes does the Car class define in Python?",
+    "corruption_type": "invented_fact",
+    "corrupted_draft": "The Car class defines attributes for make, model, year, and top_speed_mph, which is used to calculate acceleration curves [1].",
+    "should_pass": false,
+    "actual_passed": false,
+    "validation_issues": "The draft answer claims the Car class defines attributes for make, model, year, and top_speed_mph, and that these are used to calculate acceleration curves. None of these attributes or the acceleration calculation appear in any of the provided source chunks; the chunks only show the class defining `model` and `color`. The citation [1] points to a chunk that contains only `model` and `color`, not the claimed attributes. Consequently, the answer is not grounded, the citation is incorrect, and it does not correctly answer the question about which attributes the Car class actually defines.",
+    "correct": true
+  },
+  {
+    "query": "Who designed the C programming language and when?",
+    "corruption_type": "wrong_citation",
+    "corrupted_draft": "C was designed by Dennis Ritchie in 1972 at Bell Labs [3].",
+    "should_pass": false,
+    "actual_passed": false,
+    "validation_issues": "Citation [3] points to the Python chunk, which does not support the claim about C; the correct citation should be [1] or [2].",
+    "correct": true
+  },
+  {
+    "query": "What did Segur buy with money from Tallard?",
+    "corruption_type": "dodges_question",
+    "corrupted_draft": "Tallard was a general involved in the war in Italy that year [1]. Financial arrangements between generals were common during this period.",
+    "should_pass": false,
+    "actual_passed": false,
+    "validation_issues": "The draft answer fails to state what Segur bought (the government of the Foix country). The citation [1] points to a chunk about Lord Milner in South Africa, which is entirely irrelevant to the question. The relevant source is chunk [2], which is not cited. The claim that \"financial arrangements between generals were common\" is unsupported by any source.",
+    "correct": true
+  }
+]
