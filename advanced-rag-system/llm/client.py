@@ -13,7 +13,7 @@ _PROVIDER_CONFIG = {
         "base_url": "https://api.groq.com/openai/v1",
         "api_key_env": "GROQ_API_KEY",
         "models": {
-            "large": "llama-3.3-70b-versatile", #"large": "llama-3.3-70b-versatile", "large": "openai/gpt-oss-120b", "large": "qwen/qwen3.6-27b"
+            "large": "openai/gpt-oss-120b", #"large": "llama-3.3-70b-versatile", "large": "openai/gpt-oss-120b", "large": "qwen/qwen3.6-27b"
             "small": "llama-3.1-8b-instant", #llama-3.1-8b-instant
         },
     },
