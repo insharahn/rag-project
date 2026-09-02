@@ -37,7 +37,7 @@ class MilvusDB(VectorDB):
             auto_id=False,
             index_params=self.client.prepare_index_params(
                 field_name="vector",
-                index_type="FLAT",      # exact brute-force — matches FAISS ground truth
+                index_type="FLAT",      
                 metric_type="COSINE",
             ),
         )
